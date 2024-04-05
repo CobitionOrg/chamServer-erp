@@ -14,4 +14,16 @@ export class BcryptUtilClass {
         }
         
     }
+
+    /**비밀번호 체크 */
+    async checkLogin(userPw:string, dbPw:string){
+        try{
+            const check = await bcrypt.compare(userPw,dbPw);
+
+            return check;
+        }catch(err){
+            console.log(err);
+            return {success:false};
+        }
+    }
 }
