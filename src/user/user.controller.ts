@@ -6,6 +6,7 @@ import { BcryptUtilClass } from 'src/util/bcrypt.util';
 import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { AttendanceDto } from './Dto/attendance.dto';
 
 @Controller('user')
 @ApiTags('user api')
@@ -39,10 +40,12 @@ export class UserController {
         
     }
 
-    @UseGuards(AuthGuard)
-    @Get('profile')
-    getProfile(@Request() req) {
-      return req.user;
+    @ApiOperation({summary:'출근'})
+    @HttpCode(HttpStatus.OK)
+    @Post('attendance')
+    async attendence(@Body() loginDto : AttendanceDto){
+        this.logger.log('로그인 및 출근 체크');
+        return await this.userService.attendance(loginDto);
     }
 
 }

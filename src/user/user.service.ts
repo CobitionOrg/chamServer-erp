@@ -5,6 +5,8 @@ import { BcryptUtilClass } from 'src/util/bcrypt.util';
 import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { AttendanceDto } from './Dto/attendance.dto';
+import { dateUtil } from 'src/util/date.util';
 
 @Injectable()
 export class UserService{
@@ -118,17 +120,57 @@ export class UserService{
                 return {
                     success:true,
                     status:HttpStatus.OK, 
-                    token : access_token
+                    token : access_token,
+                    id : userData.id
                 };
             }
-
 
         }catch(err){
             this.logger.error(err);
             return {
                 success:false,
                 status:HttpStatus.INTERNAL_SERVER_ERROR,
-            }
+            };
+        }
+    }
+
+    async attendance(attendanceDto : AttendanceDto){
+        try{
+            const loginDto : LoginDto = {
+                userId: attendanceDto.userId,
+                userPw: attendanceDto.userPw,
+            };
+
+            const login = await this.signIn(loginDto);
+
+            if(!login.success) return login;
+
+            console.log(typeof attendanceDto.todayDate)
+            let today = new Date(attendanceDto.todayDate);
+            let startTime = dateUtil(attendanceDto.todayDate);
+           
+            
+            await this.prisma.attendance.create({
+                data : {
+                    date : attendanceDto.todayDate,
+                    startTime : startTime,
+                    endTime : startTime,
+                    userId : login.id,
+                }
+            });
+
+            return {
+                success:true,
+                status:HttpStatus.OK,
+                token : login.token,
+            };
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            };
         }
     }
 }
