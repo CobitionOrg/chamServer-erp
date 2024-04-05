@@ -1,14 +1,18 @@
-import { HttpStatus, Injectable ,Logger} from '@nestjs/common';
+import { HttpStatus, Injectable ,Logger, UnauthorizedException} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { BcryptUtilClass } from 'src/util/bcrypt.util';
 import { SignUpDto } from './Dto/signUp.dto';
+import { LoginDto } from './Dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService{
     constructor(
-        private prisma : PrismaService
+        private prisma : PrismaService,
+        private jwtService : JwtService,
     ){}
+
     private readonly logger = new Logger(UserService.name);
     private readonly bcryptClass = new BcryptUtilClass();
 
@@ -79,6 +83,47 @@ export class UserService{
                 success:false,
                 status:HttpStatus.INTERNAL_SERVER_ERROR,
             };
+        }
+    }
+
+    async signIn(loginDto:LoginDto){
+        try{
+            const userData = await this.prisma.user.findUnique({
+                where:{
+                    userId : loginDto.userId,
+                },
+            });
+
+            if(userData?.userId==null || userData.userPw==null){
+                return {success:false,status:404}
+            }
+            
+            const check = await this.bcryptClass.checkLogin(loginDto.userPw,userData.userPw);
+
+            if(!check) { //비밀번호 일치하지 않을 시
+                throw new UnauthorizedException();
+            }else{
+                const payload = {
+                    sub:userData.id,
+                    name:userData.name,
+                    userId:userData.userId
+                };
+
+                const access_token = await this.jwtService.signAsync(payload);
+                return {
+                    success:true,
+                    status:HttpStatus.OK, 
+                    token : access_token
+                };
+            }
+
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            }
         }
     }
 }
