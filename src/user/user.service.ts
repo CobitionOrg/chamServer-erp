@@ -6,6 +6,7 @@ import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
+import { dateUtil } from 'src/util/date.util';
 
 @Injectable()
 export class UserService{
@@ -146,15 +147,9 @@ export class UserService{
 
             console.log(typeof attendanceDto.todayDate)
             let today = new Date(attendanceDto.todayDate);
-
-            let year = today.getFullYear(); // 년도
-            let month = today.getMonth() + 1;  // 월
-            let date = today.getDate();  // 날짜
-            let hours = today.getHours(); // 시
-            let minutes = today.getMinutes();  // 분
-            let seconds = today.getSeconds();  // 초
-
-            let startTime = new Date(year + '/' + month + '/' + date + ' ' + hours + ':' + minutes + ':' + seconds);
+            let startTime = dateUtil(attendanceDto.todayDate);
+           
+            
             await this.prisma.attendance.create({
                 data : {
                     date : attendanceDto.todayDate,
