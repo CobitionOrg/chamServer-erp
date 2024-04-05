@@ -6,7 +6,6 @@ import { BcryptUtilClass } from 'src/util/bcrypt.util';
 import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { Public } from 'src/auth/decorators/public.decorator';
 
 @Controller('user')
 @ApiTags('user api')
@@ -40,10 +39,9 @@ export class UserController {
         
     }
 
-    @Public()
+    @UseGuards(AuthGuard)
     @Get('profile')
     getProfile(@Request() req) {
-        console.log('test');
       return req.user;
     }
 

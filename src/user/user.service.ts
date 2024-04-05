@@ -86,6 +86,11 @@ export class UserService{
         }
     }
 
+    /**
+     * 로그인
+     * @param loginDto :LoginDto
+     * @returns {success:bool,status:HttpStatus};
+     */
     async signIn(loginDto:LoginDto){
         try{
             const userData = await this.prisma.user.findUnique({
