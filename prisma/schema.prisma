@@ -19,6 +19,11 @@ enum Role {
   boss
 }
 
+enum Visit {
+  first //초진
+  return //재진
+}
+
 model user{
   id Int @id @default(autoincrement())
   userId String @unique
@@ -35,4 +40,18 @@ model attendance{
   endTime DateTime
   user user @relation(fields:[userId],references:[id])
   userId Int
+}
+
+model question{
+  id Int @id @default(autoincrement())
+  question String
+  type Visit
+  answers answer[]
+}
+
+model answer{
+  id Int @id @default(autoincrement())
+  anwer String
+  question question @relation(fields:[questionId],references:[id])
+  questionId Int
 }
