@@ -145,19 +145,19 @@ export class UserService{
 
             if(!login.success) return login;
 
-            console.log(typeof attendanceDto.todayDate)
+            console.log(attendanceDto.todayDate)
             let today = new Date(attendanceDto.todayDate);
             let startTime = dateUtil(attendanceDto.todayDate);
            
             
-            await this.prisma.attendance.create({
-                data : {
-                    date : attendanceDto.todayDate,
-                    startTime : startTime,
-                    endTime : startTime,
-                    userId : login.id,
-                }
-            });
+            // await this.prisma.attendance.create({
+            //     data : {
+            //         date : attendanceDto.todayDate,
+            //         startTime : startTime,
+            //         endTime : startTime,
+            //         userId : login.id,
+            //     }
+            // });
 
             return {
                 success:true,
