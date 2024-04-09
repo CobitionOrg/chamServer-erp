@@ -134,6 +134,11 @@ export class UserService{
         }
     }
 
+    /**
+     * 출근근
+     * @param attendanceDto 
+     * @returns {success:bool,status:HttpStatus};
+     */
     async attendance(attendanceDto : AttendanceDto){
         try{
             const loginDto : LoginDto = {
@@ -165,6 +170,44 @@ export class UserService{
                 token : login.token,
             };
 
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            };
+        }
+    }
+
+    async getUserData(header){
+        try{    
+            const token = await this.jwtService.decode(header);
+            console.log(token);
+
+            const res = await this.prisma.user.findFirst({
+                select:{
+                    name:true,
+                    userId:true,
+                    grade:true,
+                    attendances:{
+                        select:{
+                            date:true,
+                            startTime:true,
+                            endTime:true,
+                        },
+                        where:{
+                            userId:token.sub
+                        }
+                    }
+                },
+                where:{
+                    id:token.sub
+                }
+            });
+
+            console.log(res);
+
+            return res;
         }catch(err){
             this.logger.error(err);
             return {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request, } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { UserService } from './user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -7,6 +7,7 @@ import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { AttendanceDto } from './Dto/attendance.dto';
+import { getToken } from 'src/util/token';
 
 @Controller('user')
 @ApiTags('user api')
@@ -48,4 +49,11 @@ export class UserController {
         return await this.userService.attendance(loginDto);
     }
 
+    @ApiOperation({summary:'유저 정보 불러오기'})
+    @HttpCode(HttpStatus.OK)
+    @Get('/userData')
+    async userData(@Headers() header){
+        this.logger.log('유저 정보 가져오기');
+        return await this.userService.getUserData(getToken(header));
+    }
 }
