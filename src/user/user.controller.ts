@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers,Patch } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { UserService } from './user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -8,6 +8,7 @@ import { LoginDto } from './Dto/login.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { AttendanceDto } from './Dto/attendance.dto';
 import { getToken } from 'src/util/token';
+import { LeaveWorkDto } from './Dto/leaveWork.dto';
 
 @Controller('user')
 @ApiTags('user api')
@@ -43,10 +44,18 @@ export class UserController {
 
     @ApiOperation({summary:'출근'})
     @HttpCode(HttpStatus.OK)
-    @Post('attendance')
+    @Post('/attendance')
     async attendence(@Body() loginDto : AttendanceDto){
         this.logger.log('로그인 및 출근 체크');
         return await this.userService.attendance(loginDto);
+    }
+
+    @ApiOperation({summary:'퇴근'})
+    @HttpCode(HttpStatus.OK)
+    @Patch('/leaveWork')
+    async leaveWork(@Body() leaveWork : LeaveWorkDto, @Headers() header){
+        this.logger.log('퇴근 체크');
+        return await this.userService.leaveWork(getToken(header),leaveWork);
     }
 
     @ApiOperation({summary:'유저 정보 불러오기'})
