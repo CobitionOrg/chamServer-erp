@@ -7,6 +7,7 @@ import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
 import { dateUtil } from 'src/util/date.util';
+import { LeaveWorkDto } from './Dto/leaveWork.dto';
 
 @Injectable()
 export class UserService{
@@ -134,6 +135,11 @@ export class UserService{
         }
     }
 
+    /**
+     * 출근
+     * @param attendanceDto 
+     * @returns {success:bool,status:HttpStatus};
+     */
     async attendance(attendanceDto : AttendanceDto){
         try{
             const loginDto : LoginDto = {
@@ -150,14 +156,14 @@ export class UserService{
             let startTime = dateUtil(attendanceDto.todayDate);
            
             
-            // await this.prisma.attendance.create({
-            //     data : {
-            //         date : attendanceDto.todayDate,
-            //         startTime : startTime,
-            //         endTime : startTime,
-            //         userId : login.id,
-            //     }
-            // });
+            await this.prisma.attendance.create({
+                data : {
+                    date : attendanceDto.todayDate,
+                    startTime : startTime,
+                    endTime : startTime,
+                    userId : login.id,
+                }
+            });
 
             return {
                 success:true,
@@ -165,6 +171,75 @@ export class UserService{
                 token : login.token,
             };
 
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            };
+        }
+    }
+
+    async leaveWork(header,leaveWork:LeaveWorkDto){
+        try{
+            const token = await this.jwtService.decode(header);
+            console.log(token);
+            await this.prisma.attendance.update({
+                where:{
+                    id : leaveWork.id,
+                    userId:token.sub
+                },
+                data:{
+                    endTime : leaveWork.date
+                },
+            });
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            }
+        }
+    }
+
+    /**
+     * 유저 데이터 가져오기
+     * @param header :string
+     * @returns 
+     */
+    async getUserData(header){
+        try{    
+            const token = await this.jwtService.decode(header);
+            console.log(token);
+
+            const res = await this.prisma.user.findFirst({
+                select:{
+                    name:true,
+                    userId:true,
+                    grade:true,
+                    attendances:{
+                        select:{
+                            id:true,
+                            date:true,
+                            startTime:true,
+                            endTime:true,
+                        },
+                        where:{
+                            userId:token.sub
+                        },
+                        orderBy : {
+                            date:'desc'
+                        }
+                    }
+                },
+                where:{
+                    id:token.sub
+                }
+            });
+
+            console.log(res);
+
+            return {data:res,success:true};
         }catch(err){
             this.logger.error(err);
             return {
