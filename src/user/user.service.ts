@@ -99,6 +99,7 @@ export class UserService{
             const userData = await this.prisma.user.findUnique({
                 where:{
                     userId : loginDto.userId,
+                    useFlag : true
                 },
             });
 
@@ -180,6 +181,12 @@ export class UserService{
         }
     }
 
+    /**
+     * 퇴근하기
+     * @param header 
+     * @param leaveWork 
+     * @returns 
+     */
     async leaveWork(header,leaveWork:LeaveWorkDto){
         try{
             const token = await this.jwtService.decode(header);
@@ -246,6 +253,77 @@ export class UserService{
                 success:false,
                 status:HttpStatus.INTERNAL_SERVER_ERROR,
             };
+        }
+    }
+
+    /**
+     * 유저 권한 업데이트
+     * @param header 
+     * @param id 
+     * @returns {success:boolean}
+     */
+    async userFlagUpd(header:string,id:number){
+        try{
+            console.log(id);
+            console.log(typeof id);
+            
+            const token = await this.jwtService.decode(header);
+            const userId = token.sub;
+
+            const checkGrade = await this.checkUserGrade(userId);
+            if(!checkGrade.success) return {success:false,status:HttpStatus.FORBIDDEN};
+
+           
+            const userUpd = await this.prisma.user.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    useFlag:true
+                }
+            });
+
+            console.log(userUpd);
+
+            return {success:true, status:HttpStatus.OK};
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            }
+        }
+    }
+
+    /**
+     * 유저 등급 확인
+     * @param id 
+     * @returns {success:boolean}
+     */
+    async checkUserGrade(id:number){
+        try{
+            const userData = await this.prisma.user.findUnique({
+                where:{
+                    id:id
+                },
+                select:{
+                    grade:true,
+                },
+            });
+
+            if(userData.grade=='admin' || userData.grade=='boss'){
+                return {success:true};
+            }else{
+                return {success:false};
+            }
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            }
         }
     }
 }
