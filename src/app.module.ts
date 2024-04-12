@@ -5,13 +5,15 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
+import { SurveyModule } from './survey/survey.module';
 @Module({
   
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    UserModule
+    UserModule,
+    SurveyModule
   ],
   controllers: [AppController, ],
   providers: [AppService,Logger],
