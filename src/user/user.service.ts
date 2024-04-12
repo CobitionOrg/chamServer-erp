@@ -256,6 +256,12 @@ export class UserService{
         }
     }
 
+    /**
+     * 유저 권한 업데이트
+     * @param header 
+     * @param id 
+     * @returns {success:boolean}
+     */
     async userFlagUpd(header:string,id:number){
         try{
             console.log(id);
