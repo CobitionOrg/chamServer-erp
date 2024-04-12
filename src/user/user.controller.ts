@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers,Patch } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers,Patch, Param } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { UserService } from './user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -64,5 +64,13 @@ export class UserController {
     async userData(@Headers() header){
         this.logger.log('유저 정보 가져오기');
         return await this.userService.getUserData(getToken(header));
+    }
+
+    @ApiOperation({summary:'유저 권한 허용'})
+    @HttpCode(HttpStatus.OK)
+    @Patch('/updUser/:id')
+    async updUser(@Headers() header,@Param('id') id:number){
+        this.logger.log('유저 권한 허용하기');
+        return await this.userService.userFlagUpd(getToken(header),id);
     }
 }
