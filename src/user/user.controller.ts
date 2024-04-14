@@ -60,10 +60,10 @@ export class UserController {
 
     @ApiOperation({summary:'유저 정보 불러오기'})
     @HttpCode(HttpStatus.OK)
-    @Get('/userData')
-    async userData(@Headers() header){
+    @Get('/userData/:month')
+    async userData(@Headers() header, @Param('month') month:number){
         this.logger.log('유저 정보 가져오기');
-        return await this.userService.getUserData(getToken(header));
+        return await this.userService.getUserData(getToken(header),month);
     }
 
     @ApiOperation({summary:'유저 권한 허용'})
