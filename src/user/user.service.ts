@@ -32,7 +32,7 @@ export class UserService{
 
     /**
      * 회원가입
-     * @param signUpDto :SginUpDto
+     * @param signUpDto :SignUpDto
      * @returns {success:bool,status:HttpStatus};
      */
     async signUp(signUpDto:SignUpDto) : Promise<any>{
@@ -211,10 +211,11 @@ export class UserService{
 
     /**
      * 유저 데이터 가져오기
-     * @param header :string
+     * @param header :string 
+     * @param month : number
      * @returns 
      */
-    async getUserData(header){
+    async getUserData(header,month:number){
         try{    
             const token = await this.jwtService.decode(header);
             console.log(token);
