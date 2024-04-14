@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
 import { dateUtil } from 'src/util/date.util';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
+import { getMonth } from 'src/util/getMonth';
 
 @Injectable()
 export class UserService{
@@ -220,6 +221,8 @@ export class UserService{
             const token = await this.jwtService.decode(header);
             console.log(token);
 
+            const getTimeObj = getMonth(month);
+            console.log(getTimeObj);
             const res = await this.prisma.user.findFirst({
                 select:{
                     name:true,
@@ -233,7 +236,11 @@ export class UserService{
                             endTime:true,
                         },
                         where:{
-                            userId:token.sub
+                            userId:token.sub,
+                            date : {
+                                lte : new Date(getTimeObj.lte),
+                                gte : new Date(getTimeObj.gte),
+                            }
                         },
                         orderBy : {
                             date:'desc'
