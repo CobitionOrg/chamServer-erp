@@ -18,7 +18,7 @@ import { AdminModule } from './admin/admin.module';
     SurveyModule,
     AdminModule
   ],
-  controllers: [AppController, AdminController, ],
+  controllers: [AppController ],
   providers: [AppService,Logger],
 })
 export class AppModule implements NestModule{

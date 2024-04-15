@@ -1,4 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('admin')
-export class AdminController {}
+@ApiTags('admin api')
+export class AdminController {
+    constructor(
+        private adminService : AdminService,
+    ){}
+    private readonly logger = new Logger(AdminController.name);
+}
