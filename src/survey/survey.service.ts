@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
-import { CreateSurveyDto } from './dto/create-survey.dto';
-import { UpdateSurveyDto } from './dto/update-survey.dto';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class SurveyService {
-  create(createSurveyDto: CreateSurveyDto) {
-    return 'This action adds a new survey';
+  constructor(private prisma: PrismaService) {}
+
+  private readonly logger = new Logger(SurveyService.name);
+
+  async getFirstVisitQuestion() {
+    try {
+      let res: Array<any> = await this.prisma.$queryRaw`
+        SELECT
+          q.id,
+          q.question,
+          q.type,
+          q.choice,
+          q.note,
+          GROUP_CONCAT(a.anwer SEPARATOR '//') as answer
+        FROM question q
+        LEFT JOIN answer a
+        ON q.id = a.questionId
+        WHERE type = "first"
+        GROUP BY q.id, q.question;
+      `;
+
+      res.forEach((e) => {
+        if (e.answer) e.answer = e.answer.split('//');
+      });
+
+      return { success: true, status: HttpStatus.OK, data: res };
+    } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
   }
 
-  findAll() {
-    return `This action returns all survey`;
-  }
+  async getReturningQuestion() {
+    try {
+      const res: Array<any> = await this.prisma.$queryRaw`
+        SELECT
+          q.id,
+          q.question,
+          q.type,
+          q.choice,
+          q.note,
+        GROUP_CONCAT(a.anwer SEPARATOR '//') as answer
+        FROM question q
+        LEFT JOIN answer a
+        ON q.id = a.questionId
+        WHERE type = "return"
+        GROUP BY q.id, q.question;
+      `;
 
-  findOne(id: number) {
-    return `This action returns a #${id} survey`;
-  }
+      res.forEach((e) => {
+        if (e.answer) e.answer = e.answer.split('//');
+      });
 
-  update(id: number, updateSurveyDto: UpdateSurveyDto) {
-    return `This action updates a #${id} survey`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} survey`;
+      return { success: true, status: HttpStatus.OK, data: res };
+    } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
   }
 }
