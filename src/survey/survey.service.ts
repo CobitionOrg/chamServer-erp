@@ -9,23 +9,22 @@ export class SurveyService {
 
   async getFirstVisitQuestion() {
     try {
-      let res: Array<any> = await this.prisma.$queryRaw`
-        SELECT
-          q.id,
-          q.question,
-          q.type,
-          q.choice,
-          q.note,
-          GROUP_CONCAT(a.anwer SEPARATOR '//') as answer
-        FROM question q
-        LEFT JOIN answer a
-        ON q.id = a.questionId
-        WHERE type = "first"
-        GROUP BY q.id, q.question;
-      `;
-
-      res.forEach((e) => {
-        if (e.answer) e.answer = e.answer.split('//');
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'first',
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          answers: {
+            select: {
+              answer: true,
+            },
+          },
+        },
       });
 
       return { success: true, status: HttpStatus.OK, data: res };
@@ -40,23 +39,22 @@ export class SurveyService {
 
   async getReturningQuestion() {
     try {
-      const res: Array<any> = await this.prisma.$queryRaw`
-        SELECT
-          q.id,
-          q.question,
-          q.type,
-          q.choice,
-          q.note,
-        GROUP_CONCAT(a.anwer SEPARATOR '//') as answer
-        FROM question q
-        LEFT JOIN answer a
-        ON q.id = a.questionId
-        WHERE type = "return"
-        GROUP BY q.id, q.question;
-      `;
-
-      res.forEach((e) => {
-        if (e.answer) e.answer = e.answer.split('//');
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'return',
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          answers: {
+            select: {
+              answer: true,
+            },
+          },
+        },
       });
 
       return { success: true, status: HttpStatus.OK, data: res };
