@@ -56,6 +56,13 @@ model questionImg {
 
 }
 
+model patient {
+  id Int @id @default(autoincrement())
+  name String
+  socialNum String
+  phone String
+}
+
 enum Role {
   user
   admin

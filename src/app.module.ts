@@ -6,6 +6,8 @@ import { UserModule } from './user/user.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import { SurveyModule } from './survey/survey.module';
+import { AdminController } from './admin/admin.controller';
+import { AdminModule } from './admin/admin.module';
 @Module({
   
   imports: [
@@ -13,9 +15,10 @@ import { SurveyModule } from './survey/survey.module';
       isGlobal: true,
     }),
     UserModule,
-    SurveyModule
+    SurveyModule,
+    AdminModule
   ],
-  controllers: [AppController, ],
+  controllers: [AppController, AdminController, ],
   providers: [AppService,Logger],
 })
 export class AppModule implements NestModule{
