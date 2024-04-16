@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
-import { CreateSurveyDto } from './dto/create-survey.dto';
-import { UpdateSurveyDto } from './dto/update-survey.dto';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class SurveyService {
-  create(createSurveyDto: CreateSurveyDto) {
-    return 'This action adds a new survey';
+  constructor(private prisma: PrismaService) {}
+
+  private readonly logger = new Logger(SurveyService.name);
+
+  async getFirstVisitQuestion() {
+    try {
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'first',
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          answers: {
+            select: {
+              id: true,
+              answer: true,
+            },
+          },
+        },
+      });
+
+      return { success: true, status: HttpStatus.OK, data: res };
+    } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
   }
 
-  findAll() {
-    return `This action returns all survey`;
-  }
+  async getReturningQuestion() {
+    try {
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'return',
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          answers: {
+            select: {
+              id: true,
+              answer: true,
+            },
+          },
+        },
+      });
 
-  findOne(id: number) {
-    return `This action returns a #${id} survey`;
-  }
-
-  update(id: number, updateSurveyDto: UpdateSurveyDto) {
-    return `This action updates a #${id} survey`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} survey`;
+      return { success: true, status: HttpStatus.OK, data: res };
+    } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
   }
 }
