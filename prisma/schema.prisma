@@ -29,11 +29,11 @@ model attendance {
 }
 
 model question {
-  id           Int              @id @default(autoincrement())
-  question     String           @db.VarChar(500)
+  id           Int           @id @default(autoincrement())
+  question     String        @db.VarChar(500)
   type         Visit
-  choice       question_choice?
-  note         String?          @db.VarChar(200)
+  choice       Choice?
+  note         String?       @db.VarChar(200)
   answers      answer[]
   questionImgs questionImg[]
 }
@@ -57,13 +57,6 @@ model questionImg {
   @@index([questionId], map: "questionImg_questionId_fkey")
 }
 
-model patient {
-  id Int @id @default(autoincrement())
-  name String
-  socialNum String
-  phone String
-}
-
 enum Role {
   user
   admin
@@ -75,7 +68,7 @@ enum Visit {
   return
 }
 
-enum question_choice {
+enum Choice {
   multiple
   subjective
   single
