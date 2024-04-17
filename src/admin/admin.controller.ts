@@ -1,7 +1,8 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Headers } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InsertQuestionDto } from './Dto/question.dto';
+import { getToken } from 'src/util/token';
 
 @Controller('admin')
 @ApiTags('admin api')
@@ -13,9 +14,9 @@ export class AdminController {
 
     @ApiOperation({summary:'질문 생성'})
     @Post('/question')
-    async insertQuestion(@Body() questionDto : InsertQuestionDto){
+    async insertQuestion(@Body() questionDto : InsertQuestionDto, @Headers() header){
         this.logger.log('질문 생성');
-        console.log(questionDto);
+        return await this.adminService.insertQuestion(questionDto,getToken(header));
     }
 }
  

@@ -1,24 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsString } from "class-validator";
-
-export class InsertQuestionDto {
-    @ApiProperty()
-    @IsString()
-    readonly question:string;
-
-    @ApiProperty()
-    @IsString()
-    readonly type:questionType;
-
-    @ApiProperty()
-    @IsString()
-    readonly choice:choiceType;
-
-    @ApiProperty()
-    @IsString()
-    readonly note: string;
-
-}
+import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
+import { InsertAnswerDto } from "./answer.dto";
 
 //https://velog.io/@jay/typescript-enum-be-careful
 //https://engineering.linecorp.com/ko/blog/typescript-enum-tree-shaking
@@ -35,3 +17,33 @@ const choiceEnum = {
 } 
 
 export type choiceType = typeof choiceEnum[keyof typeof choiceEnum];
+
+export class InsertQuestionDto {
+    @ApiProperty()
+    @IsString()
+    readonly question:string;
+
+    @ApiProperty()
+    @IsEnum(Object.values(questionEnum))
+    readonly type:questionType;
+
+    @ApiProperty()
+    @IsEnum(Object.values(choiceEnum))
+    readonly choice:choiceType;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    readonly note: string;
+
+    @ApiProperty()
+    @IsOptional()
+    readonly imgUrl : string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsArray()
+    readonly answers : Array<InsertAnswerDto>
+
+}
+
