@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { InsertQuestionDto } from './Dto/question.dto';
-import { Choice, Visit } from '@prisma/client';
+import { question_choice, Visit } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { PermitListDto } from './Dto/permitUser.dto';
 
@@ -57,7 +57,7 @@ export class AdminService {
                     data:{
                         question:insertQuestionDto.question,
                         type:Visit[insertQuestionDto.type],
-                        choice:Choice[insertQuestionDto.choice],
+                        choice:question_choice[insertQuestionDto.choice],
                         note:insertQuestionDto.note,
                     }
                 });
