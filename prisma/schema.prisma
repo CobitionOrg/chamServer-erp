@@ -29,18 +29,18 @@ model attendance {
 }
 
 model question {
-  id       Int      @id @default(autoincrement())
-  question String   @db.VarChar(500)
-  type     Visit
-  choice   Choice
-  note     String?  @db.VarChar(200)
-  answers  answer[]
+  id           Int              @id @default(autoincrement())
+  question     String           @db.VarChar(500)
+  type         Visit
+  choice       question_choice?
+  note         String?          @db.VarChar(200)
+  answers      answer[]
   questionImgs questionImg[]
 }
 
 model answer {
   id         Int      @id @default(autoincrement())
-  answer      String
+  answer     String
   questionId Int
   question   question @relation(fields: [questionId], references: [id])
 
@@ -48,12 +48,13 @@ model answer {
 }
 
 model questionImg {
-  id Int @id @default(autoincrement())
-  imgUrl String
-  useFlag Boolean
+  id         Int      @id @default(autoincrement())
+  imgUrl     String
+  useFlag    Boolean
   questionId Int
   question   question @relation(fields: [questionId], references: [id])
 
+  @@index([questionId], map: "questionImg_questionId_fkey")
 }
 
 enum Role {
@@ -67,7 +68,8 @@ enum Visit {
   return
 }
 
-enum Choice {
+enum question_choice {
   multiple
   subjective
+  single
 }
