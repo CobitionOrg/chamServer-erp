@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma.service';
 import { InsertQuestionDto } from './Dto/question.dto';
 import { Choice, Visit } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
+import { PermitListDto } from './Dto/permitUser.dto';
 
 @Injectable()
 export class AdminService {
@@ -84,6 +85,59 @@ export class AdminService {
             });
 
             return {success:true,status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            };
+        }
+    }
+
+    /**
+     * 유저 허용
+     * @param header 
+     * @param userId 
+     * @returns {success:boolean,status:number}
+     */
+    async permitUser(header:string, body:PermitListDto){
+        try{
+            const checkAdmin = await this.checkAdmin(header);
+            if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
+
+            for(let i = 0; i<body.users.length; i++) {
+                await this.prisma.user.update({
+                    where:{id:body.users[i]['id']},
+                    data:{useFlag:true},
+                });
+            };           
+
+            return {success:true,status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            };
+        }
+    }
+
+    async permitList(header:string){
+        try{    
+            const checkAdmin = await this.checkAdmin(header);
+            if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
+
+            const res = await this.prisma.user.findMany({
+                where:{
+                    useFlag:false,
+                },
+                select:{
+                    userId:true,grade:true,name:true,id:true
+                }
+            });
+
+            return {success:true, res};
+            
         }catch(err){
             this.logger.error(err);
             return {
