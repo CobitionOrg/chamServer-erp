@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Post, Headers, Get, UseGuards, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Headers, Get, UseGuards, Param, Patch, Head } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InsertQuestionDto } from './Dto/question.dto';
@@ -45,5 +45,14 @@ export class AdminController {
         this.logger.log('미등록 유저 리스트');
         return await this.adminService.permitList(getToken(header));
     }
+
+    @ApiOperation({summary:'유저 리스트 조회'})
+    @UseGuards(AuthGuard)
+    @Get('/userList')
+    async getUserList(@Headers() header){
+        this.logger.log('유저 리스트 조회');
+        return await this.adminService.getUserList(getToken(header));
+    }
+
 }
  
