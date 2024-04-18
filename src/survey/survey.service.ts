@@ -91,7 +91,7 @@ export class SurveyService {
       const page = addrSearchDto.page;
       const confmKey = process.env.ADDR_KEY;
       const url = `
-        https://business.juso.go.kr/addrlink/addrLinkApi.do?currentPage=${page}&countPerPage=10&keyword=${keyword}&confmKey=${confmKey}&returnType=json
+        https://business.juso.go.kr/addrlink/addrLinkApi.do?currentPage=${page}&countPerPage=30&keyword=${keyword}&confmKey=${confmKey}&returnType=json
       `;
       const { data } = await firstValueFrom(
         this.httpService.get(url).pipe(
