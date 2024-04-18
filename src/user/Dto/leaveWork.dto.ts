@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsNumber } from "class-validator";
+import { IsNumber, IsString } from "class-validator";
 
 export class LeaveWorkDto {
     @ApiProperty()
@@ -7,6 +7,6 @@ export class LeaveWorkDto {
     readonly id : number;
     
     @ApiProperty()
-    @IsDate()
-    readonly date : Date;
+    @IsString()
+    readonly date : string;
 }

@@ -12,3 +12,21 @@ export const dateUtil = (todayDate:string) => {
     console.log(startTime);
     return startTime;
 }
+
+/**
+ * 지각 여부 판단
+ * @param dateTime 
+ * @returns boolean
+ */
+export const tardy  = (dateTime:string) :boolean=> {
+    let startTime = new Date(dateTime); //출근 시간
+    let startHour = startTime.getHours();
+
+    if(startHour<9){
+        return false;
+    }else{
+        let startMin = startTime.getMinutes();
+        if(startMin == 0) return false;
+        else return true;
+    }
+}

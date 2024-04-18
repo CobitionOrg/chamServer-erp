@@ -6,7 +6,7 @@ import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
-import { dateUtil } from 'src/util/date.util';
+import { dateUtil, tardy } from 'src/util/date.util';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { getMonth } from 'src/util/getMonth';
 
@@ -156,7 +156,7 @@ export class UserService{
             console.log(attendanceDto.todayDate)
             let today = new Date(attendanceDto.todayDate);
             let startTime = dateUtil(attendanceDto.todayDate);
-           
+            let isTardy = tardy(attendanceDto.todayDate);
             
             await this.prisma.attendance.create({
                 data : {
@@ -164,6 +164,7 @@ export class UserService{
                     startTime : startTime,
                     endTime : startTime,
                     userId : login.id,
+                    tardy : isTardy
                 }
             });
 
@@ -198,7 +199,7 @@ export class UserService{
                     userId:token.sub
                 },
                 data:{
-                    endTime : leaveWork.date
+                    endTime : new Date(leaveWork.date)
                 },
             });
         }catch(err){
