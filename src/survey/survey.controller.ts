@@ -1,13 +1,16 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpException,
   HttpStatus,
   Logger,
+  Post,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { ApiOperation } from '@nestjs/swagger';
+import { AddrSearchDto } from './Dto/addrSearch.dto';
 
 @Controller('survey')
 export class SurveyController {
@@ -21,8 +24,7 @@ export class SurveyController {
     this.logger.log('초진 설문');
     const res = await this.surveyService.getFirstVisitQuestion();
     if (res.success) return res;
-    else
-      throw new HttpException('SERVER ERROR in survey/new-patient', res.status);
+    else throw new HttpException('', res.status);
   }
 
   @ApiOperation({ summary: '재진 설문' })
@@ -32,10 +34,16 @@ export class SurveyController {
     this.logger.log('재진 설문');
     const res = await this.surveyService.getReturningQuestion();
     if (res.success) return res;
-    else
-      throw new HttpException(
-        'SERVER ERROR in survey/returning-patient',
-        res.status,
-      );
+    else throw new HttpException('', res.status);
+  }
+
+  @ApiOperation({ summary: '주소 검색 오픈 API' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/addr')
+  async getAddrData(@Body() addrSearchDto: AddrSearchDto) {
+    this.logger.log('주소 검색 오픈 API');
+    const res = await this.surveyService.getAddrData(addrSearchDto);
+    if (res.success) return res;
+    else throw new HttpException('', res.status);
   }
 }
