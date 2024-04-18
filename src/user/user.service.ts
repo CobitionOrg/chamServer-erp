@@ -221,6 +221,30 @@ export class UserService{
             const token = await this.jwtService.decode(header);
             console.log(token);
 
+       
+            const res = await this.getAttendance(token.sub,month);
+
+            console.log(res);
+
+            return {data:res,success:true};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+            };
+        }
+    }
+
+    /**
+     * 해당 유저 근태 조회
+     * @param id 
+     * @param month 
+     * @returns 
+     */
+    async getAttendance(id:number,month:number){
+        try{
+           
             const getTimeObj = getMonth(month);
             console.log(getTimeObj);
             const res = await this.prisma.user.findFirst({
@@ -236,7 +260,7 @@ export class UserService{
                             endTime:true,
                         },
                         where:{
-                            userId:token.sub,
+                            userId:id,
                             date : {
                                 lte : new Date(getTimeObj.lte),
                                 gte : new Date(getTimeObj.gte),
@@ -248,13 +272,11 @@ export class UserService{
                     }
                 },
                 where:{
-                    id:token.sub
+                    id:id
                 }
             });
-
             console.log(res);
-
-            return {data:res,success:true};
+            return res;
         }catch(err){
             this.logger.error(err);
             return {

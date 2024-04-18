@@ -54,5 +54,13 @@ export class AdminController {
         return await this.adminService.getUserList(getToken(header));
     }
 
+    @ApiOperation({summary:'근태 조회'})
+    @UseGuards(AuthGuard)
+    @Get('/attendance/:id')
+    async getAttendance(@Headers() header,@Param('id') id:number){
+        this.logger.log('근태 기록 조회');
+        return await this.adminService.getAttendance(getToken(header),id);
+    }
+
 }
  

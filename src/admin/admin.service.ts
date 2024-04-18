@@ -152,7 +152,11 @@ export class AdminService {
         }
     }
 
-
+    /**
+     * 유저 리스트 조회
+     * @param header 
+     * @returns 
+     */
     async getUserList(header:string){
         try{
             const checkAdmin = await this.checkAdmin(header);
@@ -170,6 +174,26 @@ export class AdminService {
             });
 
             return {success:true, data};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            };
+        }
+    }
+
+    async getAttendance(header:string,userId:number){
+        try{
+            console.log('----------'+userId);
+            const checkAdmin = await this.checkAdmin(header);
+            if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
+
+            const date = new Date();
+            const month = date.getMonth()+1;
+            const data = await this.userService.getAttendance(userId,month);
+            //console.log(data);
+            return {success:true,data};
         }catch(err){
             this.logger.error(err);
             return {
