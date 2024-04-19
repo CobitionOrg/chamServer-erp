@@ -58,6 +58,20 @@ model questionImg {
   @@index([questionId], map: "questionImg_questionId_fkey")
 }
 
+model patient {
+  id  Int @id @default(autoincrement())
+  name String
+  phoneNum String
+  addr String
+}
+
+model item {
+  id  Int @id @default(autoincrement())
+  item String
+  isFirst Boolean
+  isYoyo  Boolean
+}
+
 enum Role {
   user
   admin
