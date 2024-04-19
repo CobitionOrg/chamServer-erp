@@ -8,6 +8,9 @@ import { ConfigModule } from '@nestjs/config';
 import { SurveyModule } from './survey/survey.module';
 import { AdminController } from './admin/admin.controller';
 import { AdminModule } from './admin/admin.module';
+import { ErpController } from './erp/erp.controller';
+import { ErpService } from './erp/erp.service';
+import { ErpModule } from './erp/erp.module';
 @Module({
   
   imports: [
@@ -16,7 +19,8 @@ import { AdminModule } from './admin/admin.module';
     }),
     UserModule,
     SurveyModule,
-    AdminModule
+    AdminModule,
+    ErpModule
   ],
   controllers: [AppController ],
   providers: [AppService,Logger],
