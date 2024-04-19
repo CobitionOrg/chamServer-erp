@@ -86,6 +86,7 @@ model order {
   consultingType Boolean @default(false) //유선 상담 유무 -> true면 유선
   phoneConsulting Boolean @default(false) //유선 상담 완료 플래그
   isComplete Boolean @default(false) //완료 유무 -> 발송목록으로
+  isFirst Boolean @default(true) //초진/재진 유무
   patientId Int
   patient patient @relation(fields:[patientId],references:[id])
   orderBodyType orderBodyType?
