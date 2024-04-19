@@ -63,6 +63,7 @@ model patient {
   name String
   phoneNum String
   addr String
+  orders order[]
 }
 
 model item {
@@ -70,6 +71,46 @@ model item {
   item String
   isFirst Boolean
   isYoyo  Boolean
+}
+
+model order {
+  id  Int @id @default(autoincrement())
+  route String //알게 된 경로
+  message String //상담 및 배송 요청 메세지
+  cachReceipt String //현금 영수증
+  typeCheck String //비대면진료 타입 해당사항 체크
+  consultingTime String //상담가능시간
+  payType String //결제 진행 방법
+  essentialCheck String //필수 체크
+  outage String //감량 된 킬로수
+  consultingType Boolean @default(false) //유선 상담 유무 -> true면 유선
+  phoneConsulting Boolean @default(false) //유선 상담 완료 플래그
+  isComplete Boolean @default(false) //완료 유무 -> 발송목록으로
+  patientId Int
+  patient patient @relation(fields:[patientId],references:[id])
+  orderBodyType orderBodyType?
+  orderItems orderItem[]
+}
+
+model orderBodyType {
+  id  Int @id @default(autoincrement())
+  tallWeight String //키 몸무게
+  digestion String //소화 상태
+  sleep String  //수면 상태
+  constipation String //변비 상태
+  nowDrug String //현재 복용 중인 약
+  pastDrug String //과거 다이어트약 복용
+  pastSurgery String //과거에 수술하신 경우
+  order order @relation(fields:[orderId],references:[id])
+  orderId Int @unique
+}
+
+model orderItem {
+  id  Int @id @default(autoincrement())
+  item  String
+  type  ItemType
+  order order @relation(fields:[orderId],references:[id])
+  orderId Int
 }
 
 enum Role {
@@ -87,4 +128,10 @@ enum Choice {
   multiple
   subjective
   single
+}
+
+enum ItemType {
+  common  //일반 주문
+  yoyo //요요 주문
+  assistant //보조 주문
 }
