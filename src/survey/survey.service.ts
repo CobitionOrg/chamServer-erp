@@ -80,8 +80,8 @@ export class SurveyService {
   async getAddrData(addrSearchDto: AddrSearchDto) {
     try {
       const keyword = addrSearchDto.keyword;
-      // 키워드에 대한 금지어 처리(영어 혹은 특수문자)
-      const regex = /[a-zA-Z!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+      // 키워드에 대한 금지어 처리(영어 혹은 특수문자) hyphen(-)은 가능
+      const regex = /[a-zA-Z!@#$%^&*()_+\=\[\]{};':"\\|,.<>\/?]/;
       if (regex.test(keyword)) {
         return {
           success: false,
