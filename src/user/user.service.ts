@@ -153,6 +153,8 @@ export class UserService{
 
             if(!login.success) return login;
 
+            //중복 출근 방지 로직 넣어야 함
+
             console.log(attendanceDto.todayDate)
             let today = new Date(attendanceDto.todayDate);
             let startTime = dateUtil(attendanceDto.todayDate);
@@ -202,6 +204,8 @@ export class UserService{
                     endTime : new Date(leaveWork.date)
                 },
             });
+
+            return {success:true,status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
             return {
@@ -259,6 +263,7 @@ export class UserService{
                             date:true,
                             startTime:true,
                             endTime:true,
+                            tardy:true,
                         },
                         where:{
                             userId:id,
