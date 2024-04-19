@@ -24,6 +24,7 @@ model attendance {
   endTime   DateTime
   userId    Int
   user      user     @relation(fields: [userId], references: [id])
+  tardy     Boolean  @default(false)
 
   @@index([userId], map: "attendance_userId_fkey")
 }
