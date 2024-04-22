@@ -23,8 +23,8 @@ model attendance {
   startTime DateTime
   endTime   DateTime
   userId    Int
-  user      user     @relation(fields: [userId], references: [id])
   tardy     Boolean  @default(false)
+  user      user     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "attendance_userId_fkey")
 }
@@ -35,6 +35,7 @@ model question {
   type         Visit
   choice       Choice?
   note         String?       @db.VarChar(200)
+  questionCode String?       @db.VarChar(45)
   answers      answer[]
   questionImgs questionImg[]
 }
@@ -59,59 +60,64 @@ model questionImg {
 }
 
 model patient {
-  id  Int @id @default(autoincrement())
-  name String
+  id       Int     @id @default(autoincrement())
+  name     String
   phoneNum String
-  addr String
-  orders order[]
+  addr     String
+  socialNum Int
+  orders   order[]
 }
 
 model item {
-  id  Int @id @default(autoincrement())
-  item String
+  id      Int     @id @default(autoincrement())
+  item    String
   isFirst Boolean
   isYoyo  Boolean
 }
 
 model order {
-  id  Int @id @default(autoincrement())
-  route String //알게 된 경로
-  message String //상담 및 배송 요청 메세지
-  cachReceipt String //현금 영수증
-  typeCheck String //비대면진료 타입 해당사항 체크
-  consultingTime String //상담가능시간
-  payType String //결제 진행 방법
-  essentialCheck String //필수 체크
-  outage String //감량 된 킬로수
-  consultingType Boolean @default(false) //유선 상담 유무 -> true면 유선
-  phoneConsulting Boolean @default(false) //유선 상담 완료 플래그
-  isComplete Boolean @default(false) //완료 유무 -> 발송목록으로
-  isFirst Boolean @default(true) //초진/재진 유무
-  patientId Int
-  patient patient @relation(fields:[patientId],references:[id])
-  orderBodyType orderBodyType?
-  orderItems orderItem[]
+  id              Int            @id @default(autoincrement())
+  route           String
+  message         String
+  cachReceipt     String
+  typeCheck       String
+  consultingTime  String
+  payType         String
+  essentialCheck  String
+  outage          String
+  diagnosisType   String
+  consultingType  Boolean        @default(false)
+  phoneConsulting Boolean        @default(false)
+  isComplete      Boolean        @default(false)
+  patientId       Int
+  patient         patient        @relation(fields: [patientId], references: [id])
+  orderBodyType   orderBodyType?
+  orderItems      orderItem[]
+
+  @@index([patientId], map: "order_patientId_fkey")
 }
 
 model orderBodyType {
-  id  Int @id @default(autoincrement())
-  tallWeight String //키 몸무게
-  digestion String //소화 상태
-  sleep String  //수면 상태
-  constipation String //변비 상태
-  nowDrug String //현재 복용 중인 약
-  pastDrug String //과거 다이어트약 복용
-  pastSurgery String //과거에 수술하신 경우
-  order order @relation(fields:[orderId],references:[id])
-  orderId Int @unique
+  id           Int    @id @default(autoincrement())
+  tallWeight   String
+  digestion    String
+  sleep        String
+  constipation String
+  nowDrug      String
+  pastDrug     String
+  pastSurgery  String
+  orderId      Int    @unique
+  order        order  @relation(fields: [orderId], references: [id])
 }
 
 model orderItem {
-  id  Int @id @default(autoincrement())
-  item  String
-  type  ItemType
-  order order @relation(fields:[orderId],references:[id])
+  id      Int      @id @default(autoincrement())
+  item    String
+  type    ItemType
   orderId Int
+  order   order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId], map: "orderItem_orderId_fkey")
 }
 
 enum Role {
@@ -132,7 +138,7 @@ enum Choice {
 }
 
 enum ItemType {
-  common  //일반 주문
-  yoyo //요요 주문
-  assistant //보조 주문
+  common
+  yoyo
+  assistant
 }

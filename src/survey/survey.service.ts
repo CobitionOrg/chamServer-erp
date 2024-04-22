@@ -27,6 +27,7 @@ export class SurveyService {
           type: true,
           choice: true,
           note: true,
+          questionCode:true,
           answers: {
             select: {
               id: true,
@@ -58,6 +59,7 @@ export class SurveyService {
           type: true,
           choice: true,
           note: true,
+          questionCode:true,
           answers: {
             select: {
               id: true,
