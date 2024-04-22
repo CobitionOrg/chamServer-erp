@@ -20,6 +20,7 @@ export class SurveyService {
       const res = await this.prisma.question.findMany({
         where: {
           type: 'first',
+          useFlag:1
         },
         select: {
           id: true,
@@ -28,6 +29,7 @@ export class SurveyService {
           choice: true,
           note: true,
           questionCode:true,
+          orderType:true,
           answers: {
             select: {
               id: true,
@@ -52,6 +54,7 @@ export class SurveyService {
       const res = await this.prisma.question.findMany({
         where: {
           type: 'return',
+          useFlag:1
         },
         select: {
           id: true,
@@ -60,6 +63,7 @@ export class SurveyService {
           choice: true,
           note: true,
           questionCode:true,
+          orderType:true,
           answers: {
             select: {
               id: true,

@@ -36,6 +36,8 @@ model question {
   choice       Choice?
   note         String?       @db.VarChar(200)
   questionCode String?       @db.VarChar(45)
+  useFlag      Int?          @default(0) @db.TinyInt
+  orderType    String?       @db.VarChar(45)
   answers      answer[]
   questionImgs questionImg[]
 }
@@ -60,12 +62,12 @@ model questionImg {
 }
 
 model patient {
-  id       Int     @id @default(autoincrement())
-  name     String
-  phoneNum String
-  addr     String
+  id        Int     @id @default(autoincrement())
+  name      String
+  phoneNum  String
+  addr      String
   socialNum Int
-  orders   order[]
+  orders    order[]
 }
 
 model item {
@@ -85,11 +87,11 @@ model order {
   payType         String
   essentialCheck  String
   outage          String
-  diagnosisType   String
   consultingType  Boolean        @default(false)
   phoneConsulting Boolean        @default(false)
   isComplete      Boolean        @default(false)
   patientId       Int
+  diagnosisType   String
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
