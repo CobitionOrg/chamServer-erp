@@ -3,6 +3,7 @@ import {  JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { error } from 'console';
+import { OrderObjDto } from './Dto/orderObj.dto';
 
 @Injectable()
 export class ErpService {
@@ -15,10 +16,18 @@ export class ErpService {
 
     async insertFirstOrder(insertOrder:Array<SurveyAnswerDto>){
         try{
-            const objPatient = {};
-            const objOrder = {};
-            const objOrderBodyType = {};
-            const objOrderItem = {}
+            //타입 설정 예정
+            const objPatient:any = {};
+            const objOrder:OrderObjDto = {
+                route: '',
+                message: '',
+                cachReceipt: '',
+                typeCheck: '',
+                consultingTime: '',
+                payType: ''
+            };
+            const objOrderBodyType:any = {};
+            const objOrderItem:any = []
 
             insertOrder.forEach(e=>{
                 console.log(e)
@@ -27,7 +36,11 @@ export class ErpService {
                 }else if(e.orderType == 'patient'){
                     objPatient[`${e.code}`] = e.answer;
                 }else if(e.orderType == 'orderItem'){
-                    objOrderItem[`${e.code}`] = e.answer;
+                    const obj = {
+                        item:e.answer,
+                        type:e.code
+                    }
+                    objOrderItem.push(obj);
                 }else if(e.orderType == 'orderBodyType'){
                     objOrderBodyType[`${e.code}`] = e.answer;
                 }else{
@@ -40,6 +53,55 @@ export class ErpService {
             console.log(objOrderBodyType);
             console.log(objOrderItem);
 
+            await this.prisma.$transaction(async (tx) =>{
+                const patient = await tx.patient.create({
+                    data:{
+                        name : objPatient.name,
+                        phoneNum : objPatient.phoneNum,
+                        addr : objPatient.addr,
+                        socialNum : parseInt(objPatient.socialNum)
+                    }
+                });
+                const order = await tx.order.create({
+                   data:{
+                        route:objOrder.route,
+                        message:objOrder.message,
+                        cachReceipt:objOrder.cachReceipt,
+                        typeCheck:objOrder.typeCheck,
+                        consultingTime: objOrder.consultingTime,
+                        payType : objOrder.payType,
+                        essentialCheck:'',
+                        outage:'',
+                        isFirst:true,
+                        patientId : patient.id
+                   }
+                });
+
+                const orderBodyType = await tx.orderBodyType.create({
+                    data:{
+                        tallWeight:objOrderBodyType.tallWeight,
+                        digestion:objOrderBodyType.digestion.join('/'),
+                        sleep:objOrderBodyType.sleep.join('/'),
+                        constipation:objOrderBodyType.constipation.join('/'),
+                        nowDrug:objOrderBodyType.nowDrug.join('/'),
+                        pastDrug:objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery:objOrderBodyType.pastSurgery.join('/'),
+                        orderId:order.id,
+                    }
+                });
+
+                const items = objOrderItem.map((item) => ({
+                    item:item.item,
+                    type:item.type,
+                    orderId:order.id
+                 }));
+
+                const orderItem =await tx.orderItem.createMany({
+                    data:items
+                });
+            });
+
+            return {success:true,status:HttpStatus.CREATED};
 
         }catch(err){
             this.logger.error(err);
@@ -49,6 +111,8 @@ export class ErpService {
             }
         }
     }
+
+
 
     async insertReturnOrder(insertOrder:Array<SurveyAnswerDto>){
         try{

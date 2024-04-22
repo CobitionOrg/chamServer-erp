@@ -91,7 +91,7 @@ model order {
   phoneConsulting Boolean        @default(false)
   isComplete      Boolean        @default(false)
   patientId       Int
-  diagnosisType   String
+  isFirst Boolean @default(true) //초진/재진 유무
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
