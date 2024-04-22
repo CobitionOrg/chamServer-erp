@@ -23,8 +23,8 @@ model attendance {
   startTime DateTime
   endTime   DateTime
   userId    Int
-  user      user     @relation(fields: [userId], references: [id])
   tardy     Boolean  @default(false)
+  user      user     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "attendance_userId_fkey")
 }
@@ -35,6 +35,9 @@ model question {
   type         Visit
   choice       Choice?
   note         String?       @db.VarChar(200)
+  questionCode String?       @db.VarChar(45)
+  useFlag      Int?          @default(0) @db.TinyInt
+  orderType    String?       @db.VarChar(45)
   answers      answer[]
   questionImgs questionImg[]
 }
@@ -58,6 +61,67 @@ model questionImg {
   @@index([questionId], map: "questionImg_questionId_fkey")
 }
 
+model patient {
+  id        Int     @id @default(autoincrement())
+  name      String
+  phoneNum  String
+  addr      String
+  socialNum Int
+  orders    order[]
+}
+
+model item {
+  id      Int     @id @default(autoincrement())
+  item    String
+  isFirst Boolean
+  isYoyo  Boolean
+}
+
+model order {
+  id              Int            @id @default(autoincrement())
+  route           String
+  message         String
+  cachReceipt     String
+  typeCheck       String
+  consultingTime  String
+  payType         String
+  essentialCheck  String
+  outage          String
+  consultingType  Boolean        @default(false)
+  phoneConsulting Boolean        @default(false)
+  isComplete      Boolean        @default(false)
+  patientId       Int
+  isFirst Boolean @default(true) //초진/재진 유무
+  patient         patient        @relation(fields: [patientId], references: [id])
+  orderBodyType   orderBodyType?
+  orderItems      orderItem[]
+
+  @@index([patientId], map: "order_patientId_fkey")
+}
+
+model orderBodyType {
+  id           Int    @id @default(autoincrement())
+  tallWeight   String
+  digestion    String
+  sleep        String
+  constipation String
+  nowDrug      String
+  pastDrug     String
+  pastSurgery  String
+  orderId      Int    @unique
+  order        order  @relation(fields: [orderId], references: [id])
+}
+
+model orderItem {
+  id      Int      @id @default(autoincrement())
+  item    String
+  type    ItemType
+  orderId Int
+  order   order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId], map: "orderItem_orderId_fkey")
+}
+
 enum Role {
   user
   admin
@@ -73,4 +137,10 @@ enum Choice {
   multiple
   subjective
   single
+}
+
+enum ItemType {
+  common
+  yoyo
+  assistant
 }
