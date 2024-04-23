@@ -4,13 +4,18 @@ import { UserController } from './user.controller';
 import { PrismaService } from 'src/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '../auth/constants';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports:[
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '1d' },
+      inject:[ConfigService],
+      useFactory:(config:ConfigService) => ({
+        secret: jwtConstants.secret,
+        signOptions: { expiresIn: '1d' },
+      }),
+     
     }),
   ],
   controllers:[UserController],
