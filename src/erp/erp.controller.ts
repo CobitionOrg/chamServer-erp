@@ -1,9 +1,11 @@
-import { Body, Controller, Logger, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Headers, Logger, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
 import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { CallConsultingDto } from './Dto/callConsulting.dto';
+import { getToken } from 'src/util/token';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -30,4 +32,20 @@ export class ErpController {
         this.logger.log('재진 주문 접수');
         return await this.erpService.insertReturnOrder(surveyDto);
     }
+
+    @ApiOperation({summary:'유선 상담 목록으로 변경'})
+    @Post('/callConsulting')
+    async callConsulting(@Body() callConsultingDto : CallConsultingDto){
+        this.logger.log('유선 상담 목록으로 이동');
+        return await this.erpService.callConsulting(callConsultingDto);
+    }
+
+    @ApiOperation({summary:'유선 상담 완료 처리'})
+    @Post('/callComplete')
+    async callComplete(@Body() callConsultingDto : CallConsultingDto, @Headers() header){
+        this.logger.log('유선 상담 완료');
+        return await this.erpService.callComplete(callConsultingDto,getToken(header));
+    }
+
+
 }

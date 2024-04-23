@@ -4,12 +4,15 @@ import { PrismaService } from 'src/prisma.service';
 import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { error } from 'console';
 import { OrderObjDto } from './Dto/orderObj.dto';
+import { CallConsultingDto } from './Dto/callConsulting.dto';
+import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
 export class ErpService {
     constructor(
         private prisma : PrismaService,
         private jwtService : JwtService,
+        private adminService : AdminService,
     ){}
 
     private readonly logger = new Logger(ErpService.name);
@@ -62,9 +65,9 @@ export class ErpService {
                 const patient = await tx.patient.create({
                     data:{
                         name : objPatient.name,
-                        phoneNum : objPatient.phoneNum,
-                        addr : objPatient.addr,
-                        socialNum : parseInt(objPatient.socialNum)
+                        phoneNum : objPatient.phoneNum, //암호화 예정
+                        addr : objPatient.addr, //암호화 예정
+                        socialNum : parseInt(objPatient.socialNum)  //암호화 예정
                     }
                 });
                 const order = await tx.order.create({
@@ -122,6 +125,65 @@ export class ErpService {
     async insertReturnOrder(insertOrder:Array<SurveyAnswerDto>){
         try{
             console.log(insertOrder);
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 유선 상담 목록으로 이동
+     * @param callConsultingDto 
+     * @returns {success:boolean,status:number}
+     */
+    async callConsulting(callConsultingDto : CallConsultingDto){
+        try{
+            await this.prisma.order.update({
+                where:{
+                    id:callConsultingDto.orderId,
+                    patientId:callConsultingDto.userId
+                },
+                data:{
+                    consultingType : true,
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 유선 상담 완료 처리
+     * @param callConsultingDto 
+     * @returns {success:boolean,status:number}
+     */
+    async callComplete(callConsultingDto : CallConsultingDto,header:string){
+        try{
+            const checkAdmin = await this.adminService.checkAdmin(header);
+            if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
+
+            //유선 상담 완료 처리
+            await this.prisma.order.update({
+                where:{
+                    id:callConsultingDto.orderId,
+                    patientId:callConsultingDto.userId
+                },
+                data:{
+                    consultingType : false,
+                    phoneConsulting : true,
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
             return {
