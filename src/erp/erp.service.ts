@@ -14,6 +14,11 @@ export class ErpService {
 
     private readonly logger = new Logger(ErpService.name);
 
+    /**
+     * 초진 오더 접수
+     * @param insertOrder 
+     * @returns {success:boolean,status:number}
+     */
     async insertFirstOrder(insertOrder:Array<SurveyAnswerDto>){
         try{
             //타입 설정 예정
