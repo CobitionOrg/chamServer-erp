@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
       inject:[ConfigService],
       global: true,
       useFactory:(config:ConfigService) => ({
-        secret: jwtConstants.secret,
+        secret: config.get<string>('jwtConstant'),
         signOptions: { expiresIn: '1d' },
       }),
      
