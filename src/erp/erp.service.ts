@@ -6,6 +6,8 @@ import { error } from 'console';
 import { OrderObjDto } from './Dto/orderObj.dto';
 import { CallConsultingDto } from './Dto/callConsulting.dto';
 import { AdminService } from 'src/admin/admin.service';
+import { SurveyDto } from './Dto/survey.dto';
+import { PatientDto } from './Dto/patient.dto';
 
 @Injectable()
 export class ErpService {
@@ -22,10 +24,12 @@ export class ErpService {
      * @param insertOrder 
      * @returns {success:boolean,status:number}
      */
-    async insertFirstOrder(insertOrder:Array<SurveyAnswerDto>){
+    async insertFirstOrder(surveyDto:SurveyDto){
         try{
+            const insertOrder = surveyDto.answers;
+            const date = surveyDto.date;
             //타입 설정 예정
-            const objPatient:any = {};
+            const objPatient:any = {}; //환자 정보
             const objOrder:OrderObjDto = {
                 route: '',
                 message: '',
@@ -33,9 +37,9 @@ export class ErpService {
                 typeCheck: '',
                 consultingTime: '',
                 payType: ''
-            };
-            const objOrderBodyType:any = {};
-            const objOrderItem:any = []
+            };//오더 정보
+            const objOrderBodyType:any = {}; //초진 시 건강 응답 정보
+            const objOrderItem:any = [] //오더 아이템 정보
 
             insertOrder.forEach(e=>{
                 console.log(e)
@@ -67,7 +71,7 @@ export class ErpService {
                         name : objPatient.name,
                         phoneNum : objPatient.phoneNum, //암호화 예정
                         addr : objPatient.addr, //암호화 예정
-                        socialNum : parseInt(objPatient.socialNum)  //암호화 예정
+                        socialNum : objPatient.socialNum  //암호화 예정
                     }
                 });
                 const order = await tx.order.create({
@@ -81,7 +85,8 @@ export class ErpService {
                         essentialCheck:'',
                         outage:'',
                         isFirst:true,
-                        patientId : patient.id
+                        patientId : patient.id,
+                        date: new Date(date)
                    }
                 });
 
@@ -120,11 +125,95 @@ export class ErpService {
         }
     }
 
-
-
-    async insertReturnOrder(insertOrder:Array<SurveyAnswerDto>){
+    /**
+     * 이거 뭐하려 했더라...
+     * @returns 
+     */
+    async getReciptList(){
         try{
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
+    async insertReturnOrder(surveyDto : SurveyDto){
+        try{
+            const insertOrder = surveyDto.answers;
+            const date = surveyDto.date;
+
             console.log(insertOrder);
+            console.log(date);
+
+            const objPatient:PatientDto = {
+                name: '',
+                socialNum: '',
+                addr: '',
+                phoneNum: ''
+            };
+            const objOrder:any = {};
+            const objOrderBodyType:any={};
+            const objOrderItem:any={};
+
+            insertOrder.forEach(e=>{
+                if(e.orderType == 'order'){
+                    objOrder[`${e.code}`] = e.answer;
+                }else if(e.orderType == 'patient'){
+                    objPatient[`${e.code}`] = e.answer;
+                }else if(e.orderType == 'orderItem'){
+                    const obj = {
+                        item:e.answer,
+                        type:e.code
+                    }
+                    objOrderItem.push(obj);
+                }else if(e.orderType == 'orderBodyType'){
+                    objOrderBodyType[`${e.code}`] = e.answer;
+                }else{
+                    throw error('400 error');
+                }
+            });
+
+            const patientId = await this.checkPatient(objPatient.name, objPatient.socialNum)
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 환자 정보 찾기
+     * @param name 
+     * @param socialNum 
+     * @returns {success:boolean,id:number}
+     */
+    async checkPatient(name:string,socialNum:string){
+        try{
+         
+
+            const res = await this.prisma.patient.findFirst({
+                where:{
+                    name:name,
+                    socialNum:{
+                        contains:socialNum
+                    }
+                },
+                select:{
+                    id:true,
+                }
+            });
+
+
+            if(!res) return {success:false};
+            else return {success:true,id:res.id};
         }catch(err){
             this.logger.error(err);
             return {

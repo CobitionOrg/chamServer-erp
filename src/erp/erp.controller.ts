@@ -6,6 +6,7 @@ import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { CallConsultingDto } from './Dto/callConsulting.dto';
 import { getToken } from 'src/util/token';
+import { SurveyDto } from './Dto/survey.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -20,7 +21,7 @@ export class ErpController {
     @ApiOperation({summary:'초진 주문 접수'})
     @Public()
     @Post('/first')
-    async insertFirstOrder(@Body() surveyDto : Array<SurveyAnswerDto>){
+    async insertFirstOrder(@Body() surveyDto : SurveyDto){
         this.logger.log('초진 주문 접수');
         return await this.erpService.insertFirstOrder(surveyDto);
     }
@@ -28,7 +29,7 @@ export class ErpController {
     @ApiOperation({summary:'재진 주문 접수'})
     @Public()
     @Post('/return')
-    async insertReturnOrder(@Body() surveyDto : Array<SurveyAnswerDto>){
+    async insertReturnOrder(@Body() surveyDto : SurveyDto){
         this.logger.log('재진 주문 접수');
         return await this.erpService.insertReturnOrder(surveyDto);
     }

@@ -66,7 +66,7 @@ model patient {
   name      String
   phoneNum  String
   addr      String
-  socialNum Int
+  socialNum String
   orders    order[]
 }
 
@@ -91,7 +91,8 @@ model order {
   phoneConsulting Boolean        @default(false)
   isComplete      Boolean        @default(false)
   patientId       Int
-  isFirst Boolean @default(true) //초진/재진 유무
+  isFirst         Boolean        @default(true)
+  date            DateTime       @db.DateTime(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
