@@ -104,11 +104,16 @@ export class ErpService {
                     }
                 });
 
+                console.log(objOrderItem);
+                console.log('--------------------');
+
                 const items = objOrderItem.map((item) => ({
                     item:item.item,
                     type:item.type,
                     orderId:order.id
                  }));
+
+                console.log(items);
 
                 const orderItem =await tx.orderItem.createMany({
                     data:items
@@ -126,13 +131,45 @@ export class ErpService {
         }
     }
 
-    /**
-     * 이거 뭐하려 했더라...
-     * @returns 
-     */
+    
     async getReciptList(){
         try{
+            //날짜 별 조회 추가 예정
+            const list = await this.prisma.order.findMany({
+                where:{
+                    consultingType:false,
+                },
+                select:{
+                    id:true,
+                    route:true,
+                    message:true,
+                    cachReceipt:true,
+                    typeCheck:true,
+                    consultingTime:true,
+                    payType:true,
+                    outage:true,
+                    consultingType:true,
+                    phoneConsulting:true,
+                    isFirst:true,
+                    date:true,
+                    patient:{
+                        select:{
+                            id:true,
+                            name:true,
+                            addr:true,
+                            phoneNum:true,
+                        }
+                    },
+                    orderItems:{
+                        select:{
+                            item:true,
+                            type:true,
+                        }
+                    },
+                }
+            });
 
+            return {success:true, list};
         }catch(err){
             this.logger.error(err);
             return {
@@ -142,7 +179,11 @@ export class ErpService {
         }
     }
 
-
+    /**
+     * 재진 오더 접수
+     * @param surveyDto 
+     * @returns {success:boolean,status:number}
+     */
     async insertReturnOrder(surveyDto : SurveyDto){
         try{
             const insertOrder = surveyDto.answers;
@@ -190,7 +231,8 @@ export class ErpService {
                             id:patient.patient.id,
                         },
                         data:{
-                            addr:objPatient.addr
+                            addr:objPatient.addr,
+                            phoneNum:objPatient.phoneNum,
                         }
                     });
                 }
@@ -211,11 +253,27 @@ export class ErpService {
                     }
                 });
 
-                const items = objOrderItem.map((item) => ({
-                    item:item.item,
-                    type:item.type,
-                    orderId: order.id
-                }));
+                console.log(objOrderItem);
+                console.log('--------------------');
+                const items = [];
+
+                for(let i = 0; i<objOrderItem.length; i++){
+                    let tempObj = objOrderItem[i];
+                    for(let j = 0; j<tempObj.item.length; j++){
+                        const temp = {
+                            item:tempObj.item[j],
+                            type:tempObj.type,
+                            orderId:order.id
+                        }
+                        items.push(temp);
+                    }
+                }
+
+                console.log(items);
+
+                const orderItem = await tx.orderItem.createMany({
+                    data:items
+                });
             });
 
             return {success:true,status:HttpStatus.CREATED};
