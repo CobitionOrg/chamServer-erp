@@ -28,6 +28,7 @@ export class ErpService {
         try{
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
+            console.log(date);
             //타입 설정 예정
             const objPatient:any = {}; //환자 정보
             const objOrder:OrderObjDto = {
@@ -42,7 +43,7 @@ export class ErpService {
             const objOrderItem:any = [] //오더 아이템 정보
 
             insertOrder.forEach(e=>{
-                console.log(e)
+                //console.log(e)
                 if(e.orderType == 'order'){
                     objOrder[`${e.code}`] = e.answer;
                 }else if(e.orderType == 'patient'){
@@ -86,7 +87,7 @@ export class ErpService {
                         outage:'',
                         isFirst:true,
                         patientId : patient.id,
-                        date: new Date(date)
+                        date: new Date(date.toString())
                    }
                 });
 
@@ -158,7 +159,7 @@ export class ErpService {
             };
             const objOrder:any = {};
             const objOrderBodyType:any={};
-            const objOrderItem:any={};
+            const objOrderItem:any=[];
 
             insertOrder.forEach(e=>{
                 if(e.orderType == 'order'){
@@ -178,8 +179,46 @@ export class ErpService {
                 }
             });
 
-            const patientId = await this.checkPatient(objPatient.name, objPatient.socialNum)
+            const patient = await this.checkPatient(objPatient)
+            if(!patient.success) return {success:false, msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'};
 
+            await this.prisma.$transaction(async (tx) => {
+                //주소가 달라졌을 시
+                if(patient.patient.addr != objPatient.addr){
+                    await tx.patient.update({
+                        where:{
+                            id:patient.patient.id,
+                        },
+                        data:{
+                            addr:objPatient.addr
+                        }
+                    });
+                }
+
+                const order = await tx.order.create({
+                    data:{
+                        route:objOrder.route,
+                        message:objOrder.message,
+                        outage:objOrder.outage,
+                        payType:objOrder.payType,
+                        cachReceipt:objOrder.cachReceipt,
+                        isFirst:false,
+                        patientId:patient.patient.id,
+                        typeCheck:'',
+                        consultingTime:'',
+                        essentialCheck:'',
+                        date:new Date(date),
+                    }
+                });
+
+                const items = objOrderItem.map((item) => ({
+                    item:item.item,
+                    type:item.type,
+                    orderId: order.id
+                }));
+            });
+
+            return {success:true,status:HttpStatus.CREATED};
         }catch(err){
             this.logger.error(err);
             return {
@@ -195,25 +234,25 @@ export class ErpService {
      * @param socialNum 
      * @returns {success:boolean,id:number}
      */
-    async checkPatient(name:string,socialNum:string){
+    async checkPatient(objPatient:PatientDto){
         try{
-         
-
             const res = await this.prisma.patient.findFirst({
                 where:{
-                    name:name,
+                    name:objPatient.name,
                     socialNum:{
-                        contains:socialNum
+                        contains:objPatient.socialNum
                     }
                 },
                 select:{
                     id:true,
+                    addr:true,
                 }
             });
 
+           
 
             if(!res) return {success:false};
-            else return {success:true,id:res.id};
+            else return {success:true,patient:res};
         }catch(err){
             this.logger.error(err);
             return {
@@ -223,6 +262,8 @@ export class ErpService {
         }
     }
 
+
+   
     /**
      * 유선 상담 목록으로 이동
      * @param callConsultingDto 
