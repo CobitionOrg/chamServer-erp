@@ -22,3 +22,5 @@ import { ConfigService } from '@nestjs/config';
   providers: [UserService,PrismaService]
 })
 export class UserModule {}
+
+

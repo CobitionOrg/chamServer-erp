@@ -66,7 +66,7 @@ model patient {
   name      String
   phoneNum  String
   addr      String
-  socialNum String
+  socialNum Int
   orders    order[]
 }
 
@@ -79,20 +79,19 @@ model item {
 
 model order {
   id              Int            @id @default(autoincrement())
-  route           String
-  message         String
-  cachReceipt     String
-  typeCheck       String
-  consultingTime  String
-  payType         String
-  essentialCheck  String
-  outage          String
-  consultingType  Boolean        @default(false)
-  phoneConsulting Boolean        @default(false)
-  isComplete      Boolean        @default(false)
+  route           String         //알게 된 경로
+  message         String         //상담 및 배송 요청 메세지
+  cachReceipt     String         //현금 영수증
+  typeCheck       String         //비대면진료 타입 해당사항 체크
+  consultingTime  String         //상담가능시간   
+  payType         String         //결제 진행 방법   
+  essentialCheck  String         //필수 체크
+  outage          String         //감량 된 킬로수
+  consultingType  Boolean        @default(false)  //유선 상담 유무 -> true면 유선
+  phoneConsulting Boolean        @default(false)  //유선 상담 완료 플래그
+  isComplete      Boolean        @default(false)  //결제 완료 유무 -> 완료 시 발송목록으로
   patientId       Int
-  isFirst         Boolean        @default(true)
-  date            DateTime       @db.DateTime(0)
+  isFirst Boolean @default(true) //초진/재진 유무
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -102,13 +101,13 @@ model order {
 
 model orderBodyType {
   id           Int    @id @default(autoincrement())
-  tallWeight   String
-  digestion    String
-  sleep        String
-  constipation String
-  nowDrug      String
-  pastDrug     String
-  pastSurgery  String
+  tallWeight   String //키 몸무게
+  digestion    String //소화 상태
+  sleep        String //수면 상태
+  constipation String //변비 상태
+  nowDrug      String //현재 복용 중인 약
+  pastDrug     String //과거 다이어트 약 복용
+  pastSurgery  String //과거에 수술하신 경우
   orderId      Int    @unique
   order        order  @relation(fields: [orderId], references: [id])
 }
@@ -124,24 +123,24 @@ model orderItem {
 }
 
 enum Role {
-  user
-  admin
-  boss
+  user //일반 간호사
+  admin //관리자
+  boss //원장
 }
 
 enum Visit {
-  first
-  return
+  first //초진  
+  return //재진
 }
 
 enum Choice {
-  multiple
-  subjective
-  single
+  multiple //다수 선택
+  subjective //서술식
+  single //하나만 선택
 }
 
 enum ItemType {
-  common
-  yoyo
-  assistant
+  common 
+  yoyo //요요
+  assistant //보조
 }
