@@ -34,11 +34,26 @@ export class ErpController {
         return await this.erpService.insertReturnOrder(surveyDto);
     }
 
+    @ApiOperation({summary:'오더 리스트 조회'})
+    @Get('/getList')
+    async getReciptList(){
+       this.logger.log('오더 리스트 조회');
+       return await this.erpService.getReciptList(); 
+    }
+
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
     @Post('/callConsulting')
     async callConsulting(@Body() callConsultingDto : CallConsultingDto){
         this.logger.log('유선 상담 목록으로 이동');
         return await this.erpService.callConsulting(callConsultingDto);
+    }
+
+    @ApiOperation({summary:'유선 상담 목록 조회'})
+    @Public()
+    @Get('/callConsulting')
+    async getCallList(@Headers() header){
+        this.logger.log('유선 상담 목록 조회');
+        return await this.erpService.getCallList(getToken(header));
     }
 
     @ApiOperation({summary:'유선 상담 완료 처리'})
@@ -47,13 +62,4 @@ export class ErpController {
         this.logger.log('유선 상담 완료');
         return await this.erpService.callComplete(callConsultingDto,getToken(header));
     }
-
-    @ApiOperation({summary:'오더 리스트 조회'})
-    @Get('/getList')
-    async getReciptList(){
-       this.logger.log('오더 리스트 조회');
-       return await this.erpService.getReciptList(); 
-    }
-
-
 }
