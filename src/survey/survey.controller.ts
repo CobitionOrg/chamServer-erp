@@ -11,6 +11,7 @@ import {
 import { SurveyService } from './survey.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
+import { GetOrderDto } from './Dto/getOrder.dto';
 
 @Controller('survey')
 export class SurveyController {
@@ -45,5 +46,12 @@ export class SurveyController {
     const res = await this.surveyService.getAddrData(addrSearchDto);
     if (res.success) return res;
     else throw new HttpException('', res.status);
+  }
+
+  @ApiOperation({summary:'주문 조회'})
+  @Get('/getMyOrder')
+  async getMyOrder(@Body() getOrderDto : GetOrderDto){
+    this.logger.log('오더 조회');
+    return await this.surveyService.getMyOrder(getOrderDto);
   }
 }

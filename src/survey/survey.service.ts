@@ -5,6 +5,7 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
 import { xml2json } from 'xml-js';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
+import { GetOrderDto } from './Dto/getOrder.dto';
 
 @Injectable()
 export class SurveyService {
@@ -139,6 +140,35 @@ export class SurveyService {
         };
       }
     } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  async getMyOrder(getOrderDto:GetOrderDto){
+    try{
+      const userId = await this.prisma.patient.findFirst({
+        where:{
+          name:getOrderDto.name,
+          phoneNum:getOrderDto.phoneNum
+        },
+        select:{
+          id:true
+        }
+      });
+
+      const order = await this.prisma.order.findFirst({
+        where:{
+          patientId : userId.id,
+          isComplete: false
+        }
+      });
+
+      return {success:true, order}
+    }catch(err){
       this.logger.error(err);
       return {
         success: false,
