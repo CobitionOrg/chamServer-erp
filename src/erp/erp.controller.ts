@@ -49,7 +49,6 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'유선 상담 목록 조회'})
-    @Public()
     @Get('/callConsulting')
     async getCallList(@Headers() header){
         this.logger.log('유선 상담 목록 조회');
