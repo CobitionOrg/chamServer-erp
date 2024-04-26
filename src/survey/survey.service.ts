@@ -16,6 +16,10 @@ export class SurveyService {
 
   private readonly logger = new Logger(SurveyService.name);
 
+  /**
+   * 초진용 질문
+   * @returns 
+   */
   async getFirstVisitQuestion() {
     try {
       const res = await this.prisma.question.findMany({
@@ -50,6 +54,10 @@ export class SurveyService {
     }
   }
 
+  /**
+   * 재진용 질문
+   * @returns 
+   */
   async getReturningQuestion() {
     try {
       const res = await this.prisma.question.findMany({
@@ -149,13 +157,56 @@ export class SurveyService {
   }
 
   /**
+   * 오더 업데이트 질문만 가져오기
+   * @returns 
+   */
+  async updateSurvey(){
+    try{
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'first',
+          useFlag:1,
+          id:{
+            in:[7,8,9,10]
+          }
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          questionCode:true,
+          orderType:true,
+          answers: {
+            select: {
+              id: true,
+              answer: true,
+            },
+          },
+        },
+      });
+
+      return { success: true, status: HttpStatus.OK, data: res };
+    }catch(err){
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  /**
    * 내 오더 조회
    * @param getOrderDto 
    * @returns
    *  {
           id: number;
           patient: {
+              id: number;
               name: string;
+              addr: string;
           };
           payType: string;
           isComplete: boolean;
@@ -182,7 +233,9 @@ export class SurveyService {
           isComplete:true,
           patient:{
             select:{
-              name:true
+              id:true,
+              name:true,
+              addr:true,
             }
           },
           orderItems:{

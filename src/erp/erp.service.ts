@@ -311,6 +311,53 @@ export class ErpService {
         }
     }
 
+    async updateOrder(surveyDto : SurveyDto){
+        try{
+            const insertOrder = surveyDto.answers;
+            const date = surveyDto.date;
+
+            const objPatient: any = {}; //환자 정보
+            const objOrder: OrderObjDto = {
+                route: '',
+                message: '',
+                cachReceipt: '',
+                typeCheck: '',
+                consultingTime: '',
+                payType: ''
+            };//오더 정보
+            const objOrderBodyType: any = {}; //초진 시 건강 응답 정보
+            const objOrderItem: any = [] //오더 아이템 정보
+
+            insertOrder.forEach(e => {
+                //console.log(e)
+                if (e.orderType == 'order') {
+                    objOrder[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'patient') {
+                    objPatient[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'orderItem') {
+                    const obj = {
+                        item: e.answer,
+                        type: e.code
+                    }
+                    objOrderItem.push(obj);
+                } else if (e.orderType == 'orderBodyType') {
+                    objOrderBodyType[`${e.code}`] = e.answer;
+                } else {
+                    throw error('400 error');
+                }
+            });
+
+            await this.prisma.$transaction(async (tx) => {
+            })
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
     /**
      * 환자 정보 찾기
      * @param name 
@@ -471,4 +518,6 @@ export class ErpService {
             }
         }
     }
+
+   
 }

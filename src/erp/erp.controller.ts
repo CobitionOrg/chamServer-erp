@@ -34,6 +34,14 @@ export class ErpController {
         return await this.erpService.insertReturnOrder(surveyDto);
     }
 
+    @ApiOperation({summary:'오더 업데이트'})
+    @Public()
+    @Post('/update')
+    async updateOrder(@Body() surveyDto : SurveyDto){
+        this.logger.log('오더 업데이트');
+        return await this.erpService.updateOrder(surveyDto);
+    }
+
     @ApiOperation({summary:'오더 리스트 조회'})
     @Get('/getList')
     async getReciptList(){

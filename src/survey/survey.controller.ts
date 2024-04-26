@@ -59,4 +59,11 @@ export class SurveyController {
     console.log(getOrderDto);
     return await this.surveyService.getMyOrder(getOrderDto);
   }
+
+  @ApiOperation({summary:'오더 업데이트 용 질문 조회'})
+  @Get('/updateSurvey')
+  async updateSurvey(){
+    this.logger.log('오더 업데이트 용 질문 가져오기');
+    return await this.surveyService.updateSurvey();
+  }
 }
