@@ -8,6 +8,10 @@ import { CallConsultingDto } from './Dto/callConsulting.dto';
 import { AdminService } from 'src/admin/admin.service';
 import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
+import { generateUploadURL } from '../util/s3';
+import * as Excel from 'exceljs'
+import { styleHeaderCell } from 'src/util/excelUtil';
+import axios from 'axios';
 
 @Injectable()
 export class ErpService {
@@ -311,16 +315,24 @@ export class ErpService {
         }
     }
 
-    async updateOrder(surveyDto : SurveyDto, header:string, orderId :number){
-        try{
-            console.log('sibal');
+    /**
+     * 오더 수정하기
+     * @param surveyDto 
+     * @param header 
+     * @param orderId 
+     * @returns { success: true, status: number }
+     */
+    async updateOrder(surveyDto: SurveyDto, header: string, orderId: number) {
+        try {
             const token = await this.jwtService.decode(header);
-            console.log(token);
-            if(!token.orderId) {
-                return {success:false,status:HttpStatus.FORBIDDEN};
+
+            //토큰에 데이터가 아예 없을 때
+            if (!token.orderId) {
+                return { success: false, status: HttpStatus.FORBIDDEN };
             }
             console.log(typeof token.orderId);
-            if(token.orderId != orderId) return {success:false,status:HttpStatus.FORBIDDEN};
+            //토큰 정보와 오더 정보가 다를 때
+            if (token.orderId != orderId) return { success: false, status: HttpStatus.FORBIDDEN };
 
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
@@ -358,26 +370,26 @@ export class ErpService {
 
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
-                    where:{
-                        id:token.patientId
+                    where: {
+                        id: token.patientId
                     },
-                    data:{
-                        addr:objPatient.addr
+                    data: {
+                        addr: objPatient.addr
                     }
                 });
 
                 const order = await tx.order.update({
-                    where:{
-                        id:token.orderId
+                    where: {
+                        id: token.orderId
                     },
-                    data:{
-                        payType:objOrder.payType
+                    data: {
+                        payType: objOrder.payType
                     }
                 });
 
                 await tx.orderItem.deleteMany({
-                    where:{
-                        orderId:token.orderId
+                    where: {
+                        orderId: token.orderId
                     }
                 });
 
@@ -396,7 +408,7 @@ export class ErpService {
 
             return { success: true, status: HttpStatus.CREATED };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -472,16 +484,17 @@ export class ErpService {
      * 유선 상담 목록 조회
      * @returns 
      */
-    async getCallList(header:string) {
+    async getCallList(header: string) {
         try {
             //등급 조회
             const checkAdmin = await this.adminService.checkAdmin(header);
-            if(!checkAdmin.success) return {success:false, status:HttpStatus.FORBIDDEN, msg: '권한이 없습니다'};
+            if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
 
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: true,
+                    isComplete:false,
                 },
                 select: {
                     id: true,
@@ -510,15 +523,15 @@ export class ErpService {
                             type: true,
                         }
                     },
-                    orderBodyType:{
-                        select:{
-                            tallWeight:true,
-                            digestion:true,
-                            sleep:true,
-                            constipation:true,
-                            nowDrug:true,
-                            pastDrug:true,
-                            pastSurgery:true,
+                    orderBodyType: {
+                        select: {
+                            tallWeight: true,
+                            digestion: true,
+                            sleep: true,
+                            constipation: true,
+                            nowDrug: true,
+                            pastDrug: true,
+                            pastSurgery: true,
                         }
                     }
                 }
@@ -566,5 +579,92 @@ export class ErpService {
         }
     }
 
-   
+    async newPatientExcel() {
+        try {
+            //신환 :  이름 주소 주민번호 핸드폰번호 
+
+            //날짜 별 조회 추가 예정
+            const list = await this.prisma.order.findMany({
+                where: {
+                    consultingType: false,
+                    isComplete:false,
+                    isFirst:true,
+                },
+                select: {
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                            socialNum:true,
+                        }
+                    },
+                }
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("신환 등록");
+
+            const headers = ['이름','주소','주민번호','휴대폰 번호'];
+            const headerWidths = [16,40,30,20];
+
+            //상단 헤더 추가
+            const headerRow = sheet.addRow(headers);
+            //헤더의 높이값 지정
+            headerRow.height = 30.75;
+            // 각 헤더 cell에 스타일 지정
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            //각 data cell에 데이터 삽입
+            list.forEach((e)=>{
+                const {name,addr,socialNum,phoneNum} = e.patient;
+                const rowDatas = [name,addr,socialNum,phoneNum];
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.uploadFile(fileData);
+
+            return {success:true,status:HttpStatus.OK,url};
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async uploadFile(file:any){
+        try{
+            const presignedUrl = await generateUploadURL();
+           
+            console.log(presignedUrl);
+            await axios.put(presignedUrl,{
+                body:file
+            },{
+                headers:{
+                   "Content-Type": file.type,
+                }
+             });
+
+            let fileUrl = presignedUrl.split('?')[0];
+            return fileUrl;
+        }catch(err){
+            //this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async s3Url() {
+        const url = await generateUploadURL();
+        return { url };
+    }
 }

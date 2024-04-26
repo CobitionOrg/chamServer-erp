@@ -71,4 +71,17 @@ export class ErpController {
         this.logger.log('유선 상담 완료');
         return await this.erpService.callComplete(callConsultingDto,getToken(header));
     }
+
+    @ApiOperation({summary:'신환 용 엑셀 다운로드'})
+    @Get('/newPatientExcel')
+    async newPatientExcel(){
+        this.logger.log('신환 용 엑셀 파일 다운로드');
+        return await this.erpService.newPatientExcel();
+    }
+
+    @Public()
+    @Get('/s3')
+    async s3Test(){
+        return await this.erpService.s3Url();
+    }
 }
