@@ -7,11 +7,13 @@ import {
   HttpStatus,
   Logger,
   Post,
+  Query,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
+import { get } from 'http';
 
 @Controller('survey')
 export class SurveyController {
@@ -50,8 +52,11 @@ export class SurveyController {
 
   @ApiOperation({summary:'주문 조회'})
   @Get('/getMyOrder')
-  async getMyOrder(@Body() getOrderDto : GetOrderDto){
+  async getMyOrder(@Query() queryData){
     this.logger.log('오더 조회');
+    const { name, phoneNum } = queryData;
+    const getOrderDto:GetOrderDto = {name,phoneNum};
+    console.log(getOrderDto);
     return await this.surveyService.getMyOrder(getOrderDto);
   }
 }

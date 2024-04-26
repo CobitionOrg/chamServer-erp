@@ -148,7 +148,74 @@ export class SurveyService {
     }
   }
 
+  /**
+   * 내 오더 조회
+   * @param getOrderDto 
+   * @returns
+   *  {
+          id: number;
+          patient: {
+              name: string;
+          };
+          payType: string;
+          isComplete: boolean;
+          orderItems: {
+              type: $Enums.ItemType;
+              item: string;
+          }[];
+      }
+   */
   async getMyOrder(getOrderDto:GetOrderDto){
+    try{
+      const userId = await this.getUserId(getOrderDto);
+
+      console.log(userId);
+
+      const order = await this.prisma.order.findFirst({
+        where:{
+          patientId : userId.id,
+          isComplete: false
+        },
+        select:{
+          id:true,
+          payType:true,
+          isComplete:true,
+          patient:{
+            select:{
+              name:true
+            }
+          },
+          orderItems:{
+            select:{
+              item:true,
+              type:true,
+            }
+          }
+        }
+        
+      });
+      console.log(order);
+
+      return {success:true, order}
+    }catch(err){
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  /**
+   * 유저 아이디 값 조회
+   * @param getOrderDto 
+   * @returns {
+   *  success: boolean;
+      id: number;
+      status?: undefined;
+    }
+   */
+  async getUserId(getOrderDto:GetOrderDto){
     try{
       const userId = await this.prisma.patient.findFirst({
         where:{
@@ -160,14 +227,7 @@ export class SurveyService {
         }
       });
 
-      const order = await this.prisma.order.findFirst({
-        where:{
-          patientId : userId.id,
-          isComplete: false
-        }
-      });
-
-      return {success:true, order}
+      return {success:true,id:userId.id}
     }catch(err){
       this.logger.error(err);
       return {
