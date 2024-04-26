@@ -40,6 +40,3 @@ export async function generateUploadURL() {
     return uploadURL
   }
   
-//   module.exports = {
-//     generateUploadURL,
-//   }

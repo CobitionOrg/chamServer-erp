@@ -9,6 +9,9 @@ import { AdminService } from 'src/admin/admin.service';
 import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
 import { generateUploadURL } from '../util/s3';
+import * as Excel from 'exceljs'
+import { styleHeaderCell } from 'src/util/excelUtil';
+import axios from 'axios';
 
 @Injectable()
 export class ErpService {
@@ -491,6 +494,7 @@ export class ErpService {
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: true,
+                    isComplete:false,
                 },
                 select: {
                     id: true,
@@ -575,8 +579,92 @@ export class ErpService {
         }
     }
 
-    async s3Url(){
-        const url =  await generateUploadURL();
-        return {url};
+    async newPatientExcel() {
+        try {
+            //신환 :  이름 주소 주민번호 핸드폰번호 
+
+            //날짜 별 조회 추가 예정
+            const list = await this.prisma.order.findMany({
+                where: {
+                    consultingType: false,
+                    isComplete:false,
+                    isFirst:true,
+                },
+                select: {
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                            socialNum:true,
+                        }
+                    },
+                }
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("신환 등록");
+
+            const headers = ['이름','주소','주민번호','휴대폰 번호'];
+            const headerWidths = [16,40,30,20];
+
+            //상단 헤더 추가
+            const headerRow = sheet.addRow(headers);
+            //헤더의 높이값 지정
+            headerRow.height = 30.75;
+            // 각 헤더 cell에 스타일 지정
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            //각 data cell에 데이터 삽입
+            list.forEach((e)=>{
+                const {name,addr,socialNum,phoneNum} = e.patient;
+                const rowDatas = [name,addr,socialNum,phoneNum];
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.uploadFile(fileData);
+
+            return {success:true,status:HttpStatus.OK,url};
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async uploadFile(file:any){
+        try{
+            const presignedUrl = await generateUploadURL();
+           
+            console.log(presignedUrl);
+            await axios.put(presignedUrl,{
+                body:file
+            },{
+                headers:{
+                   "Content-Type": file.type,
+                }
+             });
+
+            let fileUrl = presignedUrl.split('?')[0];
+            return fileUrl;
+        }catch(err){
+            //this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async s3Url() {
+        const url = await generateUploadURL();
+        return { url };
     }
 }
