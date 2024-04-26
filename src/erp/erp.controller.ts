@@ -71,4 +71,10 @@ export class ErpController {
         this.logger.log('유선 상담 완료');
         return await this.erpService.callComplete(callConsultingDto,getToken(header));
     }
+
+    @Public()
+    @Get('/s3')
+    async s3Test(){
+        return await this.erpService.s3Url();
+    }
 }
