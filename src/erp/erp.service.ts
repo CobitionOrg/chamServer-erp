@@ -311,8 +311,17 @@ export class ErpService {
         }
     }
 
-    async updateOrder(surveyDto : SurveyDto){
+    async updateOrder(surveyDto : SurveyDto, header:string, orderId :number){
         try{
+            console.log('sibal');
+            const token = await this.jwtService.decode(header);
+            console.log(token);
+            if(!token.orderId) {
+                return {success:false,status:HttpStatus.FORBIDDEN};
+            }
+            console.log(typeof token.orderId);
+            if(token.orderId != orderId) return {success:false,status:HttpStatus.FORBIDDEN};
+
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
 
@@ -348,7 +357,45 @@ export class ErpService {
             });
 
             await this.prisma.$transaction(async (tx) => {
-            })
+                const patient = await tx.patient.update({
+                    where:{
+                        id:token.patientId
+                    },
+                    data:{
+                        addr:objPatient.addr
+                    }
+                });
+
+                const order = await tx.order.update({
+                    where:{
+                        id:token.orderId
+                    },
+                    data:{
+                        payType:objOrder.payType
+                    }
+                });
+
+                await tx.orderItem.deleteMany({
+                    where:{
+                        orderId:token.orderId
+                    }
+                });
+
+                const items = objOrderItem.map((item) => ({
+                    item: item.item,
+                    type: item.type,
+                    orderId: order.id
+                }));
+
+                console.log(items);
+
+                const orderItem = await tx.orderItem.createMany({
+                    data: items
+                });
+            });
+
+            return { success: true, status: HttpStatus.CREATED };
+
         }catch(err){
             this.logger.error(err);
             return {

@@ -9,6 +9,7 @@ import { jwtConstants } from './constants';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { IS_ORDERUPD_KEY } from './decorators/order.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -23,6 +24,13 @@ export class AuthGuard implements CanActivate {
             context.getClass(),
         ]);
         if (isPublic) return true;
+
+        const isOrderUpd = this.reflector.getAllAndOverride<boolean>(IS_ORDERUPD_KEY,[
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if(isOrderUpd) return true;
+        
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
