@@ -7,10 +7,13 @@ import {
   HttpStatus,
   Logger,
   Post,
+  Query,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
+import { GetOrderDto } from './Dto/getOrder.dto';
+import { get } from 'http';
 
 @Controller('survey')
 export class SurveyController {
@@ -45,5 +48,22 @@ export class SurveyController {
     const res = await this.surveyService.getAddrData(addrSearchDto);
     if (res.success) return res;
     else throw new HttpException('', res.status);
+  }
+
+  @ApiOperation({summary:'주문 조회'})
+  @Get('/getMyOrder')
+  async getMyOrder(@Query() queryData){
+    this.logger.log('오더 조회');
+    const { name, phoneNum } = queryData;
+    const getOrderDto:GetOrderDto = {name,phoneNum};
+    console.log(getOrderDto);
+    return await this.surveyService.getMyOrder(getOrderDto);
+  }
+
+  @ApiOperation({summary:'오더 업데이트 용 질문 조회'})
+  @Get('/updateSurvey')
+  async updateSurvey(){
+    this.logger.log('오더 업데이트 용 질문 가져오기');
+    return await this.surveyService.updateSurvey();
   }
 }

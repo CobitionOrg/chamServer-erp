@@ -5,6 +5,7 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
 import { xml2json } from 'xml-js';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
+import { GetOrderDto } from './Dto/getOrder.dto';
 
 @Injectable()
 export class SurveyService {
@@ -15,6 +16,10 @@ export class SurveyService {
 
   private readonly logger = new Logger(SurveyService.name);
 
+  /**
+   * 초진용 질문
+   * @returns 
+   */
   async getFirstVisitQuestion() {
     try {
       const res = await this.prisma.question.findMany({
@@ -49,6 +54,10 @@ export class SurveyService {
     }
   }
 
+  /**
+   * 재진용 질문
+   * @returns 
+   */
   async getReturningQuestion() {
     try {
       const res = await this.prisma.question.findMany({
@@ -139,6 +148,140 @@ export class SurveyService {
         };
       }
     } catch (err) {
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  /**
+   * 오더 업데이트 질문만 가져오기
+   * @returns 
+   */
+  async updateSurvey(){
+    try{
+      const res = await this.prisma.question.findMany({
+        where: {
+          type: 'first',
+          useFlag:1,
+          id:{
+            in:[7,8,9,10]
+          }
+        },
+        select: {
+          id: true,
+          question: true,
+          type: true,
+          choice: true,
+          note: true,
+          questionCode:true,
+          orderType:true,
+          answers: {
+            select: {
+              id: true,
+              answer: true,
+            },
+          },
+        },
+      });
+
+      return { success: true, status: HttpStatus.OK, data: res };
+    }catch(err){
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  /**
+   * 내 오더 조회
+   * @param getOrderDto 
+   * @returns
+   *  {
+          id: number;
+          patient: {
+              id: number;
+              name: string;
+              addr: string;
+          };
+          payType: string;
+          isComplete: boolean;
+          orderItems: {
+              type: $Enums.ItemType;
+              item: string;
+          }[];
+      }
+   */
+  async getMyOrder(getOrderDto:GetOrderDto){
+    try{
+      const userId = await this.getUserId(getOrderDto);
+
+      console.log(userId);
+
+      const order = await this.prisma.order.findFirst({
+        where:{
+          patientId : userId.id,
+          isComplete: false
+        },
+        select:{
+          id:true,
+          payType:true,
+          isComplete:true,
+          patient:{
+            select:{
+              id:true,
+              name:true,
+              addr:true,
+            }
+          },
+          orderItems:{
+            select:{
+              item:true,
+              type:true,
+            }
+          }
+        }
+        
+      });
+      console.log(order);
+
+      return {success:true, order}
+    }catch(err){
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  /**
+   * 유저 아이디 값 조회
+   * @param getOrderDto 
+   * @returns {
+   *  success: boolean;
+      id: number;
+      status?: undefined;
+    }
+   */
+  async getUserId(getOrderDto:GetOrderDto){
+    try{
+      const userId = await this.prisma.patient.findFirst({
+        where:{
+          name:getOrderDto.name,
+          phoneNum:getOrderDto.phoneNum
+        },
+        select:{
+          id:true
+        }
+      });
+
+      return {success:true,id:userId.id}
+    }catch(err){
       this.logger.error(err);
       return {
         success: false,
