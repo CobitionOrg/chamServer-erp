@@ -6,11 +6,13 @@ import { PrismaService } from 'src/prisma.service';
 import { xml2json } from 'xml-js';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class SurveyService {
   constructor(
     private prisma: PrismaService,
+    private jwtService: JwtService,
     private readonly httpService: HttpService,
   ) {}
 
@@ -249,7 +251,19 @@ export class SurveyService {
       });
       console.log(order);
 
-      return {success:true, order}
+      if(!order) {
+        return {success:false, msg:'주문하신 내역이 없습니다'};
+      }
+
+      //조회 용 토큰 발행
+      const payload = {
+        patientId : order.patient.id,
+        orderId : order.id
+      };
+
+      const orderUpd_token = await this.jwtService.signAsync(payload)
+
+      return {success:true, order,token:orderUpd_token}
     }catch(err){
       this.logger.error(err);
       return {

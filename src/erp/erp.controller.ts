@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -7,6 +7,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { CallConsultingDto } from './Dto/callConsulting.dto';
 import { getToken } from 'src/util/token';
 import { SurveyDto } from './Dto/survey.dto';
+import { OrderUpd } from 'src/auth/decorators/order.decorator';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -35,11 +36,12 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'오더 업데이트'})
-    @Public()
-    @Post('/update')
-    async updateOrder(@Body() surveyDto : SurveyDto){
+    @OrderUpd()
+    @Post('/update/:id')
+    async updateOrder(@Body() surveyDto : SurveyDto, @Headers() header, @Param('id') id : number){
         this.logger.log('오더 업데이트');
-        return await this.erpService.updateOrder(surveyDto);
+        console.log('??')
+        return await this.erpService.updateOrder(surveyDto,getToken(header),id);
     }
 
     @ApiOperation({summary:'오더 리스트 조회'})

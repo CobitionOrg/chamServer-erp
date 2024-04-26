@@ -311,8 +311,17 @@ export class ErpService {
         }
     }
 
-    async updateOrder(surveyDto : SurveyDto){
+    async updateOrder(surveyDto : SurveyDto, header:string, orderId :number){
         try{
+            console.log('sibal');
+            const token = await this.jwtService.decode(header);
+            console.log(token);
+            if(!token.orderId) {
+                return {success:false,status:HttpStatus.FORBIDDEN};
+            }
+            console.log(typeof token.orderId);
+            if(token.orderId != orderId) return {success:false,status:HttpStatus.FORBIDDEN};
+
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
 
