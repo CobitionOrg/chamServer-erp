@@ -579,6 +579,10 @@ export class ErpService {
         }
     }
 
+    /**
+     * 신규 환자 등록 용 엑셀
+     * @returns 
+     */
     async newPatientExcel() {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
@@ -638,7 +642,64 @@ export class ErpService {
             }
         }
     }
+    
+    async chatingExcel(){
+        try{
+            // 차팅 : 핸드폰번호 주문수량 결제방식 
 
+            //날짜 조건 걸 예정
+            const list = await this.prisma.order.findMany({
+                select:{
+                    patient:{
+                        select :{
+                            name:true,
+                            phoneNum:true,
+                        }
+                    },
+                    payType:true,
+                    orderItems:{
+                        select:{
+                            item:true,
+                        }
+                    }
+                }
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("챠팅 엑셀");
+            const header = ['이름', '핸드폰 번호','주문수량', '결제방식'];
+            const headerWidths = [16,30,40,10];
+
+            const headerRow = sheet.addRow(header);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell,colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            list.forEach((e) => {
+                const {name,phoneNum} = e.patient;
+                const items = e.orderItems.join('/');
+                const payType = e.payType;
+
+                const rowDatas = [name,phoneNum,items,payType];
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.uploadFile(fileData);
+
+            return { success:true,status:HttpStatus.OK, url};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
+        }
+    }
     async uploadFile(file:any){
         try{
             const presignedUrl = await generateUploadURL();
