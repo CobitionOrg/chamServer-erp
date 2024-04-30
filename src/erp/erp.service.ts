@@ -873,6 +873,8 @@ export class ErpService {
                     id:true,
                     outage:true,
                     date:true,
+                    isFirst:true,
+                    orderSortNum:true,
                     patient:{
                         select:{
                             id:true,
