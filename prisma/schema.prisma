@@ -62,12 +62,13 @@ model questionImg {
 }
 
 model patient {
-  id        Int     @id @default(autoincrement())
-  name      String
-  phoneNum  String
-  addr      String
-  socialNum String
-  orders    order[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  phoneNum   String
+  addr       String
+  socialNum  String
+  orders     order[]
+  tempOrders tempOrder[]
 }
 
 model item {
@@ -93,11 +94,38 @@ model order {
   patientId       Int
   isFirst         Boolean        @default(true)
   date            DateTime       @db.DateTime(0)
+  orderSortNum    Int            @default(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
+  tempOrders      tempOrder[]
 
   @@index([patientId], map: "order_patientId_fkey")
+}
+
+model tempOrder {
+  id              Int      @id @default(autoincrement())
+  route           String
+  message         String
+  cachReceipt     String
+  typeCheck       String
+  consultingTime  String
+  payType         String
+  essentialCheck  String
+  outage          String
+  consultingType  Boolean  @default(false)
+  phoneConsulting Boolean  @default(false)
+  isComplete      Boolean  @default(false)
+  patientId       Int
+  isFirst         Boolean  @default(true)
+  date            DateTime @db.DateTime(0)
+  orderSortNum    Int      @default(0)
+  orderId         Int
+  order           order    @relation(fields: [orderId], references: [id])
+  patient         patient  @relation(fields: [patientId], references: [id])
+
+  @@index([orderId], map: "tempOrder_orderId_fkey")
+  @@index([patientId], map: "tempOrder_patientId_fkey")
 }
 
 model orderBodyType {

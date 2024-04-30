@@ -579,6 +579,10 @@ export class ErpService {
         }
     }
 
+    /**
+     * 신규 환자 등록 용 엑셀
+     * @returns {success:true,status:HttpStatus.OK,url};
+     */
     async newPatientExcel() {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
@@ -638,7 +642,74 @@ export class ErpService {
             }
         }
     }
+    
+     /**
+     * 챠팅 용 엑셀
+     * @returns {success:true,status:HttpStatus.OK,url};
+     */
+    async chatingExcel(){
+        try{
+            // 차팅 : 핸드폰번호 주문수량 결제방식 
 
+            //날짜 조건 걸 예정
+            const list = await this.prisma.order.findMany({
+                select:{
+                    patient:{
+                        select :{
+                            name:true,
+                            phoneNum:true,
+                        }
+                    },
+                    payType:true,
+                    orderItems:{
+                        select:{
+                            item:true,
+                        }
+                    }
+                }
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("챠팅 엑셀");
+            const header = ['이름', '핸드폰 번호','주문수량', '결제방식'];
+            const headerWidths = [16,30,40,10];
+
+            const headerRow = sheet.addRow(header);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell,colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            list.forEach((e) => {
+                const {name,phoneNum} = e.patient;
+                const items = e.orderItems.join('/');
+                const payType = e.payType;
+
+                const rowDatas = [name,phoneNum,items,payType];
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.uploadFile(fileData);
+
+            return { success:true,status:HttpStatus.OK, url};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
+        }
+    }
+
+    /**
+     * 엑셀 파일 업로드
+     * @param file 
+     * @returns fileUrl : String
+     */
     async uploadFile(file:any){
         try{
             const presignedUrl = await generateUploadURL();
@@ -666,5 +737,173 @@ export class ErpService {
     async s3Url() {
         const url = await generateUploadURL();
         return { url };
+    }
+
+    /**
+     * 발송 목록으로 이동
+     * @param id 
+     * @returns {success:true, status:HttpStatus.OK};
+
+     */
+    async goToSendList(id:number) {
+        try{
+            await this.prisma.order.update({
+                where : {
+                    id:id
+                },
+                data : {
+                    isComplete:true,
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getSendList(){
+        try{
+            const list = await this.prisma.order.findMany({
+                where:{
+                    isComplete:true
+                },
+                orderBy:{
+                    orderSortNum:'asc'
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    essentialCheck:true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isComplete:true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum:true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    }
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async setSendList(){
+        try{
+            const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
+                        
+            const arr = [];
+            
+            sendList.list.forEach((e)=>{
+                const obj = {
+                    route : e.route,
+                    message : e.message,
+                    cachReceipt : e.cachReceipt,
+                    typeCheck : e.typeCheck,
+                    consultingTime : e.consultingTime,
+                    payType : e.payType,
+                    essentialCheck : e.essentialCheck,
+                    outage: e.outage,
+                    consultingType : e.consultingType,
+                    phoneConsulting : e.phoneConsulting,
+                    isComplete : e.isComplete,
+                    isFirst: e.isFirst,
+                    date : e.date,
+                    orderSortNum : e.orderSortNum,
+                    patientId : e.patient.id,
+                    orderId : e.id
+                }
+
+                arr.push(obj);
+            });
+
+            //tempOrder에 세팅
+            await this.prisma.tempOrder.createMany({
+                data:arr
+            });
+
+            return {success:true}
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getOrderTempList(){
+        try{
+            const list = await this.prisma.tempOrder.findMany({
+                orderBy:{
+                    orderSortNum:'asc'
+                },
+                select:{
+                    id:true,
+                    outage:true,
+                    date:true,
+                    isFirst:true,
+                    orderSortNum:true,
+                    patient:{
+                        select:{
+                            id:true,
+                            phoneNum:true,
+                            name:true,
+                            addr:true,
+                        }
+                    },
+                    order:{
+                        select:{
+                            id:true,
+                            message:true,
+                            cachReceipt:true,
+
+                            orderItems:{
+                                select:{item:true,type:true}
+                            }
+                        }
+                    }
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
     }
 }

@@ -84,4 +84,19 @@ export class ErpController {
     async s3Test(){
         return await this.erpService.s3Url();
     }
+
+    @ApiOperation({summary:'발송 목록 조회'})
+    @Public()
+    @Get('/sendList')
+    async getSendList(){
+        this.logger.log('발송 목록 리스트');
+        return await this.erpService.getOrderTempList();
+    }
+
+    @ApiOperation({summary:'발송 목록 세팅'})
+    @Get('/setSendList')
+    async setSendList(){
+        this.logger.log('발송 목록 세팅');
+        return await this.erpService.setSendList();
+    }
 }
