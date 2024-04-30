@@ -303,4 +303,28 @@ export class SurveyService {
       };
     }
   }
+
+  /**
+   * 아이템들만 조회하기
+   * @returns 
+   */
+  async getItems() {
+    try{
+      const list = await this.prisma.item.findMany({
+        select:{
+          item:true,
+          isFirst:true,
+          isYoyo:true,
+        }
+      });
+
+      return {success:true, list};
+    }catch(err){
+      this.logger.error(err);
+      return {
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
 }

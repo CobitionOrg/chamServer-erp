@@ -8,11 +8,13 @@ import {
   Logger,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('survey')
 export class SurveyController {
@@ -64,5 +66,13 @@ export class SurveyController {
   async updateSurvey(){
     this.logger.log('오더 업데이트 용 질문 가져오기');
     return await this.surveyService.updateSurvey();
+  }
+
+  @ApiOperation({summary:'아이템들만 조회하기'})
+  @UseGuards(AuthGuard)
+  @Get('/getItem')
+  async getItems() {
+    this.logger.log('아이템들만 조회하기');
+    return await this.surveyService.getItems();
   }
 }
