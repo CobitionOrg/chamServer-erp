@@ -581,7 +581,7 @@ export class ErpService {
 
     /**
      * 신규 환자 등록 용 엑셀
-     * @returns 
+     * @returns {success:true,status:HttpStatus.OK,url};
      */
     async newPatientExcel() {
         try {
@@ -643,6 +643,10 @@ export class ErpService {
         }
     }
     
+     /**
+     * 챠팅 용 엑셀
+     * @returns {success:true,status:HttpStatus.OK,url};
+     */
     async chatingExcel(){
         try{
             // 차팅 : 핸드폰번호 주문수량 결제방식 
@@ -700,6 +704,12 @@ export class ErpService {
 
         }
     }
+
+    /**
+     * 엑셀 파일 업로드
+     * @param file 
+     * @returns fileUrl : String
+     */
     async uploadFile(file:any){
         try{
             const presignedUrl = await generateUploadURL();
@@ -727,5 +737,94 @@ export class ErpService {
     async s3Url() {
         const url = await generateUploadURL();
         return { url };
+    }
+
+    /**
+     * 발송 목록으로 이동
+     * @param id 
+     * @returns {success:true, status:HttpStatus.OK};
+
+     */
+    async goToSendList(id:number) {
+        try{
+            await this.prisma.order.update({
+                where : {
+                    id:id
+                },
+                data : {
+                    isComplete:true,
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getSendList(){
+        try{
+            const list = await this.prisma.order.findMany({
+                where:{
+                    isComplete:true
+                },
+                orderBy:{
+                    orderSortNum:'asc'
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum:true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    }
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async setSendList(){
+        try{
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
     }
 }
