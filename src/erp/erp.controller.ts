@@ -94,7 +94,6 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 세팅'})
-    @Public()
     @Get('/setSendList')
     async setSendList(){
         this.logger.log('발송 목록 세팅');

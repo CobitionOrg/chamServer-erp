@@ -865,7 +865,35 @@ export class ErpService {
 
     async getOrderTempList(){
         try{
-            const list = await this.prisma.tempOrder.findMany();
+            const list = await this.prisma.tempOrder.findMany({
+                orderBy:{
+                    orderSortNum:'asc'
+                },
+                select:{
+                    id:true,
+                    outage:true,
+                    date:true,
+                    patient:{
+                        select:{
+                            id:true,
+                            phoneNum:true,
+                            name:true,
+                            addr:true,
+                        }
+                    },
+                    order:{
+                        select:{
+                            id:true,
+                            message:true,
+                            cachReceipt:true,
+
+                            orderItems:{
+                                select:{item:true,type:true}
+                            }
+                        }
+                    }
+                }
+            });
 
             return {success:true, list};
         }catch(err){
