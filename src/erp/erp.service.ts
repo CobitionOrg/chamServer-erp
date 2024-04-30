@@ -783,9 +783,11 @@ export class ErpService {
                     typeCheck: true,
                     consultingTime: true,
                     payType: true,
+                    essentialCheck:true,
                     outage: true,
                     consultingType: true,
                     phoneConsulting: true,
+                    isComplete:true,
                     isFirst: true,
                     date: true,
                     orderSortNum:true,
@@ -818,7 +820,54 @@ export class ErpService {
 
     async setSendList(){
         try{
+            const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
+                        
+            const arr = [];
+            
+            sendList.list.forEach((e)=>{
+                const obj = {
+                    route : e.route,
+                    message : e.message,
+                    cachReceipt : e.cachReceipt,
+                    typeCheck : e.typeCheck,
+                    consultingTime : e.consultingTime,
+                    payType : e.payType,
+                    essentialCheck : e.essentialCheck,
+                    outage: e.outage,
+                    consultingType : e.consultingType,
+                    phoneConsulting : e.phoneConsulting,
+                    isComplete : e.isComplete,
+                    isFirst: e.isFirst,
+                    date : e.date,
+                    orderSortNum : e.orderSortNum,
+                    patientId : e.patient.id,
+                    orderId : e.id
+                }
 
+                arr.push(obj);
+            });
+
+            //tempOrder에 세팅
+            await this.prisma.tempOrder.createMany({
+                data:arr
+            });
+
+            return {success:true}
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getOrderTempList(){
+        try{
+            const list = await this.prisma.tempOrder.findMany();
+
+            return {success:true, list};
         }catch(err){
             this.logger.error(err);
             return {

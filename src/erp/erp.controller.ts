@@ -90,6 +90,14 @@ export class ErpController {
     @Get('/sendList')
     async getSendList(){
         this.logger.log('발송 목록 리스트');
-        return await this.erpService.getSendList();
+        return await this.erpService.getOrderTempList();
+    }
+
+    @ApiOperation({summary:'발송 목록 세팅'})
+    @Public()
+    @Get('/setSendList')
+    async setSendList(){
+        this.logger.log('발송 목록 세팅');
+        return await this.erpService.setSendList();
     }
 }
