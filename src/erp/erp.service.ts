@@ -766,6 +766,10 @@ export class ErpService {
         }
     }
 
+    /**
+     * 오더 테이블에서 발송 목록 가져오기
+     * @returns 
+     */
     async getSendList(){
         try{
             const list = await this.prisma.order.findMany({
@@ -818,6 +822,10 @@ export class ErpService {
         }
     }
 
+    /**
+     * 오더 테이블에서 발송목록 가져와서 tempOrder 테이블에 세팅하기
+     * @returns 
+     */
     async setSendList(){
         try{
             const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
@@ -863,6 +871,10 @@ export class ErpService {
         }
     }
 
+    /**
+     * 발송목록(tempOrder)에서 가져오기
+     * @returns 
+     */
     async getOrderTempList(){
         try{
             const list = await this.prisma.tempOrder.findMany({
