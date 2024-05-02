@@ -948,7 +948,8 @@ export class ErpService {
         try {
             const list = await this.prisma.tempOrder.findMany({
                 orderBy: {
-                    id: 'asc'
+                    //id: 'asc',
+                    orderSortNum:'asc'
                 },
                 select: {
                     id: true,
