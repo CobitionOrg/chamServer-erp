@@ -219,7 +219,7 @@ export class ErpService {
             const date = surveyDto.date;
 
             console.log(insertOrder);
-            console.log(date);
+            // console.log(date);
 
             const objPatient: PatientDto = {
                 name: '',
@@ -231,12 +231,15 @@ export class ErpService {
             const objOrderBodyType: any = {};
             const objOrderItem: any = [];
 
+            console.log('반복문 전');
+
             insertOrder.forEach(e => {
                 if (e.orderType == 'order') {
                     objOrder[`${e.code}`] = e.answer;
                 } else if (e.orderType == 'patient') {
                     objPatient[`${e.code}`] = e.answer;
                 } else if (e.orderType == 'orderItem') {
+                    console.log(e);
                     const obj = {
                         item: e.answer,
                         type: e.code
@@ -288,14 +291,32 @@ export class ErpService {
 
                 for (let i = 0; i < objOrderItem.length; i++) {
                     let tempObj = objOrderItem[i];
-                    for (let j = 0; j < tempObj.item.length; j++) {
-                        const temp = {
-                            item: tempObj.item[j],
+                    let temp = {}
+
+                    if (tempObj.type=='assistant') {
+                        temp = {
+                            item: tempObj.item,
                             type: tempObj.type,
                             orderId: order.id
                         }
+                        //console.log(temp);
                         items.push(temp);
+
+                    } else {
+                        for (let j = 0; j < tempObj.item.length; j++) {
+
+                            temp = {
+                                item: tempObj.item[j],
+                                type: tempObj.type,
+                                orderId: order.id
+                            }
+
+                            //console.log(temp);
+
+                            items.push(temp);
+                        }
                     }
+
                 }
 
                 console.log(items);
@@ -494,7 +515,7 @@ export class ErpService {
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: true,
-                    isComplete:false,
+                    isComplete: false,
                 },
                 select: {
                     id: true,
@@ -591,8 +612,8 @@ export class ErpService {
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: false,
-                    isComplete:false,
-                    isFirst:true,
+                    isComplete: false,
+                    isFirst: true,
                 },
                 select: {
                     patient: {
@@ -601,7 +622,7 @@ export class ErpService {
                             name: true,
                             addr: true,
                             phoneNum: true,
-                            socialNum:true,
+                            socialNum: true,
                         }
                     },
                 }
@@ -610,8 +631,8 @@ export class ErpService {
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("신환 등록");
 
-            const headers = ['이름','주소','주민번호','휴대폰 번호'];
-            const headerWidths = [16,40,30,20];
+            const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
+            const headerWidths = [16, 40, 30, 20];
 
             //상단 헤더 추가
             const headerRow = sheet.addRow(headers);
@@ -624,16 +645,16 @@ export class ErpService {
             });
 
             //각 data cell에 데이터 삽입
-            list.forEach((e)=>{
-                const {name,addr,socialNum,phoneNum} = e.patient;
-                const rowDatas = [name,addr,socialNum,phoneNum];
+            list.forEach((e) => {
+                const { name, addr, socialNum, phoneNum } = e.patient;
+                const rowDatas = [name, addr, socialNum, phoneNum];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.uploadFile(fileData);
 
-            return {success:true,status:HttpStatus.OK,url};
+            return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -642,28 +663,28 @@ export class ErpService {
             }
         }
     }
-    
-     /**
-     * 챠팅 용 엑셀
-     * @returns {success:true,status:HttpStatus.OK,url};
-     */
-    async chatingExcel(){
-        try{
+
+    /**
+    * 챠팅 용 엑셀
+    * @returns {success:true,status:HttpStatus.OK,url};
+    */
+    async chatingExcel() {
+        try {
             // 차팅 : 핸드폰번호 주문수량 결제방식 
 
             //날짜 조건 걸 예정
             const list = await this.prisma.order.findMany({
-                select:{
-                    patient:{
-                        select :{
-                            name:true,
-                            phoneNum:true,
+                select: {
+                    patient: {
+                        select: {
+                            name: true,
+                            phoneNum: true,
                         }
                     },
-                    payType:true,
-                    orderItems:{
-                        select:{
-                            item:true,
+                    payType: true,
+                    orderItems: {
+                        select: {
+                            item: true,
                         }
                     }
                 }
@@ -671,31 +692,31 @@ export class ErpService {
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
-            const header = ['이름', '핸드폰 번호','주문수량', '결제방식'];
-            const headerWidths = [16,30,40,10];
+            const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
+            const headerWidths = [16, 30, 40, 10];
 
             const headerRow = sheet.addRow(header);
             headerRow.height = 30.75;
 
-            headerRow.eachCell((cell,colNum) => {
+            headerRow.eachCell((cell, colNum) => {
                 styleHeaderCell(cell);
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
             list.forEach((e) => {
-                const {name,phoneNum} = e.patient;
+                const { name, phoneNum } = e.patient;
                 const items = e.orderItems.join('/');
                 const payType = e.payType;
 
-                const rowDatas = [name,phoneNum,items,payType];
+                const rowDatas = [name, phoneNum, items, payType];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.uploadFile(fileData);
 
-            return { success:true,status:HttpStatus.OK, url};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK, url };
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -710,22 +731,22 @@ export class ErpService {
      * @param file 
      * @returns fileUrl : String
      */
-    async uploadFile(file:any){
-        try{
+    async uploadFile(file: any) {
+        try {
             const presignedUrl = await generateUploadURL();
-           
+
             console.log(presignedUrl);
-            await axios.put(presignedUrl,{
-                body:file
-            },{
-                headers:{
-                   "Content-Type": file.type,
+            await axios.put(presignedUrl, {
+                body: file
+            }, {
+                headers: {
+                    "Content-Type": file.type,
                 }
-             });
+            });
 
             let fileUrl = presignedUrl.split('?')[0];
             return fileUrl;
-        }catch(err){
+        } catch (err) {
             //this.logger.error(err);
             return {
                 success: false,
@@ -745,23 +766,23 @@ export class ErpService {
      * @returns {success:true, status:HttpStatus.OK};
 
      */
-    async goToSendList(id:number) {
-        try{
+    async goToSendList(id: number) {
+        try {
             await this.prisma.order.update({
-                where : {
-                    id:id
+                where: {
+                    id: id
                 },
-                data : {
-                    isComplete:true,
+                data: {
+                    isComplete: true,
                 }
             });
 
-            return {success:true, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
@@ -770,14 +791,14 @@ export class ErpService {
      * 오더 테이블에서 발송 목록 가져오기
      * @returns 
      */
-    async getSendList(){
-        try{
+    async getSendList() {
+        try {
             const list = await this.prisma.order.findMany({
-                where:{
-                    isComplete:true
+                where: {
+                    isComplete: true
                 },
-                orderBy:{
-                    orderSortNum:'asc'
+                orderBy: {
+                    orderSortNum: 'asc'
                 },
                 select: {
                     id: true,
@@ -787,14 +808,14 @@ export class ErpService {
                     typeCheck: true,
                     consultingTime: true,
                     payType: true,
-                    essentialCheck:true,
+                    essentialCheck: true,
                     outage: true,
                     consultingType: true,
                     phoneConsulting: true,
-                    isComplete:true,
+                    isComplete: true,
                     isFirst: true,
                     date: true,
-                    orderSortNum:true,
+                    orderSortNum: true,
                     patient: {
                         select: {
                             id: true,
@@ -812,12 +833,12 @@ export class ErpService {
                 }
             });
 
-            return {success:true, list};
-        }catch(err){
+            return { success: true, list };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
@@ -826,30 +847,30 @@ export class ErpService {
      * 오더 테이블에서 발송목록 가져와서 tempOrder 테이블에 세팅하기
      * @returns 
      */
-    async setSendList(){
-        try{
+    async setSendList() {
+        try {
             const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
-                        
+
             const arr = [];
-            
-            sendList.list.forEach((e)=>{
+
+            sendList.list.forEach((e) => {
                 const obj = {
-                    route : e.route,
-                    message : e.message,
-                    cachReceipt : e.cachReceipt,
-                    typeCheck : e.typeCheck,
-                    consultingTime : e.consultingTime,
-                    payType : e.payType,
-                    essentialCheck : e.essentialCheck,
+                    route: e.route,
+                    message: e.message,
+                    cachReceipt: e.cachReceipt,
+                    typeCheck: e.typeCheck,
+                    consultingTime: e.consultingTime,
+                    payType: e.payType,
+                    essentialCheck: e.essentialCheck,
                     outage: e.outage,
-                    consultingType : e.consultingType,
-                    phoneConsulting : e.phoneConsulting,
-                    isComplete : e.isComplete,
+                    consultingType: e.consultingType,
+                    phoneConsulting: e.phoneConsulting,
+                    isComplete: e.isComplete,
                     isFirst: e.isFirst,
-                    date : e.date,
-                    orderSortNum : e.orderSortNum,
-                    patientId : e.patient.id,
-                    orderId : e.id
+                    date: e.date,
+                    orderSortNum: e.orderSortNum,
+                    patientId: e.patient.id,
+                    orderId: e.id
                 }
 
                 arr.push(obj);
@@ -857,16 +878,16 @@ export class ErpService {
 
             //tempOrder에 세팅
             await this.prisma.tempOrder.createMany({
-                data:arr
+                data: arr
             });
 
-            return {success:true}
+            return { success: true }
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
@@ -875,46 +896,46 @@ export class ErpService {
      * 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(){
-        try{
+    async getOrderTempList() {
+        try {
             const list = await this.prisma.tempOrder.findMany({
-                orderBy:{
-                    id:'asc'
+                orderBy: {
+                    id: 'asc'
                 },
-                select:{
-                    id:true,
-                    outage:true,
-                    date:true,
-                    isFirst:true,
-                    orderSortNum:true,
-                    patient:{
-                        select:{
-                            id:true,
-                            phoneNum:true,
-                            name:true,
-                            addr:true,
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            addr: true,
                         }
                     },
-                    order:{
-                        select:{
-                            id:true,
-                            message:true,
-                            cachReceipt:true,
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
 
-                            orderItems:{
-                                select:{item:true,type:true}
+                            orderItems: {
+                                select: { item: true, type: true }
                             }
                         }
                     }
                 }
             });
 
-            return {success:true, list};
-        }catch(err){
+            return { success: true, list };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
