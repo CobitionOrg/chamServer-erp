@@ -35,11 +35,11 @@ export class ErpController {
         return await this.erpService.insertReturnOrder(surveyDto);
     }
 
-    @ApiOperation({summary:'오더 업데이트'})
+    @ApiOperation({summary:'환자가 자기 오더 업데이트'})
     @OrderUpd()
     @Post('/update/:id')
     async updateOrder(@Body() surveyDto : SurveyDto, @Headers() header, @Param('id') id : number){
-        this.logger.log('오더 업데이트');
+        this.logger.log('환자가 자기 오더 업데이트');
         console.log('??')
         return await this.erpService.updateOrder(surveyDto,getToken(header),id);
     }
@@ -72,6 +72,13 @@ export class ErpController {
         return await this.erpService.callComplete(callConsultingDto,getToken(header));
     }
 
+    @ApiOperation({summary:'발송 목록으로 이동 처리'})
+    @Post('/completeConsulting/:id')
+    async completeConsulting(@Param('id') id: number){
+        this.logger.log('발송 목록으로 이동 처리');
+        return await this.erpService.completeConsulting(id);
+    }
+
     @ApiOperation({summary:'신환 용 엑셀 다운로드'})
     @Get('/newPatientExcel')
     async newPatientExcel(){
@@ -86,7 +93,6 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 조회'})
-    @Public()
     @Get('/sendList')
     async getSendList(){
         this.logger.log('발송 목록 리스트');
@@ -94,6 +100,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 세팅'})
+    @Public()
     @Get('/setSendList')
     async setSendList(){
         this.logger.log('발송 목록 세팅');
