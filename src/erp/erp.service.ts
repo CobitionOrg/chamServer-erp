@@ -167,6 +167,7 @@ export class ErpService {
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: false,
+                    isComplete:false,
                 },
                 select: {
                     id: true,
@@ -230,8 +231,6 @@ export class ErpService {
             const objOrder: any = {};
             const objOrderBodyType: any = {};
             const objOrderItem: any = [];
-
-            console.log('반복문 전');
 
             insertOrder.forEach(e => {
                 if (e.orderType == 'order') {
@@ -304,7 +303,6 @@ export class ErpService {
 
                     } else {
                         for (let j = 0; j < tempObj.item.length; j++) {
-
                             temp = {
                                 item: tempObj.item[j],
                                 type: tempObj.type,
@@ -592,6 +590,56 @@ export class ErpService {
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송 목록으로 이동 처리(상담 완료 처리)
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
+    async completeConsulting(id:number){
+        try{
+            const sendOne = await this.prisma.order.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    isComplete:true,
+                }
+            });
+
+            await this.prisma.tempOrder.create({
+                data:{
+                    route: sendOne.route,
+                    message: sendOne.message,
+                    cachReceipt: sendOne.cachReceipt,
+                    typeCheck: sendOne.typeCheck,
+                    consultingTime: sendOne.consultingTime,
+                    payType: sendOne.payType,
+                    essentialCheck: sendOne.essentialCheck,
+                    outage: sendOne.outage,
+                    consultingType: sendOne.consultingType,
+                    phoneConsulting: sendOne.phoneConsulting,
+                    isComplete: sendOne.isComplete,
+                    isFirst: sendOne.isFirst,
+                    date: sendOne.date,
+                    orderSortNum: sendOne.orderSortNum,
+                    patientId: sendOne.patientId,
+                    orderId: id
+                }
+            })
+
+            return { success: true, status: HttpStatus.OK };
+        }catch(err){
             this.logger.error(err);
             return {
                 success: false,
@@ -900,7 +948,8 @@ export class ErpService {
         try {
             const list = await this.prisma.tempOrder.findMany({
                 orderBy: {
-                    id: 'asc'
+                    //id: 'asc',
+                    orderSortNum:'asc'
                 },
                 select: {
                     id: true,
@@ -939,4 +988,55 @@ export class ErpService {
             }
         }
     }
+
+    /**
+     * tempOrder 테이블에서 하나만 조회
+     * @param id 
+     * @returns 
+     */
+    async getOrderTempOne(id:number){
+        try {
+            const list = await this.prisma.tempOrder.findFirst({
+                where: {
+                    id: id
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            return { success: true, list };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
 }
