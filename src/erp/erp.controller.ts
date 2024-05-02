@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -8,6 +8,7 @@ import { CallConsultingDto } from './Dto/callConsulting.dto';
 import { getToken } from 'src/util/token';
 import { SurveyDto } from './Dto/survey.dto';
 import { OrderUpd } from 'src/auth/decorators/order.decorator';
+import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -112,5 +113,12 @@ export class ErpController {
     async setSendList(){
         this.logger.log('발송 목록 세팅');
         return await this.erpService.setSendList();
+    }
+
+    @ApiOperation({summary:'발송목록에서 오더 수정'})
+    @Patch('/updateSendOrder')
+    async updateSendOrder(@Body() surveyDto : UpdateSurveyDto){
+        this.logger.log('발송목록에서 오더 수정');
+        console.log(surveyDto);
     }
 }

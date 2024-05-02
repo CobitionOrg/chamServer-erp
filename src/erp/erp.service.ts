@@ -12,6 +12,7 @@ import { generateUploadURL } from '../util/s3';
 import * as Excel from 'exceljs'
 import { styleHeaderCell } from 'src/util/excelUtil';
 import axios from 'axios';
+import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 
 @Injectable()
 export class ErpService {
@@ -1038,5 +1039,79 @@ export class ErpService {
         }
     }
 
+    async updateSendOrder(surveyDto:UpdateSurveyDto){
+        try{
+            const insertOrder = surveyDto.answers;
+            const patientId = surveyDto.patientId;
+            const orderId = surveyDto.orderId;
+
+            const objPatient:any = {};
+            const objOrder:any = {};
+            const objOrderItem:any = [];
+
+            insertOrder.forEach(e => {
+                //console.log(e)
+                if (e.orderType == 'order') {
+                    objOrder[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'patient') {
+                    objPatient[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'orderItem') {
+                    const obj = {
+                        item: e.answer,
+                        type: e.code
+                    }
+                    objOrderItem.push(obj);
+                } else {
+                    throw error('400 error');
+                }
+            });
+
+            await this.prisma.$transaction(async (tx) => {
+                const patient = await tx.patient.update({
+                    where:{
+                        id:patientId
+                    },
+                    data:{
+                        addr:objPatient.addr
+                    }
+                });
+
+                const order = await tx.order.update({
+                    where:{
+                        id:orderId
+                    },
+                    data:{
+                        cachReceipt:objOrder.cachReceipt
+                    }
+                });
+
+                const items = objOrderItem.map((item) => ({
+                    item: item.item,
+                    type: item.type,
+                    orderId: order.id
+                }));
+
+                await tx.orderItem.deleteMany({
+                    where:{
+                        orderId:orderId
+                    }
+                });
+
+                const orderItem = await tx.orderItem.createMany({
+                    data:items
+                });
+            });
+
+            return { success: true, status: HttpStatus.CREATED };
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
+        }
+    }
 
 }
