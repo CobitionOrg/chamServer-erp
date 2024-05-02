@@ -989,6 +989,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * tempOrder 테이블에서 하나만 조회
+     * @param id 
+     * @returns 
+     */
     async getOrderTempOne(id:number){
         try {
             const list = await this.prisma.tempOrder.findFirst({

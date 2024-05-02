@@ -99,6 +99,13 @@ export class ErpController {
         return await this.erpService.getOrderTempList();
     }
 
+    @ApiOperation({summary:'발송 단일 데이터 조회'})
+    @Get('/sendOne/:id')
+    async sendOne(@Param("id") id:number){
+        this.logger.log('발송 단일 데이터 조회');
+        return await this.erpService.getOrderTempOne(id);
+    }
+
     @ApiOperation({summary:'발송 목록 세팅'})
     @Public()
     @Get('/setSendList')
