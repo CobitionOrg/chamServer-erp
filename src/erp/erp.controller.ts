@@ -119,6 +119,6 @@ export class ErpController {
     @Patch('/updateSendOrder')
     async updateSendOrder(@Body() surveyDto : UpdateSurveyDto){
         this.logger.log('발송목록에서 오더 수정');
-        console.log(surveyDto);
+        return await this.erpService.updateSendOrder(surveyDto);
     }
 }
