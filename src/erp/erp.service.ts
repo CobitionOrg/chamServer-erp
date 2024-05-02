@@ -939,4 +939,50 @@ export class ErpService {
             }
         }
     }
+
+    async getOrderTempOne(id:number){
+        try {
+            const list = await this.prisma.tempOrder.findFirst({
+                where: {
+                    id: id
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            return { success: true, list };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
 }
