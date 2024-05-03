@@ -609,6 +609,7 @@ export class ErpService {
      */
     async completeConsulting(id:number){
         try{
+            //발송 목록으로 이동
             const sendOne = await this.prisma.order.update({
                 where:{
                     id:id
@@ -617,7 +618,9 @@ export class ErpService {
                     isComplete:true,
                 }
             });
-
+            
+            //temp order에 데이터를 삽입해
+            //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             await this.prisma.tempOrder.create({
                 data:{
                     route: sendOne.route,

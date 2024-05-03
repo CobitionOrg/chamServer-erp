@@ -78,6 +78,8 @@ export class SendService {
 
             const arr = [];
 
+            //temp order에 데이터를 삽입해
+            //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             sendList.list.forEach((e) => {
                 const obj = {
                     route: e.route,
@@ -126,7 +128,7 @@ export class SendService {
             const list = await this.prisma.tempOrder.findMany({
                 orderBy: {
                     //id: 'asc',
-                    orderSortNum:'asc'
+                    orderSortNum:'asc' //sortNum으로 order by 해야됨
                 },
                 select: {
                     id: true,
@@ -227,6 +229,7 @@ export class SendService {
 
             //console.log(insertOrder);
 
+            //테이블 별 객체로 분리
             insertOrder.forEach(e => {
                 //console.log(e)
                 if (e.orderType == 'order') {
@@ -268,6 +271,7 @@ export class SendService {
                 const items = [];
                 objOrderItem.forEach((e) => {
                     if(e.type =='assistant'){
+                        //assistant는 string
                         const obj = {
                             item:e.item,
                             type:e.type,
@@ -275,6 +279,7 @@ export class SendService {
                         }
                         items.push(obj);
                     }else{
+                        //나머지는 array
                         const arr = [...e.item];
                         arr.forEach((i) => {
                             const obj = {
@@ -289,12 +294,14 @@ export class SendService {
                    
                 });
 
+                //기존 order items 제거
                 await tx.orderItem.deleteMany({
                     where:{
                         orderId:orderId
                     }
                 });
 
+                //새 order items 생성
                 const orderItem = await tx.orderItem.createMany({
                     data:items
                 });
