@@ -1049,6 +1049,8 @@ export class ErpService {
             const objOrder:any = {};
             const objOrderItem:any = [];
 
+            //console.log(insertOrder);
+
             insertOrder.forEach(e => {
                 //console.log(e)
                 if (e.orderType == 'order') {
@@ -1081,15 +1083,35 @@ export class ErpService {
                         id:orderId
                     },
                     data:{
-                        cachReceipt:objOrder.cachReceipt
+                        cachReceipt:objOrder.cashReceipt
                     }
                 });
 
-                const items = objOrderItem.map((item) => ({
-                    item: item.item,
-                    type: item.type,
-                    orderId: order.id
-                }));
+                console.log('----------------')
+                console.log(objOrderItem)
+                const items = [];
+                objOrderItem.forEach((e) => {
+                    if(e.type =='assistant'){
+                        const obj = {
+                            item:e.item,
+                            type:e.type,
+                            orderId:orderId
+                        }
+                        items.push(obj);
+                    }else{
+                        const arr = [...e.item];
+                        arr.forEach((i) => {
+                            const obj = {
+                                item: i,
+                                type: e.type,
+                                orderId: orderId
+                            }
+    
+                            items.push(obj);
+                        });
+                    }
+                   
+                });
 
                 await tx.orderItem.deleteMany({
                     where:{
