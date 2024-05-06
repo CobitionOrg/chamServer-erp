@@ -184,6 +184,7 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
+                    orderSortNum: true,
                     patient: {
                         select: {
                             id: true,
