@@ -2,12 +2,16 @@ import { HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
+import * as Excel from 'exceljs'
+import { styleHeaderCell } from "src/util/excelUtil";
+import { ErpService } from "./erp.service";
 
 //발송 목록 조회 기능
 @Injectable()
 export class SendService {
     constructor(
-        private prisma : PrismaService
+        private prisma : PrismaService,
+        private erpService : ErpService
     ){}
 
     private readonly logger = new Logger(SendService.name);
@@ -316,6 +320,53 @@ export class SendService {
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
 
+        }
+    }
+
+    async sendNumExcel(){
+        try{
+            const send = await this.getOrderTempList();
+            const list = send.list;
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("송장 시트");
+
+            const headers = ['이름',' ','주소',' ','번호','1',' ','10','주문수량',' ','메세지','발송자','발송주소','번호'];
+            const headerWidths = [16,1,40,1,20,2,1,2,10,1,20,20,35,35];
+
+            const headerRow = sheet.addRow(headers);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell,colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            list.forEach((e) => {
+                const { name,addr,phoneNum } = e.patient; 
+                const message = e.order.message;
+                const orderItemList = e.order.orderItems;
+                let orderStr = '';
+                
+                for(let i = 0; i<orderItemList.length; i++){
+                    orderStr+=`${orderItemList[i].item}+`
+                }
+
+                const rowDatas = [name, '', addr, '', phoneNum,'1','','10',orderStr,'',message,'참명인한의원','서울시 은평구 은평로 104 3층 참명인한의원','02-356-8870'];
+
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.erpService.uploadFile(fileData);
+
+            return { success:true, status:HttpStatus.OK, url };
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
         }
     }
 

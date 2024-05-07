@@ -123,4 +123,10 @@ export class ErpController {
         this.logger.log('발송목록에서 오더 수정');
         return await this.sendService.updateSendOrder(surveyDto);
     }
+
+    @ApiOperation({summary:'발송번호 엑셀'})
+    @Get('/sendNumExcel')
+    async sendNumExcel(){
+        this.logger.log('발송번호 엑셀');
+    }
 }
