@@ -13,6 +13,8 @@ import * as Excel from 'exceljs'
 import { styleHeaderCell } from 'src/util/excelUtil';
 import axios from 'axios';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
+import { checkGSB } from '../util/checkGSB.util';
+
 
 @Injectable()
 export class ErpService {
@@ -93,7 +95,7 @@ export class ErpService {
                         isFirst: true,
                         patientId: patient.id,
                         date: new Date(date.toString()),
-                        orderSortNum: this.checkGSB(objOrder.route) ? 4 : 0,
+                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
 
@@ -284,7 +286,7 @@ export class ErpService {
                         consultingTime: '',
                         essentialCheck: '',
                         date: new Date(date),
-                        orderSortNum: this.checkGSB(objOrder.route) ? 4 : 0,
+                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
 
@@ -1138,13 +1140,4 @@ export class ErpService {
 
         }
     }
-
-    /**
-     * 설문 경로 구수방 체크
-     */
-    checkGSB = (route: string) => {
-        const keywords = ['구수방', '구미수다방', '구미맘카페', '구미맘'];
-        return keywords.includes(route);
-    }
-
 }
