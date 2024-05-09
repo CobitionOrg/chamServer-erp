@@ -95,6 +95,7 @@ model order {
   isFirst         Boolean        @default(true)
   date            DateTime       @db.DateTime(0)
   orderSortNum    Int            @default(0)
+  sendNum         String?        @db.VarChar(100)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -121,6 +122,7 @@ model tempOrder {
   date            DateTime @db.DateTime(0)
   orderSortNum    Int      @default(0)
   orderId         Int
+  sendNum         String?  @db.VarChar(100)
   order           order    @relation(fields: [orderId], references: [id])
   patient         patient  @relation(fields: [patientId], references: [id])
 
