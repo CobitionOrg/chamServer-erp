@@ -13,8 +13,8 @@ import { JwtModule } from '@nestjs/jwt';
       inject: [ConfigService],
       global: true,
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('jwtConstant'),
-        signOptions: { expiresIn: '1d' },
+        secret: config.get<string>('orderUpdConstants'),
+        signOptions: { expiresIn: '1h' },
       }),
 
     }),],

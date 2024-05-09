@@ -10,6 +10,7 @@ import { SurveyDto } from './Dto/survey.dto';
 import { OrderUpd } from 'src/auth/decorators/order.decorator';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { SendService } from './send.service';
+import { SendOrder } from './Dto/sendExcel.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -94,6 +95,13 @@ export class ErpController {
     async s3Test(){
         return await this.erpService.s3Url();
     }
+  
+    @ApiOperation({summary: '지인 확인'})
+    @Get('/acquaintance-check/:route')
+    async checkAcquaintance(@Param("route") route: string) {
+        this.logger.log('지인 확인');
+        return await this.erpService.checkAcquaintance(route);
+    }
 
     @ApiOperation({summary:'발송 목록 조회'})
     @Get('/sendList')
@@ -130,11 +138,11 @@ export class ErpController {
         this.logger.log('발송번호 엑셀');
         return await this.sendService.sendNumExcel();
     }
-
-    @ApiOperation({summary: '지인 확인'})
-    @Get('/acquaintance-check/:route')
-    async checkAcquaintance(@Param("route") route: string) {
-        this.logger.log('지인 확인');
-        return await this.erpService.checkAcquaintance(route);
+  
+    @ApiOperation({summary:'송장번호 엑셀로 송장번호 업로드'})
+    @Patch('/setSendNum')
+    async setSendNum(@Body() sendExcelDto:SendOrder[]){
+        this.logger.log('송장번호 저장');
+        return await this.sendService.setSendNum(sendExcelDto);
     }
 }

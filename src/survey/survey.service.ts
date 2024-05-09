@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma.service';
 import { xml2json } from 'xml-js';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 
 @Injectable()
 export class SurveyService {
@@ -260,7 +260,7 @@ export class SurveyService {
         patientId : order.patient.id,
         orderId : order.id
       };
-
+      
       const orderUpd_token = await this.jwtService.signAsync(payload)
 
       return {success:true, order,token:orderUpd_token}
