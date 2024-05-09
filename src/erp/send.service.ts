@@ -6,6 +6,7 @@ import * as Excel from 'exceljs'
 import { styleHeaderCell } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
 import { getItem } from "src/util/getItem";
+import { SendOrder } from "./Dto/sendExcel.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -141,6 +142,7 @@ export class SendService {
                     date: true,
                     isFirst: true,
                     orderSortNum: true,
+                    sendNum:true,
                     patient: {
                         select: {
                             id: true,
@@ -383,4 +385,36 @@ export class SendService {
         }
     }
 
+    async setSendNum(sendExcelDto:SendOrder[]){
+        try{
+            console.log(sendExcelDto);
+            const qryArr = [];
+
+            sendExcelDto.forEach(async (e) => {
+                console.log(e);
+                const qry = await this.prisma.tempOrder.update({
+                    where: {
+                        id: e.id
+                    },
+                    data: {
+                        sendNum:e.sendNum
+                    }
+                });
+            });
+
+            await Promise.all([...qryArr]).then((value) =>{
+                console.log(value);
+                return {success:true,status:HttpStatus.OK};
+            }).catch((err) => {
+                this.logger.error(err);
+                return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+            })
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }
