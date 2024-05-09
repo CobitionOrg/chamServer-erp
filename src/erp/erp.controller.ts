@@ -9,6 +9,7 @@ import { getToken } from 'src/util/token';
 import { SurveyDto } from './Dto/survey.dto';
 import { OrderUpd } from 'src/auth/decorators/order.decorator';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
+import { SendService } from './send.service';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -16,6 +17,7 @@ import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 export class ErpController {
     constructor(
         private erpService : ErpService,
+        private sendService : SendService,
     ){}
 
     private readonly logger = new Logger(ErpController.name);
@@ -97,14 +99,14 @@ export class ErpController {
     @Get('/sendList')
     async getSendList(){
         this.logger.log('발송 목록 리스트');
-        return await this.erpService.getOrderTempList();
+        return await this.sendService.getOrderTempList();
     }
 
     @ApiOperation({summary:'발송 단일 데이터 조회'})
     @Get('/sendOne/:id')
     async sendOne(@Param("id") id:number){
         this.logger.log('발송 단일 데이터 조회');
-        return await this.erpService.getOrderTempOne(id);
+        return await this.sendService.getOrderTempOne(id);
     }
 
     @ApiOperation({summary:'발송 목록 세팅'})
@@ -112,13 +114,20 @@ export class ErpController {
     @Get('/setSendList')
     async setSendList(){
         this.logger.log('발송 목록 세팅');
-        return await this.erpService.setSendList();
+        return await this.sendService.setSendList();
     }
 
     @ApiOperation({summary:'발송목록에서 오더 수정'})
     @Patch('/updateSendOrder')
     async updateSendOrder(@Body() surveyDto : UpdateSurveyDto){
         this.logger.log('발송목록에서 오더 수정');
-        return await this.erpService.updateSendOrder(surveyDto);
+        return await this.sendService.updateSendOrder(surveyDto);
+    }
+
+    @ApiOperation({summary:'발송번호 엑셀'})
+    @Get('/sendNumExcel')
+    async sendNumExcel(){
+        this.logger.log('발송번호 엑셀');
+        return await this.sendService.sendNumExcel();
     }
 }
