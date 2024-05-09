@@ -332,7 +332,7 @@ export class SendService {
             const sheet = wb.addWorksheet("송장 시트");
 
             const headers = ['이름',' ','주소',' ','번호','1',' ','10','주문수량',' ','메세지','발송자','발송주소','번호'];
-            const headerWidths = [16,1,40,1,20,2,1,2,10,1,20,20,35,35];
+            const headerWidths = [16,3,40,3,20,4,3,4,10,3,20,20,35,35];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;

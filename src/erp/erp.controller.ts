@@ -128,5 +128,6 @@ export class ErpController {
     @Get('/sendNumExcel')
     async sendNumExcel(){
         this.logger.log('발송번호 엑셀');
+        return await this.sendService.sendNumExcel();
     }
 }
