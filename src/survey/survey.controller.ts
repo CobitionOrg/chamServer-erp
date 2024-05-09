@@ -15,6 +15,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { OrderUpd } from 'src/auth/decorators/order.decorator';
 
 @Controller('survey')
 export class SurveyController {
@@ -52,6 +53,7 @@ export class SurveyController {
   }
 
   @ApiOperation({summary:'주문 조회'})
+  @OrderUpd()
   @Get('/getMyOrder')
   async getMyOrder(@Query() queryData){
     this.logger.log('오더 조회');
@@ -62,6 +64,7 @@ export class SurveyController {
   }
 
   @ApiOperation({summary:'오더 업데이트 용 질문 조회'})
+  @OrderUpd()
   @Get('/updateSurvey')
   async updateSurvey(){
     this.logger.log('오더 업데이트 용 질문 가져오기');

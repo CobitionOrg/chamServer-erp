@@ -5,7 +5,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
+import { jwtConstants, orderUpdConstants } from './constants';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
@@ -29,7 +29,32 @@ export class AuthGuard implements CanActivate {
             context.getHandler(),
             context.getClass(),
         ]);
-        if(isOrderUpd) return true;
+
+        if(isOrderUpd){
+            const request = context.switchToHttp().getRequest();
+            const token = this.extractTokenFromHeader(request);
+            if (!token) {
+                throw new UnauthorizedException();
+            }
+
+            try {
+                const payload = await this.jwtService.verifyAsync(
+                    token,
+                    {
+                        secret: orderUpdConstants.secret
+                    }
+                );
+                console.log(payload);
+                // 💡 We're assigning the payload to the request object here
+                // so that we can access it in our route handlers
+                request['user'] = payload;
+            } catch (err){
+                console.log(err);
+    
+                throw new UnauthorizedException();
+            }
+            return true;
+        }
         
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
