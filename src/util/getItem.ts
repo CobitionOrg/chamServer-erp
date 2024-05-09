@@ -23,5 +23,7 @@ export const getItem = (item:string) => {
             return '요요3개월';
         case '요요방지환 6개월분 198,000원 (택배무료)':
             return '요요6개월';
+        default:
+            return item;
     }
 }

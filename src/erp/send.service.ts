@@ -5,6 +5,7 @@ import { error } from "winston";
 import * as Excel from 'exceljs'
 import { styleHeaderCell } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
+import { getItem } from "src/util/getItem";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -323,6 +324,14 @@ export class SendService {
         }
     }
 
+    /**
+     * 송장번호 뽑는 엑셀 파일 만들기
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            url: any;
+        } 
+     */
     async sendNumExcel(){
         try{
             const send = await this.getOrderTempList();
@@ -332,7 +341,7 @@ export class SendService {
             const sheet = wb.addWorksheet("송장 시트");
 
             const headers = ['이름',' ','주소',' ','번호','1',' ','10','주문수량',' ','메세지','발송자','발송주소','번호'];
-            const headerWidths = [16,3,40,3,20,4,3,4,10,3,20,20,35,35];
+            const headerWidths = [16,3,40,3,20,4,3,4,40,3,20,20,35,35];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;
@@ -349,7 +358,11 @@ export class SendService {
                 let orderStr = '';
                 
                 for(let i = 0; i<orderItemList.length; i++){
-                    orderStr+=`${orderItemList[i].item}+`
+                    let item = getItem(orderItemList[i].item);
+                    if(item !== ''){
+                        if(i==orderItemList.length-1) orderStr+=`${item}`
+                        else orderStr+=`${item}+`
+                    }
                 }
 
                 const rowDatas = [name, '', addr, '', phoneNum,'1','','10',orderStr,'',message,'참명인한의원','서울시 은평구 은평로 104 3층 참명인한의원','02-356-8870'];
