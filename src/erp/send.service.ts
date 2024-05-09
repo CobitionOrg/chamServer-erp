@@ -1,0 +1,386 @@
+import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "src/prisma.service";
+import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
+import { error } from "winston";
+import * as Excel from 'exceljs'
+import { styleHeaderCell } from "src/util/excelUtil";
+import { ErpService } from "./erp.service";
+import { getItem } from "src/util/getItem";
+
+//발송 목록 조회 기능
+@Injectable()
+export class SendService {
+    constructor(
+        private prisma : PrismaService,
+        private erpService : ErpService
+    ){}
+
+    private readonly logger = new Logger(SendService.name);
+
+      /**
+     * 오더 테이블에서 발송 목록 가져오기
+     * @returns 
+     */
+      async getSendList() {
+        try {
+            const list = await this.prisma.order.findMany({
+                where: {
+                    isComplete: true
+                },
+                orderBy: {
+                    orderSortNum: 'asc'
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    essentialCheck: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isComplete: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    }
+                }
+            });
+
+            return { success: true, list };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 오더 테이블에서 발송목록 가져와서 tempOrder 테이블에 세팅하기
+     * @returns 
+     */
+    async setSendList() {
+        try {
+            const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
+
+            const arr = [];
+
+            //temp order에 데이터를 삽입해
+            //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
+            sendList.list.forEach((e) => {
+                const obj = {
+                    route: e.route,
+                    message: e.message,
+                    cachReceipt: e.cachReceipt,
+                    typeCheck: e.typeCheck,
+                    consultingTime: e.consultingTime,
+                    payType: e.payType,
+                    essentialCheck: e.essentialCheck,
+                    outage: e.outage,
+                    consultingType: e.consultingType,
+                    phoneConsulting: e.phoneConsulting,
+                    isComplete: e.isComplete,
+                    isFirst: e.isFirst,
+                    date: e.date,
+                    orderSortNum: e.orderSortNum,
+                    patientId: e.patient.id,
+                    orderId: e.id
+                }
+
+                arr.push(obj);
+            });
+
+            //tempOrder에 세팅
+            await this.prisma.tempOrder.createMany({
+                data: arr
+            });
+
+            return { success: true }
+
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록(tempOrder)에서 가져오기
+     * @returns 
+     */
+    async getOrderTempList() {
+        try {
+            const list = await this.prisma.tempOrder.findMany({
+                orderBy: {
+                    //id: 'asc',
+                    orderSortNum:'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            return { success: true, list };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * tempOrder 테이블에서 하나만 조회
+     * @param id 
+     * @returns 
+     */
+    async getOrderTempOne(id:number){
+        try {
+            const list = await this.prisma.tempOrder.findFirst({
+                where: {
+                    id: id
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            return { success: true, list };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async updateSendOrder(surveyDto:UpdateSurveyDto){
+        try{
+            const insertOrder = surveyDto.answers;
+            const patientId = surveyDto.patientId;
+            const orderId = surveyDto.orderId;
+
+            const objPatient:any = {};
+            const objOrder:any = {};
+            const objOrderItem:any = [];
+
+            //console.log(insertOrder);
+
+            //테이블 별 객체로 분리
+            insertOrder.forEach(e => {
+                //console.log(e)
+                if (e.orderType == 'order') {
+                    objOrder[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'patient') {
+                    objPatient[`${e.code}`] = e.answer;
+                } else if (e.orderType == 'orderItem') {
+                    const obj = {
+                        item: e.answer,
+                        type: e.code
+                    }
+                    objOrderItem.push(obj);
+                } else {
+                    throw error('400 error');
+                }
+            });
+
+            await this.prisma.$transaction(async (tx) => {
+                const patient = await tx.patient.update({
+                    where:{
+                        id:patientId
+                    },
+                    data:{
+                        addr:objPatient.addr
+                    }
+                });
+
+                const order = await tx.order.update({
+                    where:{
+                        id:orderId
+                    },
+                    data:{
+                        cachReceipt:objOrder.cashReceipt
+                    }
+                });
+
+                console.log('----------------')
+                console.log(objOrderItem)
+                const items = [];
+                objOrderItem.forEach((e) => {
+                    if(e.type =='assistant'){
+                        //assistant는 string
+                        const obj = {
+                            item:e.item,
+                            type:e.type,
+                            orderId:orderId
+                        }
+                        items.push(obj);
+                    }else{
+                        //나머지는 array
+                        const arr = [...e.item];
+                        arr.forEach((i) => {
+                            const obj = {
+                                item: i,
+                                type: e.type,
+                                orderId: orderId
+                            }
+    
+                            items.push(obj);
+                        });
+                    }
+                   
+                });
+
+                //기존 order items 제거
+                await tx.orderItem.deleteMany({
+                    where:{
+                        orderId:orderId
+                    }
+                });
+
+                //새 order items 생성
+                const orderItem = await tx.orderItem.createMany({
+                    data:items
+                });
+            });
+
+            return { success: true, status: HttpStatus.CREATED };
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
+        }
+    }
+
+    /**
+     * 송장번호 뽑는 엑셀 파일 만들기
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            url: any;
+        } 
+     */
+    async sendNumExcel(){
+        try{
+            const send = await this.getOrderTempList();
+            const list = send.list;
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("송장 시트");
+
+            const headers = ['이름',' ','주소',' ','번호','1',' ','10','주문수량',' ','메세지','발송자','발송주소','번호'];
+            const headerWidths = [16,3,40,3,20,4,3,4,40,3,20,20,35,35];
+
+            const headerRow = sheet.addRow(headers);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell,colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            list.forEach((e) => {
+                const { name,addr,phoneNum } = e.patient; 
+                const message = e.order.message;
+                const orderItemList = e.order.orderItems;
+                let orderStr = '';
+                
+                for(let i = 0; i<orderItemList.length; i++){
+                    let item = getItem(orderItemList[i].item);
+                    if(item !== ''){
+                        if(i==orderItemList.length-1) orderStr+=`${item}`
+                        else orderStr+=`${item}+`
+                    }
+                }
+
+                const rowDatas = [name, '', addr, '', phoneNum,'1','','10',orderStr,'',message,'참명인한의원','서울시 은평구 은평로 104 3층 참명인한의원','02-356-8870'];
+
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.erpService.uploadFile(fileData);
+
+            return { success:true, status:HttpStatus.OK, url };
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+}
