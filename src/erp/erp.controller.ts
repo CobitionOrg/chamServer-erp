@@ -130,4 +130,11 @@ export class ErpController {
         this.logger.log('발송번호 엑셀');
         return await this.sendService.sendNumExcel();
     }
+
+    @ApiOperation({summary: '지인 확인'})
+    @Get('/acquaintance-check/:route')
+    async checkAcquaintance(@Param("route") route: string) {
+        this.logger.log('지인 확인');
+        return await this.erpService.checkAcquaintance(route);
+    }
 }
