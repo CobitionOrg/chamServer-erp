@@ -385,6 +385,14 @@ export class SendService {
         }
     }
 
+    /**
+     * 송장번호 디비에 입력
+     * @param sendExcelDto :Array<SendOrder>
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }
+     */
     async setSendNum(sendExcelDto:SendOrder[]){
         try{
             console.log(sendExcelDto);
