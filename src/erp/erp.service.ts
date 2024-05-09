@@ -13,6 +13,8 @@ import * as Excel from 'exceljs'
 import { styleHeaderCell } from 'src/util/excelUtil';
 import axios from 'axios';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
+import { checkGSB } from '../util/checkGSB.util';
+
 
 @Injectable()
 export class ErpService {
@@ -92,7 +94,8 @@ export class ErpService {
                         outage: '',
                         isFirst: true,
                         patientId: patient.id,
-                        date: new Date(date.toString())
+                        date: new Date(date.toString()),
+                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
 
@@ -183,6 +186,7 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
+                    orderSortNum: true,
                     patient: {
                         select: {
                             id: true,
@@ -282,6 +286,7 @@ export class ErpService {
                         consultingTime: '',
                         essentialCheck: '',
                         date: new Date(date),
+                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
 
@@ -838,6 +843,4 @@ export class ErpService {
             }
         }
     }
-
-  
 }
