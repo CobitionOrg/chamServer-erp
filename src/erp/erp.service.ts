@@ -843,4 +843,32 @@ export class ErpService {
             }
         }
     }
+
+    /**
+     * 지인 확인
+     * @param route
+     * @returns {success: boolean, status: HttpStatus.OK, check: boolean}
+     */
+    async checkAcquaintance(route: string) {
+        try {
+            const res = await this.prisma.patient.findMany({
+                where: {
+                    name: route,
+                },
+                select: {
+                    name: true,
+                }
+            });
+            if(res.length >= 1)
+                return { success: true, check: true, status: HttpStatus.OK };
+            else
+                return { success: true, check: false, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }
