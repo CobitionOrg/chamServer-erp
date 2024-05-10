@@ -22,7 +22,7 @@ export class SendService {
      * 오더 테이블에서 발송 목록 가져오기
      * @returns 
      */
-      async getSendList() {
+      async getSendOne() {
         try {
             const list = await this.prisma.order.findMany({
                 where: {
@@ -80,7 +80,7 @@ export class SendService {
      */
     async setSendList() {
         try {
-            const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
+            const sendList = await this.getSendOne(); //isComplete 된 리스트 가져오기
 
             const arr = [];
 
@@ -129,9 +129,12 @@ export class SendService {
      * 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList() {
+    async getOrderTempList(id:number) {
         try {
             const list = await this.prisma.tempOrder.findMany({
+                where:{
+                    sendListId:id
+                },
                 orderBy: {
                     //id: 'asc',
                     orderSortNum:'asc' //sortNum으로 order by 해야됨
@@ -334,9 +337,9 @@ export class SendService {
             url: any;
         } 
      */
-    async sendNumExcel(){
+    async sendNumExcel(id:number){
         try{
-            const send = await this.getOrderTempList();
+            const send = await this.getOrderTempList(id);
             const list = send.list;
 
             const wb = new Excel.Workbook();
@@ -416,11 +419,80 @@ export class SendService {
             }).catch((err) => {
                 this.logger.error(err);
                 return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
-            })
+            });
+
+            return {success:true,status:HttpStatus.OK};
+
         }catch(err){
             this.logger.error(err);
             return {
                 success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 리스트 가져오기
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                title: string;
+                amount: number;
+                full: boolean;
+                useFlag: boolean;
+                date: Date;
+            }[];
+            status?: undefined;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async getSendList(){
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{
+                    useFlag:true
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }> 
+     */
+    async completeSend(id:number){
+        try{
+            await this.prisma.sendList.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    useFlag:false
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }

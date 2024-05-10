@@ -56,11 +56,13 @@ export class ErpService {
                 } else if (e.orderType == 'patient') {
                     objPatient[`${e.code}`] = e.answer;
                 } else if (e.orderType == 'orderItem') {
-                    const obj = {
-                        item: e.answer,
-                        type: e.code
+                    if (e.answer != '') {
+                        const obj = {
+                            item: e.answer,
+                            type: e.code
+                        }
+                        objOrderItem.push(obj);
                     }
-                    objOrderItem.push(obj);
                 } else if (e.orderType == 'orderBodyType') {
                     objOrderBodyType[`${e.code}`] = e.answer;
                 } else {
@@ -171,7 +173,7 @@ export class ErpService {
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: false,
-                    isComplete:false,
+                    isComplete: false,
                 },
                 select: {
                     id: true,
@@ -298,7 +300,7 @@ export class ErpService {
                     let tempObj = objOrderItem[i];
                     let temp = {}
 
-                    if (tempObj.type=='assistant') {
+                    if (tempObj.type == 'assistant') {
                         temp = {
                             item: tempObj.item,
                             type: tempObj.type,
@@ -612,21 +614,152 @@ export class ErpService {
             status: HttpStatus;
         }>
      */
-    async completeConsulting(id:number){
-        try{
-            //발송 목록으로 이동
-            const sendOne = await this.prisma.order.update({
-                where:{
-                    id:id
-                },
-                data:{
-                    isComplete:true,
+    async completeConsulting(id: number) {
+        try {
+            //트랜젝션 시작
+            await this.prisma.$transaction(async (tx) => {
+
+                //발송 목록으로 이동 처리
+                const sendOne = await tx.order.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        isComplete: true,
+                    }
+                });
+
+                //해당 오더 발송 개수 가져오기
+                const orderItems = await tx.orderItem.findMany({
+                    where: {
+                        orderId: id,
+                        type: { in: ['common', 'yoyo'] }
+                    }
+                });
+
+                console.log(`-----------${orderItems.length}-----------`);
+                console.log(orderItems);
+
+                //오더 개수
+                const orderAmount = orderItems.length;
+
+                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
+                const sendList = await tx.sendList.findMany({
+                    where: {
+                        full: false
+                    },
+                    orderBy:{
+                        id:'asc'
+                    },
+                    select: {
+                        id: true,
+                        amount:true
+                    }
+                });
+
+                //아직 350개 차지 않은 발송 목록이 있을 때
+                if (sendList.length>0) {
+                    const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
+
+                    if(checkAmount>350){
+                        //350개가 넘으면 새로운 발송목록에 삽입
+                        if(sendList.length==1){
+                            //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
+                            const date = new Date();
+                            const title = date.toString();
+                            const newSendList = await tx.sendList.create({
+                                data:{
+                                    title:title,
+                                    amount:orderAmount,
+                                    date:date,
+                                    full:false
+                                }
+                            });
+
+                            //새 발송목록에 데이터 넣기
+                            const res = await this.createTempOrder(sendOne, id, newSendList.id, tx);
+                            if(res.success) return {success:true,status:HttpStatus.OK};
+                            else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+
+                        }else{
+                            //다 차지 않은 발송목록이 있어서 그냥 넣으면 될 때
+                            await tx.sendList.update({
+                                where:{
+                                    id:sendList[1].id
+                                },
+                                data:{
+                                    amount:checkAmount
+                                }
+                            });
+                            const res = await this.createTempOrder(sendOne, id, sendList[1].id,tx);
+                            if(res.success) return {success:true,status:HttpStatus.OK};
+                            else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
+                        }
+                    }else{
+                        //350개 이하면 기존 발송목록에 삽입
+                        const checkAmount = sendList[0].amount + orderAmount;
+
+                        if(checkAmount == 350) {
+                            await tx.sendList.update({
+                                where:{
+                                    id:sendList[0].id
+                                },
+                                data:{
+                                    full:true
+                                }
+                            });
+                        }else{
+                            await tx.sendList.update({
+                                where:{
+                                    id:sendList[0].id
+                                },
+                                data:{
+                                    amount:checkAmount
+                                }
+                            })
+                        }
+                        const res = await this.createTempOrder(sendOne, id, sendList[0].id,tx);
+                        if(res.success) return {success:true,status:HttpStatus.OK};
+                        else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
+                    }
+                } else {
+                    //새로 발송목록을 만들어야 할 때
+                    console.log('create new send list');
+                    const date = new Date();
+                    const title = date.toString();
+                    const newSendList = await tx.sendList.create({
+                        data:{
+                            title:title,
+                            amount:orderAmount,
+                            date:date,
+                            full:false
+                        }
+                    });
+
+                    //새 발송목록에 데이터 넣기
+                    const res = await this.createTempOrder(sendOne, id, newSendList.id,tx);
+                    if(res.success) return {success:true,status:HttpStatus.OK};
+                    else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
                 }
             });
-            
+
+
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async createTempOrder(sendOne,id,sendListId,tx) {
+        try{
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
-            await this.prisma.tempOrder.create({
+
+            await tx.tempOrder.create({
                 data:{
                     route: sendOne.route,
                     message: sendOne.message,
@@ -643,11 +776,13 @@ export class ErpService {
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
                     patientId: sendOne.patientId,
-                    orderId: id
+                    orderId: id,
+                    sendListId:sendListId
                 }
-            })
+            });
 
-            return { success: true, status: HttpStatus.OK };
+            return {success:true};
+
         }catch(err){
             this.logger.error(err);
             return {
@@ -859,7 +994,7 @@ export class ErpService {
                     name: true,
                 }
             });
-            if(res.length >= 1)
+            if (res.length >= 1)
                 return { success: true, check: true, status: HttpStatus.OK };
             else
                 return { success: true, check: false, status: HttpStatus.OK };
