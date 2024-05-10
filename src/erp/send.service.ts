@@ -22,7 +22,7 @@ export class SendService {
      * 오더 테이블에서 발송 목록 가져오기
      * @returns 
      */
-      async getSendList() {
+      async getSendOne() {
         try {
             const list = await this.prisma.order.findMany({
                 where: {
@@ -80,7 +80,7 @@ export class SendService {
      */
     async setSendList() {
         try {
-            const sendList = await this.getSendList(); //isComplete 된 리스트 가져오기
+            const sendList = await this.getSendOne(); //isComplete 된 리스트 가져오기
 
             const arr = [];
 
@@ -416,11 +416,77 @@ export class SendService {
             }).catch((err) => {
                 this.logger.error(err);
                 return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
-            })
+            });
         }catch(err){
             this.logger.error(err);
             return {
                 success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 리스트 가져오기
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                title: string;
+                amount: number;
+                full: boolean;
+                useFlag: boolean;
+                date: Date;
+            }[];
+            status?: undefined;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async getSendList(){
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{
+                    useFlag:true
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }> 
+     */
+    async completeSend(id:number){
+        try{
+            await this.prisma.sendList.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    useFlag:false
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }

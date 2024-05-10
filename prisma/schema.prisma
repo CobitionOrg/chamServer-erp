@@ -136,6 +136,7 @@ model sendList {
   title String
   amount Int
   full  Boolean @default(false)
+  useFlag Boolean @default(true)
   date DateTime @db.DateTime(0)
   tempOrders tempOrder[]
 }

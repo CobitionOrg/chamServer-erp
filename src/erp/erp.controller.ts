@@ -105,7 +105,7 @@ export class ErpController {
 
     @ApiOperation({summary:'발송 목록 조회'})
     @Get('/sendList')
-    async getSendList(){
+    async getSendOne(){
         this.logger.log('발송 목록 리스트');
         return await this.sendService.getOrderTempList();
     }
@@ -144,5 +144,19 @@ export class ErpController {
     async setSendNum(@Body() sendExcelDto:SendOrder[]){
         this.logger.log('송장번호 저장');
         return await this.sendService.setSendNum(sendExcelDto);
+    }
+
+    @ApiOperation({summary:'발송목록 리스트 가져오기'})
+    @Get('/getSendList')
+    async getSendList(){
+        this.logger.log('발송목록 리스트 가져오기');
+        return await this.sendService.getSendList();
+    }
+
+    @ApiOperation({summary:'송장 리스트 완료 처리'})
+    @Patch('/completeSend/:id')
+    async completeSend(@Param("id") id:number){
+        this.logger.log('송장 리스트 완료 처리');
+        return await this.sendService.completeSend(id);
     }
 }
