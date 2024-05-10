@@ -129,9 +129,12 @@ export class SendService {
      * 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList() {
+    async getOrderTempList(id:number) {
         try {
             const list = await this.prisma.tempOrder.findMany({
+                where:{
+                    sendListId:id
+                },
                 orderBy: {
                     //id: 'asc',
                     orderSortNum:'asc' //sortNum으로 order by 해야됨
@@ -334,9 +337,9 @@ export class SendService {
             url: any;
         } 
      */
-    async sendNumExcel(){
+    async sendNumExcel(id:number){
         try{
-            const send = await this.getOrderTempList();
+            const send = await this.getOrderTempList(id);
             const list = send.list;
 
             const wb = new Excel.Workbook();
@@ -417,6 +420,9 @@ export class SendService {
                 this.logger.error(err);
                 return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
             });
+
+            return {success:true,status:HttpStatus.OK};
+
         }catch(err){
             this.logger.error(err);
             return {

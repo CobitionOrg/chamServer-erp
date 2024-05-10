@@ -104,10 +104,10 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 조회'})
-    @Get('/sendList')
-    async getSendOne(){
+    @Get('/sendList/:id')
+    async getSendOne(@Param("id") id:number){
         this.logger.log('발송 목록 리스트');
-        return await this.sendService.getOrderTempList();
+        return await this.sendService.getOrderTempList(id);
     }
 
     @ApiOperation({summary:'발송 단일 데이터 조회'})
@@ -133,10 +133,10 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송번호 엑셀'})
-    @Get('/sendNumExcel')
-    async sendNumExcel(){
+    @Get('/sendNumExcel/:id')
+    async sendNumExcel(@Param("id") id:number){
         this.logger.log('발송번호 엑셀');
-        return await this.sendService.sendNumExcel();
+        return await this.sendService.sendNumExcel(id);
     }
   
     @ApiOperation({summary:'송장번호 엑셀로 송장번호 업로드'})
