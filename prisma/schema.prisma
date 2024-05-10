@@ -122,12 +122,22 @@ model tempOrder {
   date            DateTime @db.DateTime(0)
   orderSortNum    Int      @default(0)
   orderId         Int
+  sendListId      Int
   sendNum         String?  @db.VarChar(100)
   order           order    @relation(fields: [orderId], references: [id])
   patient         patient  @relation(fields: [patientId], references: [id])
-
+  sendList        sendList @relation(fields: [sendListId],references:[id])
   @@index([orderId], map: "tempOrder_orderId_fkey")
   @@index([patientId], map: "tempOrder_patientId_fkey")
+}
+
+model sendList {
+  id  Int @id @default(autoincrement())
+  title String
+  amount Int
+  full  Boolean @default(false)
+  date DateTime @db.DateTime(0)
+  tempOrders tempOrder[]
 }
 
 model orderBodyType {
