@@ -646,7 +646,8 @@ export class ErpService {
                 //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
                 const sendList = await tx.sendList.findMany({
                     where: {
-                        full: false
+                        full: false,
+                        fixFlag: false //픽스 여부 체크
                     },
                     orderBy:{
                         id:'asc'
@@ -705,7 +706,8 @@ export class ErpService {
                                     id:sendList[0].id
                                 },
                                 data:{
-                                    full:true
+                                    full:true,
+                                    fixFlag:true, //350개 되면 자동으로 fix
                                 }
                             });
                         }else{

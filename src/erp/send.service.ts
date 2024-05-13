@@ -227,6 +227,11 @@ export class SendService {
         }
     }
 
+    /**
+     * 발송목록에서 오더 수정
+     * @param surveyDto 
+     * @returns 
+     */
     async updateSendOrder(surveyDto:UpdateSurveyDto){
         try{
             const insertOrder = surveyDto.answers;
@@ -485,6 +490,64 @@ export class SendService {
                 },
                 data:{
                     useFlag:false
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 고정
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
+    async fixSendList(id:number){
+        try{
+            await this.prisma.sendList.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    fixFlag:true,
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 고정 해제
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
+    async cancelFix(id:number){
+        try{
+            await this.prisma.sendList.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    fixFlag:false
                 }
             });
 
