@@ -159,4 +159,20 @@ export class ErpController {
         this.logger.log('송장 리스트 완료 처리');
         return await this.sendService.completeSend(id);
     }
+
+    @ApiOperation({summary:'발송목록 고정'})
+    @Patch('/fixSendList/:id')
+    async fixSendList(@Param("id") id:number){
+        this.logger.log('발송목록 고정');
+        return await this.sendService.fixSendList(id);
+    }
+
+    @ApiOperation({summary:'발송목록 고정 해제'})
+    @Patch('/cancelFix/:id')
+    async cancelFix(@Param("id") id:number){
+        this.logger.log('발송목록 고정 해제');
+        return await this.sendService.cancelFix(id);
+    }
+
+   
 }
