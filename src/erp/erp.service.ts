@@ -14,6 +14,8 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import axios from 'axios';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
+import { getItem } from 'src/util/getItem';
+import { InsertCashDto } from './Dto/insertCash.dto';
 
 
 @Injectable()
@@ -904,7 +906,9 @@ export class ErpService {
                 let items='';
 
                 for(let i =0; i<e.orderItems.length;i++){
-                    items+=`${e.orderItems[i].item}/`
+                    console.log(e.orderItems[i].item)
+                    const item = getItem(e.orderItems[i].item);
+                    items+=`${item}/`
                 }
 
                 const payType = e.payType;
@@ -1008,6 +1012,18 @@ export class ErpService {
             else
                 return { success: true, check: false, status: HttpStatus.OK };
         } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async cashExcel(insertCashDto:Array<InsertCashDto>){
+        try{    
+            console.log(insertCashDto);
+        }catch(err){
             this.logger.error(err);
             return {
                 success: false,
