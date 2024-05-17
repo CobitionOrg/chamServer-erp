@@ -20,7 +20,8 @@ jobs:
           port: ${{ secrets.REMOTE_SSH_PORT }} # 접속포트
           script: | # 실행할 스크립트
             cd /home/ubuntu/chamServer-erp
-            echo "directory"
+            echo "Cham Server"
+            ls -al
             git pull origin main
             pm2 kill
             npm i 
