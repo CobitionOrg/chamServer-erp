@@ -884,6 +884,7 @@ export class ErpService {
                 }
             });
 
+
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
             const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
@@ -899,7 +900,13 @@ export class ErpService {
 
             list.forEach((e) => {
                 const { name, phoneNum } = e.patient;
-                const items = e.orderItems.join('/');
+                console.log(e.orderItems)
+                let items='';
+
+                for(let i =0; i<e.orderItems.length;i++){
+                    items+=`${e.orderItems[i].item}/`
+                }
+
                 const payType = e.payType;
 
                 const rowDatas = [name, phoneNum, items, payType];
