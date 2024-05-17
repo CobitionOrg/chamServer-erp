@@ -948,7 +948,7 @@ export class ErpService {
             let fileUrl = presignedUrl.split('?')[0];
             return fileUrl;
         } catch (err) {
-            //this.logger.error(err);
+            this.logger.error(err);
             return {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
