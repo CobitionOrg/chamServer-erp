@@ -26,4 +26,4 @@ interface Order {
 interface OrderItem {
     item: string;
     type: string;
-  }
+}
