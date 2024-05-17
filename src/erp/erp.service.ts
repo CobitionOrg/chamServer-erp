@@ -1015,4 +1015,129 @@ export class ErpService {
             }
         }
     }
+
+    /**
+     * 직원이 환자 order 업데이트
+     * @param {UpdateSurveyDto, id}
+     * @returns {success: boolean, status: HttpStatus.OK}
+     */
+    async updateOrderByStaff(updateSurveyDto, id) {
+        try{
+            const patientData = updateSurveyDto.patient;
+            const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
+                return item.item !== '';
+            });
+
+            delete updateSurveyDto.patient;
+            delete updateSurveyDto.orderItems;
+
+            const orderData = updateSurveyDto;
+            const items = orderItemsData.map((item) => ({
+                item: item.item,
+                type: item.type,
+                orderId: id
+            }));
+            console.log(items);
+
+            const res = await this.prisma.$transaction(async (tx) => {
+                const order = await tx.order.update({
+                    where: {
+                        id: id
+                    },
+                    data: orderData
+                });
+
+                const patient = await tx.patient.update({
+                    where: {
+                        id: patientData.id
+                    },
+                    data: patientData
+                });
+
+                const deleteItems = await tx.orderItem.deleteMany({
+                    where: {
+                        orderId: id
+                    }
+                });
+
+                const insertItems = await tx.orderItem.createMany({
+                    data: items
+                });
+            });
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 원장님이 환자 order 업데이트
+     * @param {UpdateSurveyDto, id}
+     * @returns {success: boolean, status: HttpStatus.OK}
+     */
+    async updateOrderByDoc(updateSurveyDto, id) {
+        try {
+            const patientData = updateSurveyDto.patient;
+            const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
+                return item.item !== '';
+            });
+            const orderBodyTypeData = updateSurveyDto.orderBodyType;
+
+            delete updateSurveyDto.patient;
+            delete updateSurveyDto.orderItems;
+            delete updateSurveyDto.orderBodyType;
+
+            const orderData = updateSurveyDto;
+            const items = orderItemsData.map((item) => ({
+                item: item.item,
+                type: item.type,
+                orderId: id
+            }));
+            console.log(items);
+
+            const res = await this.prisma.$transaction(async (tx) => {
+                const order = await tx.order.update({
+                    where: {
+                        id: id
+                    },
+                    data: orderData
+                });
+
+                const patient = await tx.patient.update({
+                    where: {
+                        id: patientData.id
+                    },
+                    data: patientData
+                });
+
+                const orderBodyType = await tx.orderBodyType.update({
+                    where: {
+                        orderId: id
+                    },
+                    data: orderBodyTypeData
+                });
+
+                const deleteItems = await tx.orderItem.deleteMany({
+                    where: {
+                        orderId: id
+                    }
+                });
+
+                const insertItems = await tx.orderItem.createMany({
+                    data: items
+                });
+            })
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }

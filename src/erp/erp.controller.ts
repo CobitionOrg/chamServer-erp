@@ -103,6 +103,20 @@ export class ErpController {
     async s3Test(){
         return await this.erpService.s3Url();
     }
+
+    @ApiOperation({summary: '직원이 환자 정보 업데이트'})
+    @Post('/staff-order-update/:id')
+    async updateOrderByStaff(@Body() updateSurveyDto : UpdateSurveyDto, @Param('id') id : number) {
+        this.logger.log('직원이 환자 정보 업데이트');
+        return await this.erpService.updateOrderByStaff(updateSurveyDto, id);
+    }
+
+    @ApiOperation({summary: '원장님이 환자 정보 업데이트'})
+    @Post('/doctor-order-update/:id')
+    async updateOrderByDoc(@Body() updateSurveyDto : UpdateSurveyDto, @Param('id') id : number) {
+        this.logger.log('직원이 환자 정보 업데이트');
+        return await this.erpService.updateOrderByDoc(updateSurveyDto, id);
+    }
   
     @ApiOperation({summary: '지인 확인'})
     @Get('/acquaintance-check/:route')
