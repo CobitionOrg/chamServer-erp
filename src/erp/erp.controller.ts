@@ -11,6 +11,7 @@ import { OrderUpd } from 'src/auth/decorators/order.decorator';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { SendService } from './send.service';
 import { SendOrder } from './Dto/sendExcel.dto';
+import axios from 'axios';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -88,6 +89,13 @@ export class ErpController {
     async newPatientExcel(){
         this.logger.log('신환 용 엑셀 파일 다운로드');
         return await this.erpService.newPatientExcel();
+    }
+
+    @ApiOperation({summary:'차팅 용 엑셀 다운로드'})
+    @Get('/chatingExcel')
+    async chatingExcel(){
+        this.logger.log('차팅 용 엑셀 파일 다운로드');
+        return await this.erpService.chatingExcel();
     }
 
     @Public()
@@ -174,5 +182,5 @@ export class ErpController {
         return await this.sendService.cancelFix(id);
     }
 
-   
+       
 }
