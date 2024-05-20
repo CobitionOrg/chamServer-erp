@@ -17,20 +17,30 @@ export class CashExcel {
 
     countNames() {
         this.excelData.forEach((e) => {
-            this.countMap1.set(e.name, (this.countMap1.get(e) || 0) +1);
+            console.log(e.name);
+            let name = e.name;
+            if(e.name.match(/[\uAC00-\uD7AF]/g)){
+                name = e.name.match(/[\uAC00-\uD7AF]/g).join(''); //이름만 추출
+
+            }
+            this.countMap1.set(name, e);
         });
 
-        console.log(this.dbData);
+        //console.log(this.dbData);
         this.dbData.forEach((e) =>{
-            this.countMap2.set(e.patient.name, (this.countMap2.get(e) || 0) +1);
+            this.countMap2.set(e.patient.name, e);
         });
     }
 
     findMatchesAndDuplicates(){
-        this.countMap1.forEach((count1, e:any) => {
-            const count2 = this.countMap2.get(e) || 0
+        console.log(this.countMap1);
+        console.log(this.countMap2);
 
-            if(count1 === 1 && count2 ===1) {
+        this.countMap1.forEach((count1, e:any) => {
+            console.log(count1.name)
+            const count2 = this.countMap2.get(count1.name);
+            console.log(count2);
+            if(e.includes(count2) && count2 != 0) {
                 this.matches.push(e);
             }else if(count1 > 0 && count2 > 0){
                 this.duplicates.push(e);
