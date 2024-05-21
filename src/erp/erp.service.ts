@@ -14,6 +14,7 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import axios from 'axios';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
+import { GetListDto } from './Dto/getList.dto';
 
 
 @Injectable()
@@ -167,14 +168,54 @@ export class ErpService {
             type:string,
         }[];
      */
-    async getReciptList() {
+    async getReciptList(getListDto: GetListDto) {
         try {
-            //날짜 별 조회 추가 예정
-            const list = await this.prisma.order.findMany({
-                where: {
+            console.log(getListDto);
+            let orderConditions = {};
+            if(getListDto.date === null) {
+                //날짜 조건 X
+                orderConditions = {
                     consultingType: false,
                     isComplete: false,
-                },
+                }
+            } else {
+                //날짜 조건 O
+                const date = new Date(getListDto.date);
+                const startDate = new Date(date.setHours(0,0,0,0));
+                const endDate = new Date(date.setHours(23,59,59,999));
+                orderConditions = {
+                    consultingType: false,
+                    isComplete: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if(getListDto.searchKeyword !== "") {
+                //검색어 O
+                if(getListDto.searchCategory === "all"){
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: {contains: getListDto.searchKeyword } } },
+                            { patient: { phoneNum: {contains: getListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: {contains: getListDto.searchKeyword } }
+                    }
+                }
+                else if (getListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { phoneNum: {contains: getListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: {...orderConditions, ...patientConditions},
                 select: {
                     id: true,
                     route: true,

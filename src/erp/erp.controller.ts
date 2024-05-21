@@ -12,6 +12,7 @@ import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { SendService } from './send.service';
 import { SendOrder } from './Dto/sendExcel.dto';
 import axios from 'axios';
+import { GetListDto } from './Dto/getList.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -50,10 +51,10 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'오더 리스트 조회'})
-    @Get('/getList')
-    async getReciptList(){
+    @Post('/getList')
+    async getReciptList(@Body() getListDto: GetListDto){
        this.logger.log('오더 리스트 조회');
-       return await this.erpService.getReciptList(); 
+       return await this.erpService.getReciptList(getListDto); 
     }
 
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
