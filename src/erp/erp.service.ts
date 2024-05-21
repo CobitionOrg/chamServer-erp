@@ -1152,16 +1152,31 @@ export class ErpService {
         try{    
             //console.log(insertCashDto);
             const cashList = await this.getCashTypeList();
+            const itemList = await this.getItems();
             //console.log(cashList);
 
-            const cashMatcher = new CashExcel(insertCashDto,cashList.list);
-            const results = cashMatcher.getResult();
+            const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
+            const results = cashMatcher.compare();
             console.log(results);
         }catch(err){
             this.logger.error(err);
             return {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getItems(){
+        try{
+            const list = await this.prisma.item.findMany();
+
+            return list;
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
