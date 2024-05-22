@@ -109,10 +109,10 @@ export class CashExcel {
 
                         //duplicates 배열에 넣고 해시테이블에서 삭제
                         idx.forEach(i => {
-                            console.log(i);
+                            //console.log(i);
                             this.duplicates.push(hashData[i]);
                             hashData.splice(i,1);
-                            console.log(hashData);
+                            //console.log(hashData);
                             this.hashTable.set(data.patient.name, hashData)
                             this.log.push({
                                 name : data.patient.name,
@@ -125,14 +125,17 @@ export class CashExcel {
 
                 }else{
                     //동명이인이 없어 금액만 비교해서 바로 입금 처리
-                    //console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
-                    let compare = this.comparePrice(this.hashTable.get(data.patient.name).cash, data);
+                    console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
+                    console.log(this.hashTable.get(data.patient.name));
+                    console.log(this.hashTable.get(data.patient.name).cash);
+                    let cash = Array.isArray(this.hashTable.get(data.patient.name)) ? this.hashTable.get(data.patient.name)[0].cash : this.hashTable.get(data.patient.name).cash;
+                    let compare = this.comparePrice(cash, data);
                     if(compare.success){
                         this.matches.push(data);
                         this.log.push({
                             name : data.patient.name,
                             log : 'match',
-                            price : this.hashTable.get(data.patient.name).cash,
+                            price : cash,
                             id : 3,
                         })
                     }else{
@@ -218,6 +221,7 @@ export class CashExcel {
         //console.log(check);
         //console.log(sendTax.includes(check[0]?.item));
         if(check.length == 1 && sendTax.includes(check[0].item)){
+            console.log(dbData);
             priceSum+=3500;
         }
 
@@ -226,14 +230,20 @@ export class CashExcel {
             for(let i = 0; i<this.itemList.length; i++){
                 if(this.itemList[i].item.includes(e.item)){
                     priceSum+=this.itemList[i].price;
+                    if(dbData.id == 34 || dbData.id ==21){
+                        console.log(priceSum)
+                    }
                     //console.log(priceSum);
                     break;
                 }
             }
         });
-
-        //console.log(priceSum);
-        //console.log(excelPrice);
+        
+        if(dbData.id == 34 || dbData.id ==21){
+            console.log(priceSum);
+            console.log(excelPrice);
+        }
+        
         if(priceSum == excelPrice){
             return {success:true};
         }else{
