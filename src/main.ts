@@ -3,12 +3,16 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { winstonLogger } from './util/winston.util';
 import { ValidationPipe } from '@nestjs/common';
+import * as express from 'express';
+
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{
     cors:true,
     logger:winstonLogger
   });
 
+  app.use(express.json({limit:'50mb'}));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist : true,  //유효성이 안맞으면 접근이 안되게

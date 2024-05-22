@@ -72,10 +72,12 @@ model patient {
 }
 
 model item {
-  id      Int     @id @default(autoincrement())
-  item    String
-  isFirst Boolean
-  isYoyo  Boolean
+  id         Int     @id @default(autoincrement())
+  item       String
+  isFirst    Boolean
+  isYoyo     Boolean
+  isQuestion Boolean
+  price      Int?
 }
 
 model order {

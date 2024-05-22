@@ -1,5 +1,8 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as Excel from 'exceljs'
+import axios from 'axios';
+
 import { PrismaService } from 'src/prisma.service';
 import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { error } from 'console';
@@ -9,13 +12,14 @@ import { AdminService } from 'src/admin/admin.service';
 import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
 import { generateUploadURL } from '../util/s3';
-import * as Excel from 'exceljs'
-import { styleHeaderCell } from 'src/util/excelUtil';
-import axios from 'axios';
+import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
 import { GetListDto } from './Dto/getList.dto';
-
+import { getItem } from 'src/util/getItem';
+import { InsertCashDto } from './Dto/insertCash.dto';
+import { CashExcel } from 'src/util/cashExcel';
+import { getSendTitle } from 'src/util/getSendTitle';
 
 @Injectable()
 export class ErpService {
@@ -722,7 +726,7 @@ export class ErpService {
                 //오더 개수
                 const orderAmount = orderItems.length;
 
-                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
+                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임(이라고 생각했는데 fix 해제 요청 들어옴...)
                 const sendList = await tx.sendList.findMany({
                     where: {
                         full: false,
@@ -746,10 +750,12 @@ export class ErpService {
                         if(sendList.length==1){
                             //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
                             const date = new Date();
-                            const title = date.toString();
+                            const title = getSendTitle();
+                            console.log(title);
+
                             const newSendList = await tx.sendList.create({
                                 data:{
-                                    title:title,
+                                    title:title.toString(),
                                     amount:orderAmount,
                                     date:date,
                                     full:false
@@ -807,10 +813,11 @@ export class ErpService {
                     //새로 발송목록을 만들어야 할 때
                     console.log('create new send list');
                     const date = new Date();
-                    const title = date.toString();
+                    const title = getSendTitle();
+                    console.log(title);
                     const newSendList = await tx.sendList.create({
                         data:{
-                            title:title,
+                            title:title.toString(),
                             amount:orderAmount,
                             date:date,
                             full:false
@@ -983,7 +990,9 @@ export class ErpService {
                 let items='';
 
                 for(let i =0; i<e.orderItems.length;i++){
-                    items+=`${e.orderItems[i].item}/`
+                    console.log(e.orderItems[i].item)
+                    const item = getItem(e.orderItems[i].item);
+                    items+=`${item}/`
                 }
 
                 const payType = e.payType;
@@ -1212,6 +1221,101 @@ export class ErpService {
             })
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async cashExcel(insertCashDto : Array<InsertCashDto>){
+        try{    
+            //console.log(insertCashDto);
+            const cashList = await this.getCashTypeList();
+            const itemList = await this.getItems();
+            //console.log(cashList);
+            console.log(insertCashDto);
+            const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
+            const results = cashMatcher.compare();
+
+            console.log(results);
+            //엑셀 생성
+            const createExcel = await createExcelCash(results.duplicates,results.noMatches);
+            const url = createExcel.url;
+
+            //발송목록 이동 처리
+            results.matches.forEach(async (e) => {
+                await this.completeConsulting(e.id);
+            });
+            return {success:true, url};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**item 테이블 데이터 가져오기 */
+    async getItems(){
+        try{
+            const list = await this.prisma.item.findMany();
+
+            return list;
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getCashTypeList() {
+        try{
+             //날짜 별 조회 추가 예정
+             const list = await this.prisma.order.findMany({
+                where: {
+                    consultingType: false,
+                    isComplete: false,
+                    payType: '계좌이체'
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            id : true,
+                            item: true,
+                            type: true,
+                        }
+                    },
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
             this.logger.error(err);
             return {
                 success: false,
