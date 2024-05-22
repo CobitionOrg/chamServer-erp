@@ -15,12 +15,11 @@ import { generateUploadURL } from '../util/s3';
 import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
+import { GetListDto } from './Dto/getList.dto';
 import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
-
-
 
 @Injectable()
 export class ErpService {
@@ -173,14 +172,53 @@ export class ErpService {
             type:string,
         }[];
      */
-    async getReciptList() {
+    async getReciptList(getListDto: GetListDto) {
         try {
-            //날짜 별 조회 추가 예정
-            const list = await this.prisma.order.findMany({
-                where: {
+            let orderConditions = {};
+            if(getListDto.date === undefined) {
+                //날짜 조건 X
+                orderConditions = {
                     consultingType: false,
                     isComplete: false,
-                },
+                }
+            } else {
+                //날짜 조건 O
+                const date = new Date(getListDto.date);
+                const startDate = new Date(date.setHours(0,0,0,0));
+                const endDate = new Date(date.setHours(23,59,59,999));
+                orderConditions = {
+                    consultingType: false,
+                    isComplete: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if(getListDto.searchKeyword !== "") {
+                //검색어 O
+                if(getListDto.searchCategory === "all"){
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: { contains: getListDto.searchKeyword } } },
+                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: {contains: getListDto.searchKeyword } }
+                    }
+                }
+                else if (getListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { phoneNum: {contains: getListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: {...orderConditions, ...patientConditions},
                 select: {
                     id: true,
                     route: true,
@@ -517,18 +555,57 @@ export class ErpService {
      * 유선 상담 목록 조회
      * @returns 
      */
-    async getCallList(header: string) {
+    async getCallList(header: string, getListDto: GetListDto) {
         try {
             //등급 조회
             const checkAdmin = await this.adminService.checkAdmin(header);
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
-
-            //날짜 별 조회 추가 예정
-            const list = await this.prisma.order.findMany({
-                where: {
+            console.log(getListDto);
+            let orderConditions = {};
+            if(getListDto.date === undefined) {
+                //날짜 조건 X
+                orderConditions = {
                     consultingType: true,
                     isComplete: false,
-                },
+                }
+            } else {
+                //날짜 조건 O
+                const date = new Date(getListDto.date);
+                const startDate = new Date(date.setHours(0,0,0,0));
+                const endDate = new Date(date.setHours(23,59,59,999));
+                orderConditions = {
+                    consultingType: true,
+                    isComplete: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if(getListDto.searchKeyword === "") {
+                //검색어 O
+                if(getListDto.searchCategory === "all") {
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: { contains: getListDto.searchKeyword } } },
+                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: { contains: getListDto.searchKeyword } }
+                    }
+                }
+                else if (getListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { name: { contains: getListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: {...orderConditions, ...patientConditions},
                 select: {
                     id: true,
                     route: true,
