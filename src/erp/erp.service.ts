@@ -183,9 +183,13 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const date = new Date(getListDto.date);
-                const startDate = new Date(date.setHours(0,0,0,0));
-                const endDate = new Date(date.setHours(23,59,59,999));
+                // 그리니치 천문대 표준시
+                const gmtDate = new Date(getListDto.date);
+                // 한국 시간으로 바꾸기
+                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
+
+                const startDate = new Date(kstDate.setHours(0,0,0,0));
+                const endDate = new Date(kstDate.setHours(23,59,59,999));
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
@@ -557,6 +561,7 @@ export class ErpService {
      */
     async getCallList(header: string, getListDto: GetListDto) {
         try {
+            console.log(getListDto);
             //등급 조회
             const checkAdmin = await this.adminService.checkAdmin(header);
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
@@ -570,9 +575,13 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const date = new Date(getListDto.date);
-                const startDate = new Date(date.setHours(0,0,0,0));
-                const endDate = new Date(date.setHours(23,59,59,999));
+                // 그리니치 천문대 표준시
+                const gmtDate = new Date(getListDto.date);
+                // 한국 시간으로 바꾸기
+                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
+                
+                const startDate = new Date(kstDate.setHours(0,0,0,0));
+                const endDate = new Date(kstDate.setHours(23,59,59,999));
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
