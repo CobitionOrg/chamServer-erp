@@ -54,7 +54,6 @@ export class ErpController {
     @Get('/getList')
     async getReciptList(@Query() getListDto: GetListDto){
        this.logger.log('오더 리스트 조회');
-       console.log(getListDto);
        return await this.erpService.getReciptList(getListDto); 
     }
 
@@ -67,9 +66,9 @@ export class ErpController {
 
     @ApiOperation({summary:'유선 상담 목록 조회'})
     @Get('/callConsulting')
-    async getCallList(@Headers() header){
+    async getCallList(@Headers() header, @Query() getListDto: GetListDto){
         this.logger.log('유선 상담 목록 조회');
-        return await this.erpService.getCallList(getToken(header));
+        return await this.erpService.getCallList(getToken(header), getListDto);
     }
 
     @ApiOperation({summary:'유선 상담 완료 처리'})
