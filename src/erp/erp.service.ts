@@ -18,6 +18,7 @@ import { checkGSB } from '../util/checkGSB.util';
 import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
+import { getSendTitle } from 'src/util/getSendTitle';
 
 
 
@@ -648,7 +649,7 @@ export class ErpService {
                 //오더 개수
                 const orderAmount = orderItems.length;
 
-                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
+                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임(이라고 생각했는데 fix 해제 요청 들어옴...)
                 const sendList = await tx.sendList.findMany({
                     where: {
                         full: false,
@@ -672,7 +673,7 @@ export class ErpService {
                         if(sendList.length==1){
                             //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
                             const date = new Date();
-                            const title = date.toString();
+                            const title = getSendTitle.toString();
                             const newSendList = await tx.sendList.create({
                                 data:{
                                     title:title,
