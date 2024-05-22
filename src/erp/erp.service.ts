@@ -170,9 +170,9 @@ export class ErpService {
      */
     async getReciptList(getListDto: GetListDto) {
         try {
-            console.log(getListDto);
+            console.log(getListDto.date);
             let orderConditions = {};
-            if(getListDto.date === null) {
+            if(getListDto.date === undefined) {
                 //날짜 조건 X
                 orderConditions = {
                     consultingType: false,

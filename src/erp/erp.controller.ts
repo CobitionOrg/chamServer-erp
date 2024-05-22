@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -51,9 +51,10 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'오더 리스트 조회'})
-    @Post('/getList')
-    async getReciptList(@Body() getListDto: GetListDto){
+    @Get('/getList')
+    async getReciptList(@Query() getListDto: GetListDto){
        this.logger.log('오더 리스트 조회');
+       console.log(getListDto);
        return await this.erpService.getReciptList(getListDto); 
     }
 
