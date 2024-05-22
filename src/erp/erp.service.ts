@@ -560,7 +560,7 @@ export class ErpService {
             //등급 조회
             const checkAdmin = await this.adminService.checkAdmin(header);
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
-            console.log(getListDto);
+
             let orderConditions = {};
             if(getListDto.date === undefined) {
                 //날짜 조건 X
