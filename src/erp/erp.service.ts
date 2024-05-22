@@ -1,5 +1,8 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as Excel from 'exceljs'
+import axios from 'axios';
+
 import { PrismaService } from 'src/prisma.service';
 import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { error } from 'console';
@@ -9,11 +12,13 @@ import { AdminService } from 'src/admin/admin.service';
 import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
 import { generateUploadURL } from '../util/s3';
-import * as Excel from 'exceljs'
-import { styleHeaderCell } from 'src/util/excelUtil';
-import axios from 'axios';
+import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
+import { getItem } from 'src/util/getItem';
+import { InsertCashDto } from './Dto/insertCash.dto';
+import { CashExcel } from 'src/util/cashExcel';
+
 
 
 @Injectable()
@@ -904,7 +909,9 @@ export class ErpService {
                 let items='';
 
                 for(let i =0; i<e.orderItems.length;i++){
-                    items+=`${e.orderItems[i].item}/`
+                    console.log(e.orderItems[i].item)
+                    const item = getItem(e.orderItems[i].item);
+                    items+=`${item}/`
                 }
 
                 const payType = e.payType;
@@ -1133,6 +1140,101 @@ export class ErpService {
             })
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async cashExcel(insertCashDto : Array<InsertCashDto>){
+        try{    
+            //console.log(insertCashDto);
+            const cashList = await this.getCashTypeList();
+            const itemList = await this.getItems();
+            //console.log(cashList);
+            console.log(insertCashDto);
+            const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
+            const results = cashMatcher.compare();
+
+            console.log(results);
+            //엑셀 생성
+            const createExcel = await createExcelCash(results.duplicates,results.noMatches);
+            const url = createExcel.url;
+
+            //발송목록 이동 처리
+            results.matches.forEach(async (e) => {
+                await this.completeConsulting(e.id);
+            });
+            return {success:true, url};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**item 테이블 데이터 가져오기 */
+    async getItems(){
+        try{
+            const list = await this.prisma.item.findMany();
+
+            return list;
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async getCashTypeList() {
+        try{
+             //날짜 별 조회 추가 예정
+             const list = await this.prisma.order.findMany({
+                where: {
+                    consultingType: false,
+                    isComplete: false,
+                    payType: '계좌이체'
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            id : true,
+                            item: true,
+                            type: true,
+                        }
+                    },
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
             this.logger.error(err);
             return {
                 success: false,

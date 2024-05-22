@@ -12,6 +12,7 @@ import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { SendService } from './send.service';
 import { SendOrder } from './Dto/sendExcel.dto';
 import axios from 'axios';
+import { InsertCashDto } from './Dto/insertCash.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -196,5 +197,11 @@ export class ErpController {
         return await this.sendService.cancelFix(id);
     }
 
+    @ApiOperation({summary:'입금 파일 업로드'})
+    @Post('/cashExcel')
+    async cashExcel(@Body() insertCashDto : Array<InsertCashDto>){
+        this.logger.log('입금 파일 업로드');
+        return await this.erpService.cashExcel(insertCashDto);
+    }
        
 }
