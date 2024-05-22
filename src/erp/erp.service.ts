@@ -1158,7 +1158,7 @@ export class ErpService {
             const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
             const results = cashMatcher.compare();
 
-            //console.log(results);
+            console.log(results);
             return results;
         }catch(err){
             this.logger.error(err);

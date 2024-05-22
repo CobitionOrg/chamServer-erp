@@ -39,8 +39,9 @@ export class CashExcel {
                     temp.forEach((e) => {
                         tempArr.push(e);
                     })
+                }else{
+                    tempArr.push(temp);
                 }
-                tempArr.push(temp);
                 tempArr.push(e);
                 this.hashTable.set(name, tempArr);
             } else {
@@ -53,12 +54,16 @@ export class CashExcel {
 
     compare() {
         this.buildHashTable();
-        //console.log('-------------hash table--------------');
-        //console.log(this.hashTable);
+        console.log('-------------hash table--------------');
+        console.log(this.hashTable);
         //console.log(this.dbData);
         //console.log(this.dbData);
         this.dbData.forEach(data => {
             if (this.hashTable.has(data.patient.name)) { //해시 테이블에 이름이 있을 경우
+                if(data.patient.name =='라건호'){
+                    console.log('+++++++++++++++++++++++++++++++');
+                    console.log(this.hashTable.get(data.patient.name))
+                }
                 const hashData = this.hashTable.get(data.patient.name)
                 if(hashData.length>1){
                     //동명이인이 있어 금액을 비교해야 되는 경우
@@ -104,15 +109,23 @@ export class CashExcel {
                             name:data.patient.name,
                             price:hashData[0].cash
                         }
-
+                        console.log(idx);
                         this.checkDuplicate.push(duplicateObj);
 
-                        //duplicates 배열에 넣고 해시테이블에서 삭제
+                       
                         idx.forEach(i => {
                             //console.log(i);
                             this.duplicates.push(hashData[i]);
+                           
+                        });
+
+                        //뒈어서부터 지우기 위해 reverse
+                        let reverseIdx = idx.reverse();
+                        //duplicates 배열에 넣고 해시테이블에서 삭제
+                        reverseIdx.forEach( i => {
                             hashData.splice(i,1);
-                            //console.log(hashData);
+                            // console.log('/////////////////////');
+                            // console.log(hashData);
                             this.hashTable.set(data.patient.name, hashData)
                             this.log.push({
                                 name : data.patient.name,
@@ -120,14 +133,15 @@ export class CashExcel {
                                 price : hashData[0].cash,
                                 id:2,
                             })
-                        });
+                        })
                     }
 
                 }else{
                     //동명이인이 없어 금액만 비교해서 바로 입금 처리
-                    console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
-                    console.log(this.hashTable.get(data.patient.name));
-                    console.log(this.hashTable.get(data.patient.name).cash);
+                    // console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
+                    
+                    // console.log(this.hashTable.get(data.patient.name));
+                    // console.log(this.hashTable.get(data.patient.name).cash);
                     let cash = Array.isArray(this.hashTable.get(data.patient.name)) ? this.hashTable.get(data.patient.name)[0].cash : this.hashTable.get(data.patient.name).cash;
                     let compare = this.comparePrice(cash, data);
                     if(compare.success){
@@ -140,8 +154,8 @@ export class CashExcel {
                         })
                     }else{
                         //금액이 틀릴 시
-                        this.noMatches.push(this.hashTable.get(data.patient.name));
-                        if(Array.isArray(this.hashTable.get(data.patient.name))){
+                        if(Array.isArray(this.hashTable.get(data.patient.name))){ //hash table value가 배열일 때
+                            this.noMatches.push(this.hashTable.get(data.patient.name)[0]);
                             this.log.push({
                                 name : data.patient.name,
                                 log : 'nomatch diffrent price',
@@ -149,6 +163,7 @@ export class CashExcel {
                                 id: 4
                             });
                         }else {
+                            this.noMatches.push(this.hashTable.get(data.patient.name));
                             this.log.push({
                                 name : data.patient.name,
                                 log : 'nomatch diffrent price',
@@ -202,48 +217,9 @@ export class CashExcel {
 
     //금액 비교
     comparePrice(excelPrice:number,dbData ) :{ success: boolean; } {
-        let priceSum = 0;
+        let priceSum = this.getSum(dbData);
         //console.log(dbData);
-        const orderItem = dbData.orderItems;
-
-        //택배비 받는 리스트
-        //만약 요소 추가 시 추가해야됨...
-        const sendTax = ['1개월 방문수령시 79,000원 (택배 발송시 82,500원)','쎈1개월 방문수령시 99,000원(택배 발송시 102,500원)','요요방지환 3개월분 방문수령시 99,000원 (택배발송시 102,500원)']; //택배비 처리
-
-        let check = [];
-        //console.log(dbData.patient.name +' 금액 비교');
-        
-        orderItem.forEach(e => {
-            if(e.type != 'assistant'){
-                check.push(e);
-            }
-        });
-        //console.log(check);
-        //console.log(sendTax.includes(check[0]?.item));
-        if(check.length == 1 && sendTax.includes(check[0].item)){
-            console.log(dbData);
-            priceSum+=3500;
-        }
-
-        orderItem.forEach(e => {
-            //별도 구매 처리 필요
-            for(let i = 0; i<this.itemList.length; i++){
-                if(this.itemList[i].item.includes(e.item)){
-                    priceSum+=this.itemList[i].price;
-                    if(dbData.id == 34 || dbData.id ==21){
-                        console.log(priceSum)
-                    }
-                    //console.log(priceSum);
-                    break;
-                }
-            }
-        });
-        
-        if(dbData.id == 34 || dbData.id ==21){
-            console.log(priceSum);
-            console.log(excelPrice);
-        }
-        
+         
         if(priceSum == excelPrice){
             return {success:true};
         }else{
@@ -303,11 +279,5 @@ export class CashExcel {
     }
     
 
-    getResult() {
-        this.buildHashTable();
-        console.log(this.matches);
-        console.log(this.duplicates);
-        console.log(this.noMatches);
-        return { matches: this.matches, duplicates: this.duplicates, noMatches: this.noMatches };
-    }
+
 }
