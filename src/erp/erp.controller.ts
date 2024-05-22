@@ -208,7 +208,8 @@ export class ErpController {
     @ApiOperation({summary:'발송목록 타이틀 수정'})
     @Patch('/update/title')
     async updateSendTitle(@Body() updateTitleDto: UpdateTitleDto){
-
+        this.logger.log('발송 목록 타이틀 업데이트');
+        return await this.updateSendTitle(updateTitleDto);
     }
        
 }

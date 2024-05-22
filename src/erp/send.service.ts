@@ -562,6 +562,11 @@ export class SendService {
         }
     }
 
+    /**
+     * 발송목록 타이틀 변경
+     * @param updateTitleDto 
+     * @returns {success:boolean; status:number}
+     */
     async updateSendTitle(updateTitleDto: UpdateTitleDto){
         try{
             await this.prisma.sendList.update({
