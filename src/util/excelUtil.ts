@@ -75,7 +75,7 @@ export const createExcelCash = async (duplicates, noMatches) => {
 const uploadedFile = async (file: any) => {
   const presignedUrl = await generateUploadURL();
 
-  console.log(presignedUrl);
+  //console.log(presignedUrl);
   await axios.put(presignedUrl, {
     body: file
   }, {
