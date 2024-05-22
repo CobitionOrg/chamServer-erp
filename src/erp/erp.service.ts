@@ -673,10 +673,12 @@ export class ErpService {
                         if(sendList.length==1){
                             //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
                             const date = new Date();
-                            const title = getSendTitle.toString();
+                            const title = getSendTitle();
+                            console.log(title);
+
                             const newSendList = await tx.sendList.create({
                                 data:{
-                                    title:title,
+                                    title:title.toString(),
                                     amount:orderAmount,
                                     date:date,
                                     full:false
@@ -734,10 +736,11 @@ export class ErpService {
                     //새로 발송목록을 만들어야 할 때
                     console.log('create new send list');
                     const date = new Date();
-                    const title = date.toString();
+                    const title = getSendTitle();
+                    console.log(title);
                     const newSendList = await tx.sendList.create({
                         data:{
-                            title:title,
+                            title:title.toString(),
                             amount:orderAmount,
                             date:date,
                             full:false
