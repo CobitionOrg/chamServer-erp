@@ -12,7 +12,7 @@ import { AdminService } from 'src/admin/admin.service';
 import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
 import { generateUploadURL } from '../util/s3';
-import { styleHeaderCell } from 'src/util/excelUtil';
+import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
 import { getItem } from 'src/util/getItem';
@@ -1154,12 +1154,14 @@ export class ErpService {
             const cashList = await this.getCashTypeList();
             const itemList = await this.getItems();
             //console.log(cashList);
-
+            console.log(insertCashDto);
             const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
             const results = cashMatcher.compare();
 
             console.log(results);
-            return results;
+            const createExcel = await createExcelCash(results.duplicates,results.noMatches);
+            const url = createExcel.url;
+            return {url};
         }catch(err){
             this.logger.error(err);
             return {
@@ -1169,6 +1171,7 @@ export class ErpService {
         }
     }
 
+    /**item 테이블 데이터 가져오기 */
     async getItems(){
         try{
             const list = await this.prisma.item.findMany();

@@ -23,7 +23,7 @@ export class CashExcel {
 
     buildHashTable() {
         this.excelData.forEach((e) => {
-            //console.log(e.name);
+            //console.log(e);
             let name = e.name;
             if (e.name.match(/[\uAC00-\uD7AF]/g)) {
                 name = e.name.match(/[\uAC00-\uD7AF]/g).join(''); //이름만 추출
@@ -60,10 +60,6 @@ export class CashExcel {
         //console.log(this.dbData);
         this.dbData.forEach(data => {
             if (this.hashTable.has(data.patient.name)) { //해시 테이블에 이름이 있을 경우
-                if(data.patient.name =='라건호'){
-                    console.log('+++++++++++++++++++++++++++++++');
-                    console.log(this.hashTable.get(data.patient.name))
-                }
                 const hashData = this.hashTable.get(data.patient.name)
                 if(hashData.length>1){
                     //동명이인이 있어 금액을 비교해야 되는 경우
@@ -115,11 +111,11 @@ export class CashExcel {
                        
                         idx.forEach(i => {
                             //console.log(i);
-                            this.duplicates.push(hashData[i]);
+                            this.duplicates.push(hashData[i]); //중복되는 데이터 duplicates 안에 넣기
                            
                         });
 
-                        //뒈어서부터 지우기 위해 reverse
+                        //뒤에서부터 지우기 위해 reverse
                         let reverseIdx = idx.reverse();
                         //duplicates 배열에 넣고 해시테이블에서 삭제
                         reverseIdx.forEach( i => {
@@ -228,7 +224,7 @@ export class CashExcel {
     }
 
 
-
+    //금액 합계 구하기
     getSum(dbData){
         let priceSum = 0;
         const orderItem = dbData.orderItems;
