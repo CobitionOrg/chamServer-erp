@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -12,6 +12,7 @@ import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { SendService } from './send.service';
 import { SendOrder } from './Dto/sendExcel.dto';
 import axios from 'axios';
+import { GetListDto } from './Dto/getList.dto';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { UpdateTitleDto } from './Dto/updateTitle.dto';
 
@@ -53,9 +54,9 @@ export class ErpController {
 
     @ApiOperation({summary:'오더 리스트 조회'})
     @Get('/getList')
-    async getReciptList(){
+    async getReciptList(@Query() getListDto: GetListDto){
        this.logger.log('오더 리스트 조회');
-       return await this.erpService.getReciptList(); 
+       return await this.erpService.getReciptList(getListDto); 
     }
 
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
@@ -67,9 +68,9 @@ export class ErpController {
 
     @ApiOperation({summary:'유선 상담 목록 조회'})
     @Get('/callConsulting')
-    async getCallList(@Headers() header){
+    async getCallList(@Headers() header, @Query() getListDto: GetListDto){
         this.logger.log('유선 상담 목록 조회');
-        return await this.erpService.getCallList(getToken(header));
+        return await this.erpService.getCallList(getToken(header), getListDto);
     }
 
     @ApiOperation({summary:'유선 상담 완료 처리'})
