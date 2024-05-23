@@ -572,16 +572,40 @@ export class SendService {
      */
     async updateSendTitle(updateTitleDto: UpdateTitleDto){
         try{
-            await this.prisma.sendList.update({
-                where:{
-                    id:updateTitleDto.id
-                },
-                data:{
-                    title:updateTitleDto.title
-                }
+            let check = await this.checkSendTitle(updateTitleDto.title);
+
+            if(check.success){
+                await this.prisma.sendList.update({
+                    where:{
+                        id:updateTitleDto.id
+                    },
+                    data:{
+                        title:updateTitleDto.title
+                    }
+                });
+    
+                return {success:true, status:HttpStatus.OK};
+            }else{
+                return {success:false, status:HttpStatus.CONFLICT};
+            }
+           
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async checkSendTitle(title:string){
+        try{
+            const response = await this.prisma.sendList.findMany({
+                where:{title:title}
             });
 
-            return {success:true, status:HttpStatus.OK};
+            if(response.length == 0) return {success:true};
+            else return {success:false};
         }catch(err){
             this.logger.error(err);
             return {
