@@ -462,6 +462,9 @@ export class SendService {
             const list = await this.prisma.sendList.findMany({
                 where:{
                     useFlag:true
+                },
+                orderBy:{
+                    title:'asc'
                 }
             });
 

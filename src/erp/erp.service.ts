@@ -770,7 +770,7 @@ export class ErpService {
                                     amount:true,
                                     title:true,
                                 }
-                            });
+                            }); //제일 마지막 발송일자 가져오기
                             const lastTitle = sendList[sendList.length-1].title;
                             const date = new Date(lastTitle);                            
                             const title = getSendTitle(date);
@@ -844,7 +844,7 @@ export class ErpService {
                             amount:true,
                             title:true,
                         }
-                    });
+                    });//제일 마지막 발송일자 가져오기
                     //console.log(sendList);
                     const lastTitle = sendList[sendList.length-1].title;
                     const date = new Date(lastTitle);
@@ -876,6 +876,7 @@ export class ErpService {
             }
         }
     }
+    
 
     async createTempOrder(sendOne,id,sendListId,tx) {
         try{

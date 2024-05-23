@@ -210,7 +210,7 @@ export class ErpController {
     @Patch('/update/title')
     async updateSendTitle(@Body() updateTitleDto: UpdateTitleDto){
         this.logger.log('발송 목록 타이틀 업데이트');
-        return await this.updateSendTitle(updateTitleDto);
+        return await this.sendService.updateSendTitle(updateTitleDto);
     }
        
 }
