@@ -98,6 +98,7 @@ model order {
   date            DateTime       @db.DateTime(0)
   orderSortNum    Int            @default(0)
   sendNum         String?        @db.VarChar(100)
+  price           Int?           @default(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]

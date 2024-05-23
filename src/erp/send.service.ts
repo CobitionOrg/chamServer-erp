@@ -598,6 +598,11 @@ export class SendService {
         }
     }
 
+    /**
+     * 해당 날짜에 다른 발송 목록이 있는지 체크
+     * @param title :string
+     * @returns {success:boolean}
+     */
     async checkSendTitle(title:string){
         try{
             const response = await this.prisma.sendList.findMany({

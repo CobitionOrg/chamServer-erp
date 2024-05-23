@@ -271,6 +271,7 @@ export class ErpService {
      */
     async insertReturnOrder(surveyDto: SurveyDto) {
         try {
+            console.log(surveyDto);
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
 
@@ -307,7 +308,10 @@ export class ErpService {
             });
 
             const patient = await this.checkPatient(objPatient)
-            if (!patient.success) return { success: false, msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요' };
+            if (!patient.success) return { 
+                success: false, 
+                msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요' 
+            };
 
             await this.prisma.$transaction(async (tx) => {
                 //주소가 달라졌을 시
@@ -1265,6 +1269,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금 내역 엑셀 파일 업로드 및 발송목록으로 이동(부정확한 데이터 리턴)
+     * @param insertCashDto 
+     * @returns {success:boolean, url:string}
+     */
     async cashExcel(insertCashDto : Array<InsertCashDto>){
         try{    
             //console.log(insertCashDto);
