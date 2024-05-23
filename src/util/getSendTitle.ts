@@ -1,6 +1,8 @@
-export const getSendTitle = () =>{
+import { getDateString } from "./date.util";
+
+export const getSendTitle = (date) =>{
     const targetDays = ['Monday', 'Tuesday', 'Thursday', 'Friday'];
-    const today = new Date();
+    const today = new Date(date);
     const todayDay = today.getDay();
 
     const targetIndices = targetDays.map(day => {
@@ -29,5 +31,6 @@ export const getSendTitle = () =>{
     });
 
     
-    return colosetDate;
+    console.log(colosetDate);
+    return getDateString(colosetDate);
 }
