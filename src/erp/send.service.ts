@@ -7,6 +7,7 @@ import { styleHeaderCell } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
 import { getItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
+import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -461,6 +462,9 @@ export class SendService {
             const list = await this.prisma.sendList.findMany({
                 where:{
                     useFlag:true
+                },
+                orderBy:{
+                    title:'asc'
                 }
             });
 
@@ -548,6 +552,32 @@ export class SendService {
                 },
                 data:{
                     fixFlag:false
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    /**
+     * 발송목록 타이틀 변경
+     * @param updateTitleDto 
+     * @returns {success:boolean; status:number}
+     */
+    async updateSendTitle(updateTitleDto: UpdateTitleDto){
+        try{
+            await this.prisma.sendList.update({
+                where:{
+                    id:updateTitleDto.id
+                },
+                data:{
+                    title:updateTitleDto.title
                 }
             });
 

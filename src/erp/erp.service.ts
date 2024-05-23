@@ -746,9 +746,12 @@ export class ErpService {
                     },
                     select: {
                         id: true,
-                        amount:true
+                        amount:true,
+                        title:true,
                     }
                 });
+
+                //console.log(sendList.length);
 
                 //아직 350개 차지 않은 발송 목록이 있을 때
                 if (sendList.length>0) {
@@ -758,13 +761,24 @@ export class ErpService {
                         //350개가 넘으면 새로운 발송목록에 삽입
                         if(sendList.length==1){
                             //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
-                            const date = new Date();
-                            const title = getSendTitle();
+                            const sendList = await tx.sendList.findMany({
+                                orderBy:{
+                                    id:'asc'
+                                },
+                                select: {
+                                    id: true,
+                                    amount:true,
+                                    title:true,
+                                }
+                            }); //제일 마지막 발송일자 가져오기
+                            const lastTitle = sendList[sendList.length-1].title;
+                            const date = new Date(lastTitle);                            
+                            const title = getSendTitle(date);
                             console.log(title);
 
                             const newSendList = await tx.sendList.create({
                                 data:{
-                                    title:title.toString(),
+                                    title:title,
                                     amount:orderAmount,
                                     date:date,
                                     full:false
@@ -821,12 +835,24 @@ export class ErpService {
                 } else {
                     //새로 발송목록을 만들어야 할 때
                     console.log('create new send list');
-                    const date = new Date();
-                    const title = getSendTitle();
-                    console.log(title);
+                    const sendList = await tx.sendList.findMany({
+                        orderBy:{
+                            id:'asc'
+                        },
+                        select: {
+                            id: true,
+                            amount:true,
+                            title:true,
+                        }
+                    });//제일 마지막 발송일자 가져오기
+                    //console.log(sendList);
+                    const lastTitle = sendList[sendList.length-1].title;
+                    const date = new Date(lastTitle);
+                    const title = getSendTitle(date);
+                    //console.log(title);
                     const newSendList = await tx.sendList.create({
                         data:{
-                            title:title.toString(),
+                            title:title,
                             amount:orderAmount,
                             date:date,
                             full:false
@@ -850,6 +876,7 @@ export class ErpService {
             }
         }
     }
+    
 
     async createTempOrder(sendOne,id,sendListId,tx) {
         try{

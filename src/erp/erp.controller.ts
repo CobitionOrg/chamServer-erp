@@ -14,6 +14,7 @@ import { SendOrder } from './Dto/sendExcel.dto';
 import axios from 'axios';
 import { GetListDto } from './Dto/getList.dto';
 import { InsertCashDto } from './Dto/insertCash.dto';
+import { UpdateTitleDto } from './Dto/updateTitle.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -203,6 +204,13 @@ export class ErpController {
     async cashExcel(@Body() insertCashDto : Array<InsertCashDto>){
         this.logger.log('입금 파일 업로드');
         return await this.erpService.cashExcel(insertCashDto);
+    }
+
+    @ApiOperation({summary:'발송목록 타이틀 수정'})
+    @Patch('/update/title')
+    async updateSendTitle(@Body() updateTitleDto: UpdateTitleDto){
+        this.logger.log('발송 목록 타이틀 업데이트');
+        return await this.sendService.updateSendTitle(updateTitleDto);
     }
        
 }
