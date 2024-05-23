@@ -95,6 +95,8 @@ model order {
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
+  remark          String         //특이 사항
+  isPickup        Boolean        //방문 수령 여부 true: 방문 수령, false: 택배 배송
 
   @@index([patientId], map: "order_patientId_fkey")
 }
