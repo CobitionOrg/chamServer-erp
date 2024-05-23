@@ -12,6 +12,12 @@ export class GetOrderSendPrice{
     getPrice(){
         let priceSum = 0;
 
+        const checkSend = this.checkSend();
+
+        if(checkSend){
+            priceSum+=3500;
+        }
+        
         this.orderItems.forEach(e => {
             for(let i = 0; i<this.itemList.length; i++){
                 priceSum+=this.itemList[i].price;

@@ -20,6 +20,7 @@ import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
+import { GetOrderSendPrice } from 'src/util/getOrderPrice';
 
 @Injectable()
 export class ErpService {
@@ -1368,4 +1369,35 @@ export class ErpService {
             }
         }
     }
+
+
+    async testPrice(){
+        try{
+            const itemList = await this.getItems();
+            const list = await this.prisma.order.findMany({
+                select:{
+                    orderItems:true,
+                    id:true
+                }
+            });
+
+            list.forEach(async e => {
+                const getOrderPrice = new GetOrderSendPrice(e.orderItems,itemList);
+                const price = getOrderPrice.getPrice();
+                console.log(price);
+                await this.prisma.order.update({
+                    where:{id:e.id},data:{price:price}
+                });
+            });
+
+            return {success:true,status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
 }
