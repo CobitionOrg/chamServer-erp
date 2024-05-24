@@ -99,6 +99,8 @@ model order {
   orderSortNum    Int            @default(0)
   sendNum         String?        @db.VarChar(100)
   price           Int?           @default(0)
+  remark          String?
+  isPickup        Boolean?       @default(false)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]

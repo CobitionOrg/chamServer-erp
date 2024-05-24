@@ -1,3 +1,5 @@
+import { exceptions } from "winston";
+
 //리팩토링 예정
 export class GetOrderSendPrice{
     orderItems : Array<any>;
@@ -17,12 +19,37 @@ export class GetOrderSendPrice{
         if(checkSend){
             priceSum+=3500;
         }
-        
+
+        //console.log(this.orderItems);
         this.orderItems.forEach(e => {
-            for(let i = 0; i<this.itemList.length; i++){
-                priceSum+=this.itemList[i].price;
-                break;
+            if(e.type =='assistant'){
+                let assistantArr = e.item.split(',');
+                //console.log(assistantArr);
+                assistantArr.forEach(e => {
+                    let order = e.replace("'",'');
+                    let check = order.split(' ');
+
+                    if(check.length>1){
+                        let item = check[0];
+                        let amount = check[1].slice(0, -1);
+    
+                        for(let i = 0; i<this.itemList.length; i++){
+                            if(this.itemList[i].item==item){
+                                priceSum+=(this.itemList[i].price*amount);
+                                break;
+                            } 
+                        }
+                    }
+                })
+            }else{
+                for(let i = 0; i<this.itemList.length; i++){
+                    if(this.itemList[i].item.includes(e.item)){
+                        priceSum+=this.itemList[i].price;
+                        break;
+                    }
+                }
             }
+            
         });
 
         return priceSum;

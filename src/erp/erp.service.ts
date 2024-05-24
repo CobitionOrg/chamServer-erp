@@ -1375,19 +1375,26 @@ export class ErpService {
         try{
             const itemList = await this.getItems();
             const list = await this.prisma.order.findMany({
+                orderBy:{
+                    id:"asc"
+                },
                 select:{
                     orderItems:true,
                     id:true
                 }
             });
 
+            console.log(list);
             list.forEach(async e => {
+                console.log(e.id)
+
                 const getOrderPrice = new GetOrderSendPrice(e.orderItems,itemList);
                 const price = getOrderPrice.getPrice();
-                console.log(price);
+                console.log(e.id +' / ' +price);
                 await this.prisma.order.update({
                     where:{id:e.id},data:{price:price}
-                });
+                }).catch(err =>(console.log(err)));
+                  
             });
 
             return {success:true,status:HttpStatus.OK};
