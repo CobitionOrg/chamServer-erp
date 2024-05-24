@@ -212,5 +212,12 @@ export class ErpController {
         this.logger.log('발송 목록 타이틀 업데이트');
         return await this.sendService.updateSendTitle(updateTitleDto);
     }
+
+    @Public()
+    @Get('/update/price')
+    async testPrice(){
+        this.logger.log('일괄 업데이트');
+        return await this.erpService.testPrice();
+    }
        
 }

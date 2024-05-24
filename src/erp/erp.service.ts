@@ -20,6 +20,7 @@ import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
+import { GetOrderSendPrice } from 'src/util/getOrderPrice';
 
 @Injectable()
 export class ErpService {
@@ -273,6 +274,7 @@ export class ErpService {
      */
     async insertReturnOrder(surveyDto: SurveyDto) {
         try {
+            console.log(surveyDto);
             const insertOrder = surveyDto.answers;
             const date = surveyDto.date;
 
@@ -309,7 +311,10 @@ export class ErpService {
             });
 
             const patient = await this.checkPatient(objPatient)
-            if (!patient.success) return { success: false, msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요' };
+            if (!patient.success) return { 
+                success: false, 
+                msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요' 
+            };
 
             await this.prisma.$transaction(async (tx) => {
                 //주소가 달라졌을 시
@@ -1269,6 +1274,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금 내역 엑셀 파일 업로드 및 발송목록으로 이동(부정확한 데이터 리턴)
+     * @param insertCashDto 
+     * @returns {success:boolean, url:string}
+     */
     async cashExcel(insertCashDto : Array<InsertCashDto>){
         try{    
             //console.log(insertCashDto);
@@ -1363,4 +1373,35 @@ export class ErpService {
             }
         }
     }
+
+
+    async testPrice(){
+        try{
+            const itemList = await this.getItems();
+            const list = await this.prisma.order.findMany({
+                select:{
+                    orderItems:true,
+                    id:true
+                }
+            });
+
+            list.forEach(async e => {
+                const getOrderPrice = new GetOrderSendPrice(e.orderItems,itemList);
+                const price = getOrderPrice.getPrice();
+                console.log(price);
+                await this.prisma.order.update({
+                    where:{id:e.id},data:{price:price}
+                });
+            });
+
+            return {success:true,status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
 }
