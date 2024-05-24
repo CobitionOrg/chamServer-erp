@@ -1,3 +1,5 @@
+import { exceptions } from "winston";
+
 //리팩토링 예정
 export class GetOrderSendPrice{
     orderItems : Array<any>;
@@ -17,12 +19,39 @@ export class GetOrderSendPrice{
         if(checkSend){
             priceSum+=3500;
         }
-        
+
+        //console.log(this.orderItems);
         this.orderItems.forEach(e => {
-            for(let i = 0; i<this.itemList.length; i++){
-                priceSum+=this.itemList[i].price;
-                break;
+            if(e.type =='assistant'){
+                let assistantArr = e.item.split(',');
+                console.log(assistantArr);
+                assistantArr.forEach(e => {
+                    let order = e.replace("'",'');
+                    let check = order.split(' ');
+
+                    if(check.length>1){
+                        let item = check[0];
+                        let amount = check[1].slice(0, -1);
+                        // console.log('----------------');
+                        // console.log(item);
+                        // console.log(amount);
+                        for(let i = 0; i<this.itemList.length; i++){
+                            if(this.itemList[i].item==item){
+                                priceSum+=(this.itemList[i].price*amount);
+                                break;
+                            } 
+                        }
+                    }
+                })
+            }else{
+                for(let i = 0; i<this.itemList.length; i++){
+                    if(e.item!='' && this.itemList[i].item.includes(e.item)){
+                        priceSum+=this.itemList[i].price;
+                        break;
+                    }
+                }
             }
+            
         });
 
         return priceSum;
@@ -36,12 +65,29 @@ export class GetOrderSendPrice{
         const sendTax = ['1개월 방문수령시 79,000원 (택배 발송시 82,500원)','쎈1개월 방문수령시 99,000원(택배 발송시 102,500원)','요요방지환 3개월분 방문수령시 99,000원 (택배발송시 102,500원)']; //택배비 처리
           
         let check = [];
-
+        //console.log('/////////////////////////');
         this.orderItems.forEach(e => {
-          if(e.type != 'assistant'){
-              check.push(e);
-          }
+            console.log(e);  
+
+            if(Array.isArray(e.item)){
+                e.item.forEach(i => {
+                    if(e.type != 'assistant' && i.item !=''){
+                        const obj = {
+                            item:i,
+                            type:e.type
+                        }
+                        check.push(obj)
+                    }
+                })
+            }else{
+                if(e.type != 'assistant' && e.item != ''){
+                    check.push(e);
+                }
+            }
+           
         });
+
+        //console.log(check);
 
         //별도 주문 제외하고 주문 내역이 하나인데 그 하나가 택배비 받는 오더일 때
         if(check.length ===1 && sendTax.includes(check[0].item)){
