@@ -1388,8 +1388,11 @@ export class ErpService {
         }
     }
 
-
-    async testPrice(){
+    /**
+     * 가격 일괄 업데이트
+     * @returns {success:boolean, status:number}
+     */
+    async updatePrice(){
         try{
             const itemList = await this.getItems();
             const list = await this.prisma.order.findMany({
