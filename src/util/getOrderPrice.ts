@@ -24,7 +24,7 @@ export class GetOrderSendPrice{
         this.orderItems.forEach(e => {
             if(e.type =='assistant'){
                 let assistantArr = e.item.split(',');
-                //console.log(assistantArr);
+                console.log(assistantArr);
                 assistantArr.forEach(e => {
                     let order = e.replace("'",'');
                     let check = order.split(' ');
@@ -32,7 +32,9 @@ export class GetOrderSendPrice{
                     if(check.length>1){
                         let item = check[0];
                         let amount = check[1].slice(0, -1);
-    
+                        console.log('----------------');
+                        console.log(item);
+                        console.log(amount);
                         for(let i = 0; i<this.itemList.length; i++){
                             if(this.itemList[i].item==item){
                                 priceSum+=(this.itemList[i].price*amount);
