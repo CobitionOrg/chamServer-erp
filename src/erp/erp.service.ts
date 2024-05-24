@@ -238,6 +238,8 @@ export class ErpService {
                     isFirst: true,
                     date: true,
                     orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
                     patient: {
                         select: {
                             id: true,
@@ -633,6 +635,8 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
+                    remark: true,
+                    isPickup: true,
                     patient: {
                         select: {
                             id: true,
