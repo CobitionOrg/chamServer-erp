@@ -369,7 +369,7 @@ export class ErpService {
                     let tempObj = objOrderItem[i];
                     let temp = {}
 
-                    if (tempObj.type == 'assistant') {
+                    if (tempObj.type == 'assistant' && tempObj.item !== "") {
                         temp = {
                             item: tempObj.item,
                             type: tempObj.type,
