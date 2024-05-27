@@ -1265,13 +1265,15 @@ export class ErpService {
                     data: patientData
                 });
 
-                const orderBodyType = await tx.orderBodyType.update({
-                    where: {
-                        orderId: id
-                    },
-                    data: orderBodyTypeData
-                });
-
+                if(orderBodyTypeData !== null) {
+                    const orderBodyType = await tx.orderBodyType.update({
+                        where: {
+                            orderId: id
+                        },
+                        data: orderBodyTypeData
+                    });
+                }
+                
                 const deleteItems = await tx.orderItem.deleteMany({
                     where: {
                         orderId: id
