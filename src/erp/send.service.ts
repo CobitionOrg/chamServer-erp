@@ -160,7 +160,7 @@ export class SendService {
                             id: true,
                             message: true,
                             cachReceipt: true,
-
+                            price:true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
