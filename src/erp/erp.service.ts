@@ -1047,7 +1047,7 @@ export class ErpService {
             //const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
             const headers = ['주소', '주민번호','이름', '휴대폰 번호','설문지번호','특이사항(추천인)'];
 
-            const headerWidths = [16, 40, 30, 20];
+            const headerWidths = [30, 30, 10, 20, 10, 20];
 
             //상단 헤더 추가
             const headerRow = sheet.addRow(headers);
