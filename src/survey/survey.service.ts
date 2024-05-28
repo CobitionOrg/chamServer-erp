@@ -315,6 +315,7 @@ export class SurveyService {
           item:true,
           isFirst:true,
           isYoyo:true,
+          isQuestion:true,
         }
       });
 
