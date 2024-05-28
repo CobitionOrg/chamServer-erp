@@ -21,6 +21,7 @@ import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
 import { GetOrderSendPrice } from 'src/util/getOrderPrice';
+import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 
 @Injectable()
 export class ErpService {
@@ -904,7 +905,18 @@ export class ErpService {
         }
     }
     
-
+    /**
+     *  //temp order에 데이터를 삽입해
+        order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
+     * @param sendOne 
+     * @param id 
+     * @param sendListId 
+     * @param tx 
+     * @returns Promise<{
+            success: boolean;
+            status?: undefined;
+        }
+     */
     async createTempOrder(sendOne,id,sendListId,tx) {
         try{
             //temp order에 데이터를 삽입해
@@ -938,6 +950,53 @@ export class ErpService {
             this.logger.error(err);
             return {
                 success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async completeConsultingSetSend(completeSetSendDto: CompleteSetSendDto){
+        try{
+            const orderId = completeSetSendDto.orderId;
+            const sendListId = completeSetSendDto.sendListId;
+
+            await this.prisma.$transaction(async (tx) => {
+                const sendOne = await tx.order.update({
+                    where:{id:orderId},
+                    data:{isComplete:true}
+                });
+
+                const orderItems = await tx.orderItem.findMany({
+                    where:{
+                        orderId: orderId,
+                        type: {in: ['common','yoyo']}
+                    }
+                });
+
+                const orderAmount = orderItems.length;
+
+                const sendList = await tx.sendList.findUnique({
+                    where:{id:sendListId}
+                });
+
+                const amount = sendList.amount+orderAmount;
+
+                await tx.sendList.update({
+                    where: {id: sendListId},
+                    data:{amount:amount}
+                });
+
+                const res = await this.createTempOrder(sendOne,orderId,sendListId,tx);
+                if(res.success) return {success:true,status:HttpStatus.OK};
+                else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
+            });
+
+            return {success:true, status: HttpStatus.OK};
+
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }

@@ -619,4 +619,41 @@ export class SendService {
             }
         }
     }
+
+    /**
+     * 발송목록 완료 안 된 전체 리스트 가져오기(입금상담목록에서 발송목록을 선택해서 넘기기)
+     * @returns  Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                title: string;
+                amount: number;
+            }[];
+            status: HttpStatus;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async getAllSendList(){
+        //useFlag가 true인 것만 가져옵니다.false는 이미 발송 완료 처리 되었을 때 되기 때문에 발송 나간건 x
+        try{
+            const response = await this.prisma.sendList.findMany({
+                where:{useFlag:true},
+                select:{title:true, id:true, amount:true,fixFlag:true}
+            }); 
+
+            console.log(response);
+            return {success:true, list:response, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    
 }
