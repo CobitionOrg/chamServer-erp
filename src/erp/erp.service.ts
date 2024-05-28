@@ -42,8 +42,10 @@ export class ErpService {
     async insertFirstOrder(surveyDto: SurveyDto) {
         try {
             const insertOrder = surveyDto.answers;
-            const date = surveyDto.date;
-            console.log(date);
+            const date = new Date(surveyDto.date);
+            // 한국 시간으로 변환
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
             //타입 설정 예정
             const objPatient: any = {}; //환자 정보
             const objOrder: OrderObjDto = {
@@ -111,7 +113,7 @@ export class ErpService {
                         isFirst: true,
                         price:price,
                         patientId: patient.id,
-                        date: new Date(date.toString()),
+                        date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
@@ -285,7 +287,9 @@ export class ErpService {
         try {
             console.log(surveyDto);
             const insertOrder = surveyDto.answers;
-            const date = surveyDto.date;
+            const date = new Date(surveyDto.date);
+            // 한국 시간으로 변환
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
             console.log(insertOrder);
             // console.log(date);
@@ -358,7 +362,7 @@ export class ErpService {
                         consultingTime: '',
                         essentialCheck: '',
                         price:price,
-                        date: new Date(date),
+                        date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
                 });
@@ -371,7 +375,7 @@ export class ErpService {
                     let tempObj = objOrderItem[i];
                     let temp = {}
 
-                    if (tempObj.type == 'assistant') {
+                    if (tempObj.type == 'assistant' && tempObj.item !== "") {
                         temp = {
                             item: tempObj.item,
                             type: tempObj.type,
@@ -1345,13 +1349,15 @@ export class ErpService {
                     data: patientData
                 });
 
-                const orderBodyType = await tx.orderBodyType.update({
-                    where: {
-                        orderId: id
-                    },
-                    data: orderBodyTypeData
-                });
-
+                if(orderBodyTypeData !== null) {
+                    const orderBodyType = await tx.orderBodyType.update({
+                        where: {
+                            orderId: id
+                        },
+                        data: orderBodyTypeData
+                    });
+                }
+                
                 const deleteItems = await tx.orderItem.deleteMany({
                     where: {
                         orderId: id
