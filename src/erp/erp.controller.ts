@@ -213,11 +213,11 @@ export class ErpController {
         return await this.sendService.updateSendTitle(updateTitleDto);
     }
 
-    @Public()
+    @ApiOperation({summary:'가격 일괄 업데이트'})
     @Get('/update/price')
-    async testPrice(){
-        this.logger.log('일괄 업데이트');
-        return await this.erpService.testPrice();
+    async updatePrice(){
+        this.logger.log('가격 일괄 업데이트');
+        return await this.erpService.updatePrice();
     }
        
 }
