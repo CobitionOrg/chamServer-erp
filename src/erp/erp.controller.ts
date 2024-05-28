@@ -15,6 +15,7 @@ import axios from 'axios';
 import { GetListDto } from './Dto/getList.dto';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { UpdateTitleDto } from './Dto/updateTitle.dto';
+import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -218,6 +219,20 @@ export class ErpController {
     async updatePrice(){
         this.logger.log('가격 일괄 업데이트');
         return await this.erpService.updatePrice();
+    }
+
+    @ApiOperation({summary:'발송목록 완료 안 된 전체 리스트 가져오기'})
+    @Get('/getAllSendList')
+    async getAllSendList(){
+        this.logger.log('발송목록 완료 안 된 전체 리스트 가져오기');
+        return await this.sendService.getAllSendList();
+    }
+
+    @ApiOperation({summary:'특정 발송목록에 선택해 발송목록으로 넘기기'})
+    @Post('/completeSetSend')
+    async completeConsultingSetSend(@Body() completeSetSendDto: CompleteSetSendDto){
+        this.logger.log('특정 발송목록에 선택해 발송목록으로 넘기기');
+        return await this.erpService.completeConsultingSetSend(completeSetSendDto);
     }
        
 }
