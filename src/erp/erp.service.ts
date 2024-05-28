@@ -22,6 +22,7 @@ import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
 import { GetOrderSendPrice } from 'src/util/getOrderPrice';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
+import { GetHyphen } from 'src/util/hyphen';
 
 @Injectable()
 export class ErpService {
@@ -1035,13 +1036,17 @@ export class ErpService {
                             socialNum: true,
                         }
                     },
+                    id:true,
+                    route:true,
                 }
             });
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("신환 등록");
 
-            const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
+            //const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
+            const headers = ['주소', '주민번호','이름', '휴대폰 번호','설문지번호','특이사항(추천인)'];
+
             const headerWidths = [16, 40, 30, 20];
 
             //상단 헤더 추가
@@ -1054,10 +1059,18 @@ export class ErpService {
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
+            const hyphen = new GetHyphen('');
             //각 data cell에 데이터 삽입
             list.forEach((e) => {
                 const { name, addr, socialNum, phoneNum } = e.patient;
-                const rowDatas = [name, addr, socialNum, phoneNum];
+                const rowDatas = [
+                    addr,
+                    hyphen.socialNumHyphen(socialNum) ,
+                    name, 
+                    hyphen.phoneNumHyphen(phoneNum),
+                    e.id,
+                    e.route
+                ];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
