@@ -731,6 +731,8 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
+            console.log(id);
+            console.log(typeof id);
             //트랜젝션 시작
             await this.prisma.$transaction(async (tx) => {
 
@@ -774,7 +776,7 @@ export class ErpService {
                     }
                 });
 
-                //console.log(sendList.length);
+                console.log(sendList.length);
 
                 //아직 350개 차지 않은 발송 목록이 있을 때
                 if (sendList.length>0) {
@@ -868,9 +870,11 @@ export class ErpService {
                             title:true,
                         }
                     });//제일 마지막 발송일자 가져오기
-                    //console.log(sendList);
-                    const lastTitle = sendList[sendList.length-1].title;
+                    console.log(sendList);
+                    
+                    const lastTitle = sendList.length != 0 ? sendList[sendList.length-1].title : new Date();
                     const date = new Date(lastTitle);
+                    console.log(date);
                     const title = getSendTitle(date);
                     //console.log(title);
                     const newSendList = await tx.sendList.create({
@@ -1023,7 +1027,7 @@ export class ErpService {
                     payType: true,
                     orderItems: {
                         select: {
-                            item: true,
+                            item: true, 
                         }
                     }
                 }
