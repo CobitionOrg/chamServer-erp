@@ -14,99 +14,100 @@ datasource db {
 }
 
 model user {
-  id          Int          @id @default(autoincrement())
-  userId      String       @unique
-  userPw      String
-  grade       Role         @default(user)
-  name        String
-  useFlag     Boolean      @default(false)
+ 
+  id          Int          @id @default(autoincrement())  ///index key
+  userId      String       @unique ///유저 아이디
+  userPw      String ///유저 비밀번호
+  grade       Role         @default(user)  ///유저 등급
+  name        String    ///유저 이름
+  useFlag     Boolean      @default(false) ///사용 여부
   attendances attendance[]
 }
 
 model attendance {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  startTime DateTime
-  endTime   DateTime
-  userId    Int
-  tardy     Boolean  @default(false)
+  id        Int      @id @default(autoincrement())  ///index key
+  date      DateTime  ///출근 날짜
+  startTime DateTime  ///출근 시간
+  endTime   DateTime  ///퇴근 시간
+  userId    Int       ///유저 key
+  tardy     Boolean  @default(false)  ///지각 여부
   user      user     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "attendance_userId_fkey")
 }
 
 model question {
-  id           Int           @id @default(autoincrement())
-  question     String        @db.VarChar(500)
-  type         Visit
-  choice       Choice?
-  note         String?       @db.VarChar(200)
-  questionCode String?       @db.VarChar(45)
-  useFlag      Int?          @default(0) @db.TinyInt
-  orderType    String?       @db.VarChar(45)
+  id           Int           @id @default(autoincrement()) ///index key
+  question     String        @db.VarChar(500) ///질문 내용
+  type         Visit         ///초진 or 재진 타입 
+  choice       Choice?       ///선택형 or 서술형 or 멀티 선택형 
+  note         String?       @db.VarChar(200) ///비고
+  questionCode String?       @db.VarChar(45)  ///어떤 질문인지 코드 값(order table에 매칭)
+  useFlag      Int?          @default(0) @db.TinyInt ///사용여부
+  orderType    String?       @db.VarChar(45)  ///어떤 질문인지 타입 (주문관련, 주문 아이템, 환자 정보 등)
   answers      answer[]
   questionImgs questionImg[]
 }
 
 model answer {
-  id         Int      @id @default(autoincrement())
-  answer     String
-  questionId Int
+  id         Int      @id @default(autoincrement()) ///index key
+  answer     String   ///선택지
+  questionId Int      ///question key 값
   question   question @relation(fields: [questionId], references: [id])
 
   @@index([questionId], map: "answer_questionId_fkey")
 }
 
 model questionImg {
-  id         Int      @id @default(autoincrement())
-  imgUrl     String
-  useFlag    Boolean
-  questionId Int
+  id         Int      @id @default(autoincrement()) ///index key
+  imgUrl     String   ///이미지 url 값
+  useFlag    Boolean  ///사용 여부 flag
+  questionId Int      ///question key 값
   question   question @relation(fields: [questionId], references: [id])
 
   @@index([questionId], map: "questionImg_questionId_fkey")
 }
 
 model patient {
-  id         Int         @id @default(autoincrement())
-  name       String
-  phoneNum   String
-  addr       String
-  socialNum  String
+  id         Int         @id @default(autoincrement())  ///index key
+  name       String      ///환자 이름
+  phoneNum   String      ///환자 핸드폰 번호
+  addr       String      ///환자 주소
+  socialNum  String      ///환자 주민번호
   orders     order[]
   tempOrders tempOrder[]
 }
 
 model item {
-  id         Int     @id @default(autoincrement())
-  item       String
-  isFirst    Boolean
-  isYoyo     Boolean
-  isQuestion Boolean
-  price      Int?
+  id         Int     @id @default(autoincrement())  ///index key
+  item       String  ///아이템 정보
+  isFirst    Boolean ///초진 or 재진 여부
+  isYoyo     Boolean ///요요 여부
+  isQuestion Boolean ///설문 관련 정보 여부
+  price      Int?    ///가격(택배비 제외)
 }
 
 model order {
-  id              Int            @id @default(autoincrement())
-  route           String
-  message         String
-  cachReceipt     String
-  typeCheck       String
-  consultingTime  String
-  payType         String
-  essentialCheck  String
-  outage          String
-  consultingType  Boolean        @default(false)
-  phoneConsulting Boolean        @default(false)
-  isComplete      Boolean        @default(false)
-  patientId       Int
-  isFirst         Boolean        @default(true)
-  date            DateTime       @db.DateTime(0)
-  orderSortNum    Int            @default(0)
-  sendNum         String?        @db.VarChar(100)
-  price           Int?           @default(0)
-  remark          String?
-  isPickup        Boolean?       @default(false)
+  id              Int            @id @default(autoincrement()) ///index key
+  route           String         ///알게 된 경로 
+  message         String         ///배송 요청 메세지
+  cachReceipt     String         ///현금 영수증
+  typeCheck       String         ///비대면 진료 타입 해당사항 체크
+  consultingTime  String         ///상담가능시간
+  payType         String         ///결제 진행 방법
+  essentialCheck  String         ///필수 체크
+  outage          String         ///감량 된 킬로수
+  consultingType  Boolean        @default(false) ///유선 상담 유무 -> true면 유선
+  phoneConsulting Boolean        @default(false) ///유선 상담 완료 플래그
+  isComplete      Boolean        @default(false) ///결제 완료 유무 -> 완료 시 발송목록으로
+  patientId       Int            ///환자 key 
+  isFirst         Boolean        @default(true)  ///초진 재진 유무
+  date            DateTime       @db.DateTime(0) ///접수 일자
+  orderSortNum    Int            @default(0) ///정렬 번호
+  sendNum         String?        @db.VarChar(100) ///송장 번호
+  price           Int?           @default(0) /// 오더에 주문된 제품 총 가격
+  remark          String?        ///특이 사항
+  isPickup        Boolean?       @default(false) ///방문 수령 여부 true: 방문 수령, false: 택배 배송
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -116,25 +117,25 @@ model order {
 }
 
 model tempOrder {
-  id              Int      @id @default(autoincrement())
-  route           String
-  message         String
-  cachReceipt     String
-  typeCheck       String
-  consultingTime  String
-  payType         String
-  essentialCheck  String
-  outage          String
-  consultingType  Boolean  @default(false)
-  phoneConsulting Boolean  @default(false)
-  isComplete      Boolean  @default(false)
-  patientId       Int
-  isFirst         Boolean  @default(true)
-  date            DateTime @db.DateTime(0)
-  orderSortNum    Int      @default(0)
-  orderId         Int
-  sendNum         String?  @db.VarChar(100)
-  sendListId      Int
+  id              Int      @id @default(autoincrement()) ///index key
+  route           String   ///알게 된 경로 
+  message         String   ///배송 요청 메세지
+  cachReceipt     String   ///현금 영수증
+  typeCheck       String   ///비대면 진료 타입 해당사항 체크
+  consultingTime  String   ///상담가능시간
+  payType         String   ///결제 진행 방법
+  essentialCheck  String   ///필수 체크
+  outage          String   ///감량 된 킬로수
+  consultingType  Boolean  @default(false) ///유선 상담 유무 -> true면 유선
+  phoneConsulting Boolean  @default(false) ///유선 상담 완료 플래그
+  isComplete      Boolean  @default(false) ///결제 완료 유무 -> 완료 시 발송목록으로
+  patientId       Int ///환자 key
+  isFirst         Boolean  @default(true) ///초진 재진 유무
+  date            DateTime @db.DateTime(0) ///접수 일자
+  orderSortNum    Int      @default(0) ///정렬 번호
+  orderId         Int      ///원 오더 key
+  sendNum         String?  @db.VarChar(100) ///송장 번호
+  sendListId      Int      ///발송목록 key
   order           order    @relation(fields: [orderId], references: [id])
   patient         patient  @relation(fields: [patientId], references: [id])
   sendList        sendList @relation(fields: [sendListId], references: [id])
@@ -145,34 +146,34 @@ model tempOrder {
 }
 
 model sendList {
-  id         Int         @id @default(autoincrement())
-  title      String
-  amount     Int
-  date       DateTime    @db.DateTime(0)
-  full       Boolean     @default(false)
-  useFlag    Boolean     @default(true)
-  fixFlag    Boolean     @default(false)
+  id         Int         @id @default(autoincrement()) ///index key
+  title      String       ///발송목록 타이틀(발송되는 날짜)
+  amount     Int          ///발송 총량
+  date       DateTime    @db.DateTime(0) ///만들어진 날짜
+  full       Boolean     @default(false) ///기준 총량을 채웠는지 여부(최대 350개)
+  useFlag    Boolean     @default(true) ///사용 여부
+  fixFlag    Boolean     @default(false) ///고정 여부
   tempOrders tempOrder[]
 }
 
 model orderBodyType {
-  id           Int    @id @default(autoincrement())
-  tallWeight   String
-  digestion    String
-  sleep        String
-  constipation String
-  nowDrug      String
-  pastDrug     String
-  pastSurgery  String
-  orderId      Int    @unique
+  id           Int    @id @default(autoincrement()) ///index key
+  tallWeight   String  ///키 몸무게
+  digestion    String  ///소화 상태
+  sleep        String  ///수면 상태
+  constipation String  ///변비 상태
+  nowDrug      String  ///현재 복용 중인 약
+  pastDrug     String  ///과거 다이어트 약 복용
+  pastSurgery  String  ///과거에 수술하신 경우
+  orderId      Int    @unique ///해당 주문 오더 key
   order        order  @relation(fields: [orderId], references: [id])
 }
 
 model orderItem {
-  id      Int      @id @default(autoincrement())
-  item    String
-  type    ItemType
-  orderId Int
+  id      Int      @id @default(autoincrement()) ///index key
+  item    String   /// 주문한 아이템
+  type    ItemType /// 아이템 타입
+  orderId Int      /// 해당 주문 오더 key
   order   order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "orderItem_orderId_fkey")
