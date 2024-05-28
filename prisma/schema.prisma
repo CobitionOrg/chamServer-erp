@@ -2,6 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator markdown {
+  provider = "prisma-markdown"
+  output   = "./ERD.md"
+  title    = "한의원"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
