@@ -147,6 +147,7 @@ export class SendService {
                     isFirst: true,
                     orderSortNum: true,
                     sendNum:true,
+                    payType: true,
                     patient: {
                         select: {
                             id: true,
