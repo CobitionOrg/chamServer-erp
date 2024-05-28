@@ -955,6 +955,14 @@ export class ErpService {
         }
     }
 
+    /**
+     * 지정된 발송목록에 오더 넣기
+     * @param completeSetSendDto 
+     * @returns Promise<{
+        success: boolean;
+        status: HttpStatus;
+    }>
+     */
     async completeConsultingSetSend(completeSetSendDto: CompleteSetSendDto){
         try{
             const orderId = completeSetSendDto.orderId;
