@@ -232,13 +232,13 @@ export class ErpController {
         return res;
     }
 
-    //쓰는지 여부 확인
-    @ApiOperation({summary:'발송 목록 세팅'})
-    @Get('/setSendList')
-    async setSendList(){
-        this.logger.log('발송 목록 세팅');
-        return await this.sendService.setSendList();
-    }
+    //테스트용 api
+    // @ApiOperation({summary:'발송 목록 세팅'})
+    // @Get('/setSendList')
+    // async setSendList(){
+    //     this.logger.log('발송 목록 세팅');
+    //     return await this.sendService.setSendList();
+    // }
 
     @ApiOperation({summary:'발송목록에서 오더 수정'})
     @Patch('/updateSendOrder')
@@ -274,34 +274,75 @@ export class ErpController {
         return res;
     }
   
-    @ApiOperation({summary:'송장번호 엑셀로 송장번호 업로드'})
+    @ApiOperation({summary:'송장번호 엑셀 업로드해서 송장번호 업데이트'})
     @Patch('/setSendNum')
-    async setSendNum(@Body() sendExcelDto:SendOrder[]){
+    async setSendNum(@Body() sendExcelDto:SendOrder[], @Headers() header){
         this.logger.log('송장번호 저장');
-        return await this.sendService.setSendNum(sendExcelDto);
+        const res = await this.sendService.setSendNum(sendExcelDto);
+
+        if(res.success){
+            await this.logService.createLog(
+                '송장번호 엑셀 업로드해서 송장번호 업데이트',
+                '발송목록',
+                header
+            )
+        }
+
+        return res;
     }
 
     @ApiOperation({summary:'발송목록 리스트 가져오기'})
     @Get('/getSendList')
-    async getSendList(){
+    async getSendList(@Headers() header){
         this.logger.log('발송목록 리스트 가져오기');
-        return await this.sendService.getSendList();
+        const res = await this.sendService.getSendList();
+
+        if(res.success){
+            await this.logService.createLog(
+                '발송목록 리스트 가져오기',
+                '발송목록',
+                header
+            );
+        }
+
+        return res;
     }
 
     @ApiOperation({summary:'송장 리스트 완료 처리'})
     @Patch('/completeSend/:id')
-    async completeSend(@Param("id") id:number){
+    async completeSend(@Param("id") id:number,@Headers() header){
         this.logger.log('송장 리스트 완료 처리');
-        return await this.sendService.completeSend(id);
+        const res = await this.sendService.completeSend(id);
+
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 발송목록 완료 처리`,
+                '발송목록',
+                header
+            );
+        }
+
+        return res;
     }
 
     @ApiOperation({summary:'발송목록 고정'})
     @Patch('/fixSendList/:id')
-    async fixSendList(@Param("id") id:number){
+    async fixSendList(@Param("id") id:number, @Headers() header){
         this.logger.log('발송목록 고정');
-        return await this.sendService.fixSendList(id);
+        const res = await this.sendService.fixSendList(id);
+
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 발송목록 고정`,
+                '발송목록',
+                header
+            );
+        }
+
+        return res;
     }
 
+    //안 씀
     @ApiOperation({summary:'발송목록 고정 해제'})
     @Patch('/cancelFix/:id')
     async cancelFix(@Param("id") id:number){
@@ -309,20 +350,32 @@ export class ErpController {
         return await this.sendService.cancelFix(id);
     }
 
-    @ApiOperation({summary:'입금 파일 업로드'})
+    //로직 보강 처리
+    @ApiOperation({summary:'입금 파일 데이터 업로드'})
     @Post('/cashExcel')
     async cashExcel(@Body() insertCashDto : Array<InsertCashDto>){
-        this.logger.log('입금 파일 업로드');
+        this.logger.log('입금 파일 데이터 업로드');
         return await this.erpService.cashExcel(insertCashDto);
     }
 
     @ApiOperation({summary:'발송목록 타이틀 수정'})
     @Patch('/update/title')
-    async updateSendTitle(@Body() updateTitleDto: UpdateTitleDto){
+    async updateSendTitle(@Body() updateTitleDto: UpdateTitleDto, @Headers() header){
         this.logger.log('발송 목록 타이틀 업데이트');
-        return await this.sendService.updateSendTitle(updateTitleDto);
+        const res = await this.sendService.updateSendTitle(updateTitleDto);
+
+        if(res.success){
+            await this.logService.createLog(
+                `${updateTitleDto.id}번 발송목록 이름을 ${updateTitleDto.title}로 변경`,
+                '발송목록', 
+                header
+            );
+        }
+
+        return res;
     }
 
+    //테스트 용 api
     @ApiOperation({summary:'가격 일괄 업데이트'})
     @Get('/update/price')
     async updatePrice(){
@@ -332,16 +385,36 @@ export class ErpController {
 
     @ApiOperation({summary:'발송목록 완료 안 된 전체 리스트 가져오기'})
     @Get('/getAllSendList')
-    async getAllSendList(){
+    async getAllSendList(@Headers() header){
         this.logger.log('발송목록 완료 안 된 전체 리스트 가져오기');
-        return await this.sendService.getAllSendList();
+        const res = await this.sendService.getAllSendList();
+
+        if(res.success){
+            await this.logService.createLog(
+                '발송목록 미완료 리스트 전체 조회',
+                '발송목록',
+                header
+            );
+        }
+
+        return res;
     }
 
     @ApiOperation({summary:'특정 발송목록을 선택해서 해당 발송목록으로 넘기기'})
     @Post('/completeSetSend')
-    async completeConsultingSetSend(@Body() completeSetSendDto: CompleteSetSendDto){
+    async completeConsultingSetSend(@Body() completeSetSendDto: CompleteSetSendDto,@Headers() header){
         this.logger.log('특정 발송목록을 선택해서 해당 발송목록으로 넘기기');
-        return await this.erpService.completeConsultingSetSend(completeSetSendDto);
+        const res = await this.erpService.completeConsultingSetSend(completeSetSendDto);
+
+        if(res.success){
+            await this.logService.createLog(
+                `${completeSetSendDto.orderId}번 오더를 ${completeSetSendDto.sendListId}번 발송리스트에 삽입`,
+                '입금상담목록',
+                header
+            );
+        }
+
+        return res;
     }
        
 }

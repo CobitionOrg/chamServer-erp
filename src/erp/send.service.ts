@@ -425,6 +425,7 @@ export class SendService {
                         sendNum:e.sendNum
                     }
                 });
+
             });
 
             await Promise.all([...qryArr]).then((value) =>{
