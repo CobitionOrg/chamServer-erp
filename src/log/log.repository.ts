@@ -65,6 +65,15 @@ export class LogRepository{
                         gte:startDate,
                         lt:endDate
                     }
+                },
+                select:{
+                    id:true,
+                    log:true,
+                    DateTime:true,
+                    stage:true,
+                    user:{
+                        select:{userId:true,grade:true}
+                    }
                 }
             });
 
