@@ -11,6 +11,8 @@ import { AdminModule } from './admin/admin.module';
 import { ErpController } from './erp/erp.controller';
 import { ErpService } from './erp/erp.service';
 import { ErpModule } from './erp/erp.module';
+import { LogService } from './log/log.service';
+import { LogModule } from './log/log.module';
 @Module({
   
   imports: [
@@ -20,10 +22,11 @@ import { ErpModule } from './erp/erp.module';
     UserModule,
     SurveyModule,
     AdminModule,
-    ErpModule
+    ErpModule,
+    LogModule
   ],
   controllers: [AppController ],
-  providers: [AppService,Logger],
+  providers: [AppService,Logger,],
 })
 export class AppModule implements NestModule{
     configure(consumer:MiddlewareConsumer){
