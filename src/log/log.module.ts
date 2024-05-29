@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LogController } from './log.controller';
 import { LogService } from './log.service';
+import { LogRepository } from './log.repository';
 
 @Module({
     imports:[
@@ -17,7 +18,8 @@ import { LogService } from './log.service';
          
         }),
       ],
-    providers:[PrismaService,LogService], 
+    providers:[PrismaService,LogService,LogRepository], 
     controllers: [LogController]
 })
 export class LogModule {}
+ 

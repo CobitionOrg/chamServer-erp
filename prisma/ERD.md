@@ -19,6 +19,7 @@ erDiagram
   String log
   DateTime DateTime
   String stage
+  Int userId FK
 }
 "attendance" {
   Int id PK
@@ -133,6 +134,7 @@ erDiagram
   ItemType type
   Int orderId FK
 }
+"log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
@@ -161,6 +163,7 @@ erDiagram
   - `log`: 로그
   - `DateTime`: 시간
   - `stage`: 과정
+  - `userId`: 유저 key
 
 ### `attendance`
 

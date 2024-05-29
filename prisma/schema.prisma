@@ -21,6 +21,7 @@ model user {
   name        String    ///유저 이름
   useFlag     Boolean      @default(false) ///사용 여부
   attendances attendance[]
+  logs  log[]
 }
 
 model log {
@@ -28,6 +29,8 @@ model log {
   log String ///로그
   DateTime  DateTime  ///시간
   stage String  ///과정
+  userId Int ///유저 key
+  user  user  @relation(fields:[userId], references:[id])
 }
 
 model attendance {
