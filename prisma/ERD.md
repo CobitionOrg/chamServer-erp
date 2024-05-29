@@ -14,6 +14,12 @@ erDiagram
   String name
   Boolean useFlag
 }
+"log" {
+  Int id PK
+  String log
+  DateTime DateTime
+  String stage
+}
 "attendance" {
   Int id PK
   DateTime date
@@ -147,6 +153,14 @@ erDiagram
   - `grade`: 유저 등급
   - `name`: 유저 이름
   - `useFlag`: 사용 여부
+
+### `log`
+
+**Properties**
+  - `id`: index key
+  - `log`: 로그
+  - `DateTime`: 시간
+  - `stage`: 과정
 
 ### `attendance`
 

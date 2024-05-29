@@ -14,7 +14,6 @@ datasource db {
 }
 
 model user {
- 
   id          Int          @id @default(autoincrement())  ///index key
   userId      String       @unique ///유저 아이디
   userPw      String ///유저 비밀번호
@@ -22,6 +21,13 @@ model user {
   name        String    ///유저 이름
   useFlag     Boolean      @default(false) ///사용 여부
   attendances attendance[]
+}
+
+model log {
+  id  Int @id @default(autoincrement()) ///index key
+  log String ///로그
+  DateTime  DateTime  ///시간
+  stage String  ///과정
 }
 
 model attendance {
