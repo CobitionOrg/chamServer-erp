@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query, UseGuards } from '@nestjs/common';
 import { LogService } from './log.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ApiOperation } from '@nestjs/swagger';
@@ -26,5 +26,11 @@ export class LogController {
       }else{
         return await this.logSerive.readLogAtDay(day,month,year);
       }
+    }
+
+    @ApiOperation({summary:'사용자 아이디로 조회'})
+    @Get('/readLog/:userId')
+    async readLogById(@Param("userId") userId:string){
+      return await this.logSerive.readLogById(userId);
     }
 }

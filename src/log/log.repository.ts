@@ -86,4 +86,41 @@ export class LogRepository{
             }
         }
     }
+
+    /**
+     * 유저 아이디로 조회하기
+     * @param userId 
+     * @returns Promise<{
+            list: {
+                id: number;
+                log: string;
+                DateTime: Date;
+                stage: string;
+                userId: number;
+            }[];
+            status: HttpStatus;
+            success: boolean;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async readLogById(userId:string){
+        try{
+            const res = await this.prisma.log.findMany({
+                where:{
+                    user:{userId:userId}
+                }
+            });
+
+            return {list:res,status:HttpStatus.OK,success:true}
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }

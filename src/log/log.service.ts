@@ -77,7 +77,23 @@ export class LogService {
     /**
      * 특정 연도 로그 조회
      * @param year 
-     * @returns 
+     * @returns  list: {
+                log: string;
+                id: number;
+                DateTime: Date;
+                stage: string;
+                user: {
+                    userId: string;
+                    grade: $Enums.Role;
+                };
+            }[];
+            status: HttpStatus;
+            success: boolean;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }
      */
     async readLogAtYear(year:number){
         const startDate = new Date(year, 0, 1, 0, 0, 0);
@@ -90,6 +106,29 @@ export class LogService {
         }else{
             throw new InternalServerErrorException();
         }
+    }
+
+    /**
+     * 유저 아이디로 조회하기
+     * @param userId 
+     * @returns Promise<{
+            list: {
+                id: number;
+                log: string;
+                DateTime: Date;
+                stage: string;
+                userId: number;
+            }[];
+            status: HttpStatus;
+            success: boolean;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async readLogById(userId:string){
+        return await this.logRepository.readLogById(userId);
     }
 
    
