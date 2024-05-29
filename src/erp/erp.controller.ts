@@ -337,10 +337,10 @@ export class ErpController {
         return await this.sendService.getAllSendList();
     }
 
-    @ApiOperation({summary:'특정 발송목록에 선택해 발송목록으로 넘기기'})
+    @ApiOperation({summary:'특정 발송목록을 선택해서 해당 발송목록으로 넘기기'})
     @Post('/completeSetSend')
     async completeConsultingSetSend(@Body() completeSetSendDto: CompleteSetSendDto){
-        this.logger.log('특정 발송목록에 선택해 발송목록으로 넘기기');
+        this.logger.log('특정 발송목록을 선택해서 해당 발송목록으로 넘기기');
         return await this.erpService.completeConsultingSetSend(completeSetSendDto);
     }
        
