@@ -8,6 +8,7 @@ import { ErpService } from "./erp.service";
 import { getItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
+import { GetOrderSendPrice } from "src/util/getOrderPrice";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -264,13 +265,18 @@ export class SendService {
                 }
             });
 
+            const itemList = await this.erpService.getItems();
+            const getOrderPrice = new GetOrderSendPrice(objOrderItem,itemList);
+            const price = getOrderPrice.getPrice();
+
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
                     where:{
                         id:patientId
                     },
                     data:{
-                        addr:objPatient.addr
+                        addr:objPatient.addr,
+                        phoneNum:objPatient.phoneNum
                     }
                 });
 
@@ -279,7 +285,8 @@ export class SendService {
                         id:orderId
                     },
                     data:{
-                        cachReceipt:objOrder.cashReceipt
+                        cachReceipt:objOrder.cashReceipt,
+                        price:price
                     }
                 });
 
