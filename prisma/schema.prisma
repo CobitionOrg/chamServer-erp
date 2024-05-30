@@ -14,7 +14,6 @@ datasource db {
 }
 
 model user {
- 
   id          Int          @id @default(autoincrement())  ///index key
   userId      String       @unique ///유저 아이디
   userPw      String ///유저 비밀번호
@@ -22,6 +21,16 @@ model user {
   name        String    ///유저 이름
   useFlag     Boolean      @default(false) ///사용 여부
   attendances attendance[]
+  logs  log[]
+}
+
+model log {
+  id  Int @id @default(autoincrement()) ///index key
+  log String ///로그
+  DateTime  DateTime  ///시간
+  stage String  ///과정
+  userId Int ///유저 key
+  user  user  @relation(fields:[userId], references:[id])
 }
 
 model attendance {
@@ -108,6 +117,7 @@ model order {
   price           Int?           @default(0) /// 오더에 주문된 제품 총 가격
   remark          String?        ///특이 사항
   isPickup        Boolean?       @default(false) ///방문 수령 여부 true: 방문 수령, false: 택배 배송
+  combineNum      Int?           @default(0) ///합배송 번호
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]

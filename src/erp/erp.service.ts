@@ -23,6 +23,7 @@ import { getSendTitle } from 'src/util/getSendTitle';
 import { GetOrderSendPrice } from 'src/util/getOrderPrice';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
+import { CombineOrderDto } from './Dto/combineOrder.dto';
 
 @Injectable()
 export class ErpService {
@@ -1051,7 +1052,7 @@ export class ErpService {
             //const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
             const headers = ['주소', '주민번호','이름', '휴대폰 번호','설문지번호','특이사항(추천인)'];
 
-            const headerWidths = [16, 40, 30, 20];
+            const headerWidths = [30, 30, 10, 20, 10, 20];
 
             //상단 헤더 추가
             const headerRow = sheet.addRow(headers);
@@ -1518,4 +1519,60 @@ export class ErpService {
         }
     }
 
+    async combineOrder(combineOrderDto:CombineOrderDto){
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                const maxCombineNum = await tx.order.aggregate({
+                    _max:{
+                        combineNum:true
+                    }
+                });
+
+                let newCombineNum = maxCombineNum._max.combineNum + 1;
+
+                //새 combine order 삽입
+                await tx.order.updateMany({
+                    where:{
+                        id:{
+                            in:combineOrderDto.orderIdArr
+                        },
+                        isComplete:false
+                    },
+                    data:{
+                        combineNum:newCombineNum,
+                        orderSortNum:5
+                    }
+                });
+
+                //배송 주소 업데이트
+                const patients = await tx.order.findMany({
+                    where:{
+                        id:{
+                            in:combineOrderDto.orderIdArr
+                        },
+                        isComplete:false
+                    },
+                    select:{
+                        patientId:true,
+                    }
+                });
+                
+                 // for...of 루프를 사용하여 비동기 작업을 순차적으로 처리
+                for (const e of patients) {
+                    await tx.patient.update({
+                        where:{id:e.patientId},
+                        data:{addr:combineOrderDto.addr}
+                    });
+                };
+            });
+
+            return {success:true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }

@@ -6,10 +6,20 @@ import { AdminService } from 'src/admin/admin.service';
 import { AdminModule } from 'src/admin/admin.module';
 import { UserService } from 'src/user/user.service';
 import { SendService } from './send.service';
+import { LogService } from 'src/log/log.service';
+import { LogRepository } from 'src/log/log.repository';
 
 @Module({
     controllers:[ErpController],
-    providers:[PrismaService,ErpService,AdminService,UserService,SendService]
+    providers:[
+        PrismaService,
+        ErpService,
+        AdminService,
+        UserService,
+        SendService,
+        LogService,
+        LogRepository
+    ]
 })
 
 export class ErpModule {

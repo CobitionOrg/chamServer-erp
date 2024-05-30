@@ -14,6 +14,13 @@ erDiagram
   String name
   Boolean useFlag
 }
+"log" {
+  Int id PK
+  String log
+  DateTime DateTime
+  String stage
+  Int userId FK
+}
 "attendance" {
   Int id PK
   DateTime date
@@ -79,6 +86,7 @@ erDiagram
   Int price "nullable"
   String remark "nullable"
   Boolean isPickup "nullable"
+  Int combineNum "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -127,6 +135,7 @@ erDiagram
   ItemType type
   Int orderId FK
 }
+"log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
@@ -147,6 +156,15 @@ erDiagram
   - `grade`: 유저 등급
   - `name`: 유저 이름
   - `useFlag`: 사용 여부
+
+### `log`
+
+**Properties**
+  - `id`: index key
+  - `log`: 로그
+  - `DateTime`: 시간
+  - `stage`: 과정
+  - `userId`: 유저 key
 
 ### `attendance`
 
@@ -227,6 +245,7 @@ erDiagram
   - `price`: 오더에 주문된 제품 총 가격
   - `remark`: 특이 사항
   - `isPickup`: 방문 수령 여부 true: 방문 수령, false: 택배 배송
+  - `combineNum`: 합배송 번호
 
 ### `tempOrder`
 
