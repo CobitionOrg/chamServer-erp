@@ -57,13 +57,18 @@ export class LogRepository{
             list?: undefined;
         }>
      */
-    async readLog(startDate:Date, endDate:Date){
+    async readLog(startDate:Date, endDate:Date,userName?){
         try{
+            console.log('=============');
+            console.log(userName);
             const res = await this.prisma.log.findMany({
                 where: {
                     DateTime:{
                         gte:startDate,
                         lt:endDate
+                    },
+                    user:{
+                        name:{contains:userName}
                     }
                 },
                 select:{
@@ -72,7 +77,7 @@ export class LogRepository{
                     DateTime:true,
                     stage:true,
                     user:{
-                        select:{userId:true,grade:true}
+                        select:{userId:true,grade:true,name:true}
                     }
                 }
             });
@@ -106,11 +111,20 @@ export class LogRepository{
             list?: undefined;
         }>
      */
-    async readLogById(userId:string){
+    async readLogById(userName:string){
         try{
             const res = await this.prisma.log.findMany({
                 where:{
-                    user:{userId:userId}
+                    user:{name:userName}
+                },
+                select:{
+                    id:true,
+                    log:true,
+                    DateTime:true,
+                    stage:true,
+                    user:{
+                        select:{userId:true,grade:true,name:true}
+                    }
                 }
             });
 

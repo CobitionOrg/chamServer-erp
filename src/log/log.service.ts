@@ -41,11 +41,11 @@ export class LogService {
      * @param year 
      * @returns 
      */
-    async readLogAtDay(day:number, month: number, year:number){
+    async readLogAtDay(day:number, month: number, year:number, userName:string|null){
         const startDate = new Date(year, month-1, day, 0, 0, 0);
         const endDate = new Date(year, month-1, day, 23, 59, 59);
 
-        const res = await this.logRepository.readLog(startDate, endDate);
+        const res = await this.logRepository.readLog(startDate, endDate, userName);
 
         if(res.success){
             return res;
@@ -127,8 +127,8 @@ export class LogService {
             list?: undefined;
         }>
      */
-    async readLogById(userId:string){
-        return await this.logRepository.readLogById(userId);
+    async readLogById(userName:string){
+        return await this.logRepository.readLogById(userName);
     }
 
    
