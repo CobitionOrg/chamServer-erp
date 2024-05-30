@@ -17,6 +17,7 @@ import { InsertCashDto } from './Dto/insertCash.dto';
 import { UpdateTitleDto } from './Dto/updateTitle.dto';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { LogService } from 'src/log/log.service';
+import { CombineOrderDto } from './Dto/combineOrder.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -414,6 +415,21 @@ export class ErpController {
             );
         }
 
+        return res;
+    }
+
+    @ApiOperation({summary:'합배송 처리'})
+    @Public()
+    @Post('/combine')
+    async combineOrder(@Body() combineOrderDto:CombineOrderDto, @Headers() header){
+        this.logger.log('합배송 처리');
+        const res = await this.erpService.combineOrder(combineOrderDto);
+
+        // if(res.success){
+        //     await this.logService.createLog(
+                
+        //     )
+        // }
         return res;
     }
        
