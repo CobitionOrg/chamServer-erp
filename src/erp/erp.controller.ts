@@ -18,6 +18,7 @@ import { UpdateTitleDto } from './Dto/updateTitle.dto';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { LogService } from 'src/log/log.service';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
+import { SepareteDto } from './Dto/separteData.dto';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -431,6 +432,12 @@ export class ErpController {
         //     )
         // }
         return res;
+    }
+
+    @ApiOperation({summary:'분리 배송 처리'})
+    @Post('/separate')
+    async separate(@Body() separateDto:SepareteDto, @Headers() header){
+        
     }
        
 }

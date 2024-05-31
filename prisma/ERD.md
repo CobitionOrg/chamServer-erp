@@ -84,6 +84,8 @@ erDiagram
   Int orderSortNum
   String sendNum "nullable"
   Int price "nullable"
+  Int cash "nullable"
+  Int card "nullable"
   String remark "nullable"
   Boolean isPickup "nullable"
   Int combineNum "nullable"
@@ -109,6 +111,11 @@ erDiagram
   String sendNum "nullable"
   Int sendListId FK
   String addr "nullable"
+}
+"tempOrderItem" {
+  Int id PK
+  String item
+  Int tempOrderId FK
 }
 "sendList" {
   Int id PK
@@ -144,6 +151,7 @@ erDiagram
 "tempOrder" }o--|| "order" : order
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
+"tempOrderItem" |o--|| "tempOrder" : tempOrder
 "orderBodyType" |o--|| "order" : order
 "orderItem" }o--|| "order" : order
 ```
@@ -244,6 +252,8 @@ erDiagram
   - `orderSortNum`: 정렬 번호
   - `sendNum`: 송장 번호
   - `price`: 오더에 주문된 제품 총 가격
+  - `cash`: 해당 오더에 계좌 이체 된 금액
+  - `card`: 해당 오더에 카드로 결제된 금액
   - `remark`: 특이 사항
   - `isPickup`: 방문 수령 여부 true: 방문 수령, false: 택배 배송
   - `combineNum`: 합배송 번호
@@ -271,6 +281,13 @@ erDiagram
   - `sendNum`: 송장 번호
   - `sendListId`: 발송목록 key
   - `addr`: 
+
+### `tempOrderItem`
+
+**Properties**
+  - `id`: index key
+  - `item`: 주문한 아이템
+  - `tempOrderId`: 해당 temp order key
 
 ### `sendList`
 

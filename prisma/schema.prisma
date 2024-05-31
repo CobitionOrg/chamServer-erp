@@ -178,6 +178,10 @@ model order {
   sendNum         String?        @db.VarChar(100)
   /// 오더에 주문된 제품 총 가격
   price           Int?           @default(0)
+  /// 해당 오더에 계좌 이체 된 금액
+  cash            Int?           @default(0)
+  /// 해당 오더에 카드로 결제된 금액
+  card            Int?           @default(0)
   /// 특이 사항
   remark          String?
   /// 방문 수령 여부 true: 방문 수령, false: 택배 배송
@@ -232,6 +236,7 @@ model tempOrder {
   /// 발송목록 key
   sendListId      Int
   addr            String?  @db.VarChar(100)
+  tempOrderItems  tempOrderItem[]
   order           order    @relation(fields: [orderId], references: [id])
   patient         patient  @relation(fields: [patientId], references: [id])
   sendList        sendList @relation(fields: [sendListId], references: [id])
@@ -239,6 +244,16 @@ model tempOrder {
   @@index([orderId], map: "tempOrder_orderId_fkey")
   @@index([patientId], map: "tempOrder_patientId_fkey")
   @@index([sendListId], map: "tempOrder_sendListId_fkey")
+}
+
+model tempOrderItem {
+  /// index key
+  id      Int      @id @default(autoincrement())
+  /// 주문한 아이템
+  item    String
+  /// 해당 temp order key
+  tempOrderId Int @unique
+  tempOrder tempOrder @relation(fields:[tempOrderId], references:[id])
 }
 
 model sendList {
