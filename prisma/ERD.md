@@ -108,6 +108,7 @@ erDiagram
   Int orderId FK
   String sendNum "nullable"
   Int sendListId FK
+  String addr "nullable"
 }
 "sendList" {
   Int id PK
@@ -269,6 +270,7 @@ erDiagram
   - `orderId`: 원 오더 key
   - `sendNum`: 송장 번호
   - `sendListId`: 발송목록 key
+  - `addr`: 
 
 ### `sendList`
 
