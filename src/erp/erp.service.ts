@@ -1542,6 +1542,14 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금 상담 목록에서 합배송 처리
+     * @param combineOrderDto 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
     async combineOrder(combineOrderDto:CombineOrderDto){
         try{
             await this.prisma.$transaction(async (tx) => {
@@ -1551,7 +1559,7 @@ export class ErpService {
                     }
                 });
 
-                let newCombineNum = maxCombineNum._max.combineNum + 1;
+                let newCombineNum = (maxCombineNum._max.combineNum || 0) + 1;
 
                 //새 combine order 삽입
                 await tx.order.updateMany({
