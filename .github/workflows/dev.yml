@@ -21,6 +21,7 @@ jobs:
           script: | # 실행할 스크립트
             cd /home/ubuntu/chamServer-erp
             git pull origin main
+            sudo npx prisma generate
             sudo pm2 kill
             sudo npm i 
             sudo npm run build
