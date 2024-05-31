@@ -437,7 +437,10 @@ export class ErpController {
     @ApiOperation({summary:'분리 배송 처리'})
     @Post('/separate')
     async separate(@Body() separateDto:SepareteDto, @Headers() header){
-        
+        this.logger.log("분리 배송 처리");
+        const res = await this.erpService.separate(separateDto);
+
+        return res;
     }
        
 }

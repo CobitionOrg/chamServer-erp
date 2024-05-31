@@ -766,7 +766,7 @@ export class ErpService {
                 //오더 개수
                 const orderAmount = orderItems.length;
 
-                const sendListId = await this.insertToSendList(tx, orderAmount, sendOne, id);
+                const sendListId = await this.insertToSendList(tx, orderAmount);
 
                 const res = await this.createTempOrder(sendOne, id, sendListId, tx);
 
@@ -793,7 +793,7 @@ export class ErpService {
      * @param id 오더 아이디
      * @returns 
      */
-    async insertToSendList(tx, orderAmount, sendOne, id) {
+    async insertToSendList(tx, orderAmount) {
         try {
             //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
             const sendList = await tx.sendList.findMany({
@@ -940,26 +940,29 @@ export class ErpService {
             status?: undefined;
         }
      */
-    async createTempOrder(sendOne, id, sendListId, tx) {
+    async createTempOrder(sendOne, id, sendListId, tx, address?:string ) {
         try {
-          
-            //발송되는 주소 가져오기
-            const patient = await tx.patient.findUnique({
-                where: {
-                    id: sendOne.patientId
-                },
-                select: {
-                    addr: true,
-                }
-            });
+            if(address==undefined){
+               //발송되는 주소 가져오기
+                const patient = await tx.patient.findUnique({
+                    where: {
+                        id: sendOne.patientId
+                    },
+                    select: {
+                        addr: true,
+                    }
+                }); 
 
-            const addr = patient.addr;
+                address = patient.addr
+            }
+            
+
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
-            console.log(`========${addr}==========`)
-            await tx.tempOrder.create({
+            console.log(`========${address}==========`)
+            const res = await tx.tempOrder.create({
                 data: {
                     route: sendOne.route,
                     message: sendOne.message,
@@ -975,7 +978,7 @@ export class ErpService {
                     isFirst: sendOne.isFirst,
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
-                    addr: addr,
+                    addr: address,
                     order:{
                         connect:{id:id}
                     },
@@ -988,7 +991,7 @@ export class ErpService {
                 }
             });
 
-            return { success: true };
+            return { success: true, id:res.id };
 
         } catch (err) {
             this.logger.error(err);
@@ -1638,10 +1641,37 @@ export class ErpService {
                     where: { id: separateDto.orderId }
                 });
 
+                //orderSortNum 변경
+                orderOne.orderSortNum = 6;
+
                 const orderAmount = separateDto.separate.length;
 
-                
+                //발송목록 id
+                const sendListId = await this.insertToSendList(tx,orderAmount);
+
+                //분리배송 용 tempOrder 생성
+                for (const e of separateDto.separate){
+                    if(e.sendTax){
+                        await tx.order.update({
+                            where:{id:separateDto.orderId},
+                            data:{price:orderOne.price+3500}
+                        });
+                    }
+                    const res = await this.createTempOrder(orderOne,separateDto.orderId,sendListId,tx,e.addr);
+
+                    if(!res.success) throw Error();
+                    else{
+                        await tx.tempOrderItem.create({
+                            data:{
+                                item:e.orderItem,
+                                tempOrderId:res.id
+                            }
+                        });
+                    }
+                }
             });
+
+            return {success:true, status:HttpStatus.OK};
 
         } catch (err) {
             this.logger.error(err);
