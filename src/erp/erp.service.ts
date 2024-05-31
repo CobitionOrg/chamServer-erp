@@ -753,6 +753,7 @@ export class ErpService {
                     }
                 });
 
+               
                 //해당 오더 발송 개수 가져오기
                 const orderItems = await tx.orderItem.findMany({
                     where: {
@@ -767,7 +768,7 @@ export class ErpService {
                 //오더 개수
                 const orderAmount = orderItems.length;
 
-                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임(이라고 생각했는데 fix 해제 요청 들어옴...)
+                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
                 const sendList = await tx.sendList.findMany({
                     where: {
                         full: false,
@@ -925,9 +926,22 @@ export class ErpService {
      */
     async createTempOrder(sendOne,id,sendListId,tx) {
         try{
+
+             //발송되는 주소 가져오기
+             const patient = await tx.patient.findUnique({
+                where:{
+                    id:sendOne.patientId
+                },
+                select:{
+                    addr:true,
+                }
+            });
+
+            const addr = patient.addr;
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
 
+            console.log(`========${addr}==========`)
             await tx.tempOrder.create({
                 data:{
                     route: sendOne.route,
@@ -946,7 +960,8 @@ export class ErpService {
                     orderSortNum: sendOne.orderSortNum,
                     patientId: sendOne.patientId,
                     orderId: id,
-                    sendListId:sendListId
+                    sendListId:sendListId,
+                    addr: addr
                 }
             });
 
@@ -979,6 +994,14 @@ export class ErpService {
                     where:{id:orderId},
                     data:{isComplete:true}
                 });
+
+                //발송 주소 가져오기
+                const patient = await tx.patient.findUnique({
+                    where:{id:sendOne.patientId},
+                    select:{addr:true}
+                });
+
+                const addr = patient.addr;
 
                 const orderItems = await tx.orderItem.findMany({
                     where:{

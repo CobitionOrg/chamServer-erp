@@ -149,12 +149,13 @@ export class SendService {
                     orderSortNum: true,
                     sendNum:true,
                     payType: true,
+                    addr:true,
                     patient: {
                         select: {
                             id: true,
                             phoneNum: true,
                             name: true,
-                            addr: true,
+                            //addr: true,
                         }
                     },
                     order: {
@@ -371,7 +372,8 @@ export class SendService {
             });
 
             list.forEach((e) => {
-                const { name,addr,phoneNum } = e.patient; 
+                const { name,phoneNum } = e.patient; 
+                const addr = e.addr;
                 const message = e.order.message;
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
