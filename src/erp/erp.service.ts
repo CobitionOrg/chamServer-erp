@@ -4,7 +4,6 @@ import * as Excel from 'exceljs'
 import axios from 'axios';
 
 import { PrismaService } from 'src/prisma.service';
-import { SurveyAnswerDto } from './Dto/surveyAnswer.dto';
 import { error } from 'console';
 import { OrderObjDto } from './Dto/orderObj.dto';
 import { CallConsultingDto } from './Dto/callConsulting.dto';
@@ -13,7 +12,6 @@ import { SurveyDto } from './Dto/survey.dto';
 import { PatientDto } from './Dto/patient.dto';
 import { generateUploadURL } from '../util/s3';
 import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
-import { UpdateSurveyDto } from './Dto/updateSurvey.dto';
 import { checkGSB } from '../util/checkGSB.util';
 import { GetListDto } from './Dto/getList.dto';
 import { getItem } from 'src/util/getItem';
@@ -25,6 +23,7 @@ import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { sortItems } from 'src/util/sortItems';
+import { SepareteDto } from './Dto/separteData.dto';
 
 @Injectable()
 export class ErpService {
@@ -83,7 +82,7 @@ export class ErpService {
             });
 
             const itemList = await this.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem,itemList);
+            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
@@ -113,7 +112,7 @@ export class ErpService {
                         essentialCheck: '',
                         outage: '',
                         isFirst: true,
-                        price:price,
+                        price: price,
                         patientId: patient.id,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
@@ -189,7 +188,7 @@ export class ErpService {
     async getReciptList(getListDto: GetListDto) {
         try {
             let orderConditions = {};
-            if(getListDto.date === undefined) {
+            if (getListDto.date === undefined) {
                 //날짜 조건 X
                 orderConditions = {
                     consultingType: false,
@@ -202,8 +201,8 @@ export class ErpService {
                 // 한국 시간으로 바꾸기
                 const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
 
-                const startDate = new Date(kstDate.setHours(0,0,0,0));
-                const endDate = new Date(kstDate.setHours(23,59,59,999));
+                const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
+                const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
@@ -214,9 +213,9 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if(getListDto.searchKeyword !== "") {
+            if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if(getListDto.searchCategory === "all"){
+                if (getListDto.searchCategory === "all") {
                     patientConditions = {
                         OR: [
                             { patient: { name: { contains: getListDto.searchKeyword } } },
@@ -226,17 +225,17 @@ export class ErpService {
                 }
                 else if (getListDto.searchCategory === "name") {
                     patientConditions = {
-                        patient: { name: {contains: getListDto.searchKeyword } }
+                        patient: { name: { contains: getListDto.searchKeyword } }
                     }
                 }
                 else if (getListDto.searchCategory === "num") {
                     patientConditions = {
-                        patient: { phoneNum: {contains: getListDto.searchKeyword } }
+                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
                     }
                 }
             }
             const list = await this.prisma.order.findMany({
-                where: {...orderConditions, ...patientConditions},
+                where: { ...orderConditions, ...patientConditions },
                 select: {
                     id: true,
                     route: true,
@@ -329,15 +328,15 @@ export class ErpService {
             });
 
             const itemList = await this.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem,itemList);
+            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
 
             const patient = await this.checkPatient(objPatient)
-            if (!patient.success) return { 
-                success: false, 
-                msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요' 
+            if (!patient.success) return {
+                success: false,
+                msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'
             };
 
             await this.prisma.$transaction(async (tx) => {
@@ -366,7 +365,7 @@ export class ErpService {
                         typeCheck: '',
                         consultingTime: '',
                         essentialCheck: '',
-                        price:price,
+                        price: price,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
                     }
@@ -599,7 +598,7 @@ export class ErpService {
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
 
             let orderConditions = {};
-            if(getListDto.date === undefined) {
+            if (getListDto.date === undefined) {
                 //날짜 조건 X
                 orderConditions = {
                     consultingType: true,
@@ -611,9 +610,9 @@ export class ErpService {
                 const gmtDate = new Date(getListDto.date);
                 // 한국 시간으로 바꾸기
                 const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-                
-                const startDate = new Date(kstDate.setHours(0,0,0,0));
-                const endDate = new Date(kstDate.setHours(23,59,59,999));
+
+                const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
+                const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -624,9 +623,9 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if(getListDto.searchKeyword === "") {
+            if (getListDto.searchKeyword === "") {
                 //검색어 O
-                if(getListDto.searchCategory === "all") {
+                if (getListDto.searchCategory === "all") {
                     patientConditions = {
                         OR: [
                             { patient: { name: { contains: getListDto.searchKeyword } } },
@@ -646,7 +645,7 @@ export class ErpService {
                 }
             }
             const list = await this.prisma.order.findMany({
-                where: {...orderConditions, ...patientConditions},
+                where: { ...orderConditions, ...patientConditions },
                 select: {
                     id: true,
                     route: true,
@@ -760,7 +759,6 @@ export class ErpService {
                     }
                 });
 
-               
                 //해당 오더 발송 개수 가져오기
                 const orderItems = await tx.orderItem.findMany({
                     where: {
@@ -775,137 +773,12 @@ export class ErpService {
                 //오더 개수
                 const orderAmount = orderItems.length;
 
-                //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
-                const sendList = await tx.sendList.findMany({
-                    where: {
-                        full: false,
-                        fixFlag: false //픽스 여부 체크
-                    },
-                    orderBy:{
-                        id:'asc'
-                    },
-                    select: {
-                        id: true,
-                        amount:true,
-                        title:true,
-                    }
-                });
+                const sendListId = await this.insertToSendList(tx, orderAmount);
 
-                console.log(sendList.length);
+                const res = await this.createTempOrder(sendOne, id, sendListId, tx);
 
-                //아직 350개 차지 않은 발송 목록이 있을 때
-                if (sendList.length>0) {
-                    const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
+                if(!res.success) throw error();
 
-                    if(checkAmount>350){
-                        //350개가 넘으면 새로운 발송목록에 삽입
-                        if(sendList.length==1){
-                            //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
-                            const sendList = await tx.sendList.findMany({
-                                orderBy:{
-                                    id:'asc'
-                                },
-                                select: {
-                                    id: true,
-                                    amount:true,
-                                    title:true,
-                                }
-                            }); //제일 마지막 발송일자 가져오기
-                            const lastTitle = sendList[sendList.length-1].title;
-                            const date = new Date(lastTitle);                            
-                            const title = getSendTitle(date);
-                            console.log(title);
-
-                            const newSendList = await tx.sendList.create({
-                                data:{
-                                    title:title,
-                                    amount:orderAmount,
-                                    date:date,
-                                    full:false
-                                }
-                            });
-
-                            //새 발송목록에 데이터 넣기
-                            const res = await this.createTempOrder(sendOne, id, newSendList.id, tx);
-                            if(res.success) return {success:true,status:HttpStatus.OK};
-                            else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
-
-                        }else{
-                            //다 차지 않은 발송목록이 있어서 그냥 넣으면 될 때
-                            await tx.sendList.update({
-                                where:{
-                                    id:sendList[1].id
-                                },
-                                data:{
-                                    amount:checkAmount
-                                }
-                            });
-                            const res = await this.createTempOrder(sendOne, id, sendList[1].id,tx);
-                            if(res.success) return {success:true,status:HttpStatus.OK};
-                            else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
-                        }
-                    }else{
-                        //350개 이하면 기존 발송목록에 삽입
-                        const checkAmount = sendList[0].amount + orderAmount;
-
-                        if(checkAmount == 350) {
-                            await tx.sendList.update({
-                                where:{
-                                    id:sendList[0].id
-                                },
-                                data:{
-                                    full:true,
-                                    fixFlag:true, //350개 되면 자동으로 fix
-                                }
-                            });
-                        }else{
-                            await tx.sendList.update({
-                                where:{
-                                    id:sendList[0].id
-                                },
-                                data:{
-                                    amount:checkAmount
-                                }
-                            })
-                        }
-                        const res = await this.createTempOrder(sendOne, id, sendList[0].id,tx);
-                        if(res.success) return {success:true,status:HttpStatus.OK};
-                        else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
-                    }
-                } else {
-                    //새로 발송목록을 만들어야 할 때
-                    console.log('create new send list');
-                    const sendList = await tx.sendList.findMany({
-                        orderBy:{
-                            id:'asc'
-                        },
-                        select: {
-                            id: true,
-                            amount:true,
-                            title:true,
-                        }
-                    });//제일 마지막 발송일자 가져오기
-                    console.log(sendList);
-                    
-                    const lastTitle = sendList.length != 0 ? sendList[sendList.length-1].title : new Date();
-                    const date = new Date(lastTitle);
-                    console.log(date);
-                    const title = getSendTitle(date);
-                    //console.log(title);
-                    const newSendList = await tx.sendList.create({
-                        data:{
-                            title:title,
-                            amount:orderAmount,
-                            date:date,
-                            full:false
-                        }
-                    });
-
-                    //새 발송목록에 데이터 넣기
-                    const res = await this.createTempOrder(sendOne, id, newSendList.id,tx);
-                    if(res.success) return {success:true,status:HttpStatus.OK};
-                    else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
-                }
             });
 
 
@@ -918,7 +791,150 @@ export class ErpService {
             }
         }
     }
-    
+
+    /**
+     * 발송목록에 넣기
+     * @param tx 
+     * @param orderAmount 주문 수량 
+     * @param sendOne 오더
+     * @param id 오더 아이디
+     * @returns 
+     */
+    async insertToSendList(tx, orderAmount) {
+        try {
+            //발송 목록 데이터 확인. 많이 나와봐야 두 개 임
+            const sendList = await tx.sendList.findMany({
+                where: {
+                    full: false,
+                    fixFlag: false //픽스 여부 체크
+                },
+                orderBy: {
+                    id: 'asc'
+                },
+                select: {
+                    id: true,
+                    amount: true,
+                    title: true,
+                }
+            });
+
+            console.log(sendList.length);
+
+            //아직 350개 차지 않은 발송 목록이 있을 때
+            if (sendList.length > 0) {
+                const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
+
+                if (checkAmount > 350) {
+                    //350개가 넘으면 새로운 발송목록에 삽입
+                    if (sendList.length == 1) {
+                        //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
+                        const sendList = await tx.sendList.findMany({
+                            orderBy: {
+                                id: 'asc'
+                            },
+                            select: {
+                                id: true,
+                                amount: true,
+                                title: true,
+                            }
+                        }); //제일 마지막 발송일자 가져오기
+                        const lastTitle = sendList[sendList.length - 1].title;
+                        const date = new Date(lastTitle);
+                        const title = getSendTitle(date);
+                        console.log(title);
+
+                        const newSendList = await tx.sendList.create({
+                            data: {
+                                title: title,
+                                amount: orderAmount,
+                                date: date,
+                                full: false
+                            }
+                        });
+
+                        return newSendList.id;
+
+                    } else {
+                        //다 차지 않은 발송목록이 있어서 그냥 넣으면 될 때
+                        await tx.sendList.update({
+                            where: {
+                                id: sendList[1].id
+                            },
+                            data: {
+                                amount: checkAmount
+                            }
+                        });
+                        return sendList[1].id
+                    }
+                } else {
+                    //350개 이하면 기존 발송목록에 삽입
+                    const checkAmount = sendList[0].amount + orderAmount;
+
+                    if (checkAmount == 350) {
+                        await tx.sendList.update({
+                            where: {
+                                id: sendList[0].id
+                            },
+                            data: {
+                                full: true,
+                                fixFlag: true, //350개 되면 자동으로 fix
+                            }
+                        });
+                    } else {
+                        await tx.sendList.update({
+                            where: {
+                                id: sendList[0].id
+                            },
+                            data: {
+                                amount: checkAmount
+                            }
+                        })
+                    }
+
+                    return sendList[0].id
+                   
+                }
+            } else {
+                //새로 발송목록을 만들어야 할 때
+                console.log('create new send list');
+                const sendList = await tx.sendList.findMany({
+                    orderBy: {
+                        id: 'asc'
+                    },
+                    select: {
+                        id: true,
+                        amount: true,
+                        title: true,
+                    }
+                });//제일 마지막 발송일자 가져오기
+                console.log(sendList);
+
+                const lastTitle = sendList.length != 0 ? sendList[sendList.length - 1].title : new Date();
+                const date = new Date(lastTitle);
+                console.log(date);
+                const title = getSendTitle(date);
+                //console.log(title);
+                const newSendList = await tx.sendList.create({
+                    data: {
+                        title: title,
+                        amount: orderAmount,
+                        date: date,
+                        full: false
+                    }
+                });
+
+                return newSendList.id;
+                
+            }
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
     /**
      *  //temp order에 데이터를 삽입해
         order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
@@ -931,26 +947,30 @@ export class ErpService {
             status?: undefined;
         }
      */
-    async createTempOrder(sendOne,id,sendListId,tx) {
-        try{
+    async createTempOrder(sendOne, id, sendListId, tx, address?:string ) {
+        try {
+            if(address==undefined){
+               //발송되는 주소 가져오기
+                const patient = await tx.patient.findUnique({
+                    where: {
+                        id: sendOne.patientId
+                    },
+                    select: {
+                        addr: true,
+                    }
+                }); 
 
-             //발송되는 주소 가져오기
-             const patient = await tx.patient.findUnique({
-                where:{
-                    id:sendOne.patientId
-                },
-                select:{
-                    addr:true,
-                }
-            });
+                address = patient.addr
+            }
+            
 
-            const addr = patient.addr;
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
-
-            console.log(`========${addr}==========`)
-            await tx.tempOrder.create({
-                data:{
+            console.log(id);
+            console.log(sendListId);
+            console.log(`========${address}==========`)
+            const res = await tx.tempOrder.create({
+                data: {
                     route: sendOne.route,
                     message: sendOne.message,
                     cachReceipt: sendOne.cachReceipt,
@@ -965,16 +985,22 @@ export class ErpService {
                     isFirst: sendOne.isFirst,
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
-                    patientId: sendOne.patientId,
-                    orderId: id,
-                    sendListId:sendListId,
-                    addr: addr
+                    addr: address,
+                    order:{
+                        connect:{id:id}
+                    },
+                    patient:{
+                        connect:{id:sendOne.patientId}
+                    },
+                    sendList:{
+                        connect:{id:sendListId}
+                    }
                 }
             });
 
-            return {success:true};
+            return { success: true, id:res.id };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -991,56 +1017,56 @@ export class ErpService {
         status: HttpStatus;
     }>
      */
-    async completeConsultingSetSend(completeSetSendDto: CompleteSetSendDto){
-        try{
+    async completeConsultingSetSend(completeSetSendDto: CompleteSetSendDto) {
+        try {
             const orderId = completeSetSendDto.orderId;
             const sendListId = completeSetSendDto.sendListId;
 
             await this.prisma.$transaction(async (tx) => {
                 const sendOne = await tx.order.update({
-                    where:{id:orderId},
-                    data:{isComplete:true}
+                    where: { id: orderId },
+                    data: { isComplete: true }
                 });
 
                 //발송 주소 가져오기
                 const patient = await tx.patient.findUnique({
-                    where:{id:sendOne.patientId},
-                    select:{addr:true}
+                    where: { id: sendOne.patientId },
+                    select: { addr: true }
                 });
 
                 const addr = patient.addr;
 
                 const orderItems = await tx.orderItem.findMany({
-                    where:{
+                    where: {
                         orderId: orderId,
-                        type: {in: ['common','yoyo']}
+                        type: { in: ['common', 'yoyo'] }
                     }
                 });
 
                 const orderAmount = orderItems.length;
 
                 const sendList = await tx.sendList.findUnique({
-                    where:{id:sendListId}
+                    where: { id: sendListId }
                 });
 
-                const amount = sendList.amount+orderAmount;
+                const amount = sendList.amount + orderAmount;
 
                 await tx.sendList.update({
-                    where: {id: sendListId},
-                    data:{amount:amount}
+                    where: { id: sendListId },
+                    data: { amount: amount }
                 });
 
-                const res = await this.createTempOrder(sendOne,orderId,sendListId,tx);
-                if(res.success) return {success:true,status:HttpStatus.OK};
-                else return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR}
+                const res = await this.createTempOrder(sendOne, orderId, sendListId, tx);
+                if (res.success) return { success: true, status: HttpStatus.OK };
+                else return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR }
             });
 
-            return {success:true, status: HttpStatus.OK};
+            return { success: true, status: HttpStatus.OK };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -1071,8 +1097,8 @@ export class ErpService {
                             socialNum: true,
                         }
                     },
-                    id:true,
-                    route:true,
+                    id: true,
+                    route: true,
                 }
             });
 
@@ -1080,7 +1106,7 @@ export class ErpService {
             const sheet = wb.addWorksheet("신환 등록");
 
             //const headers = ['이름', '주소', '주민번호', '휴대폰 번호'];
-            const headers = ['주소', '주민번호','이름', '휴대폰 번호','설문지번호','특이사항(추천인)'];
+            const headers = ['주소', '주민번호', '이름', '휴대폰 번호', '설문지번호', '특이사항(추천인)'];
 
             const headerWidths = [30, 30, 10, 20, 10, 20];
 
@@ -1100,8 +1126,8 @@ export class ErpService {
                 const { name, addr, socialNum, phoneNum } = e.patient;
                 const rowDatas = [
                     addr,
-                    hyphen.socialNumHyphen(socialNum) ,
-                    name, 
+                    hyphen.socialNumHyphen(socialNum),
+                    name,
                     hyphen.phoneNumHyphen(phoneNum),
                     e.id,
                     e.route
@@ -1142,7 +1168,7 @@ export class ErpService {
                     payType: true,
                     orderItems: {
                         select: {
-                            item: true, 
+                            item: true,
                         }
                     }
                 }
@@ -1165,12 +1191,12 @@ export class ErpService {
             list.forEach((e) => {
                 const { name, phoneNum } = e.patient;
                 console.log(e.orderItems)
-                let items='';
+                let items = '';
 
-                for(let i =0; i<e.orderItems.length;i++){
+                for (let i = 0; i < e.orderItems.length; i++) {
                     console.log(e.orderItems[i].item)
                     const item = getItem(e.orderItems[i].item);
-                    items+=`${item}/`
+                    items += `${item}/`
                 }
 
                 const payType = e.payType;
@@ -1288,7 +1314,7 @@ export class ErpService {
      * @returns {success: boolean, status: HttpStatus.OK}
      */
     async updateOrderByStaff(updateSurveyDto, id) {
-        try{
+        try {
             const patientData = updateSurveyDto.patient;
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
@@ -1386,7 +1412,7 @@ export class ErpService {
                     data: patientData
                 });
 
-                if(orderBodyTypeData !== null) {
+                if (orderBodyTypeData !== null) {
                     const orderBodyType = await tx.orderBodyType.update({
                         where: {
                             orderId: id
@@ -1394,7 +1420,7 @@ export class ErpService {
                         data: orderBodyTypeData
                     });
                 }
-                
+
                 const deleteItems = await tx.orderItem.deleteMany({
                     where: {
                         orderId: id
@@ -1420,27 +1446,27 @@ export class ErpService {
      * @param insertCashDto 
      * @returns {success:boolean, url:string}
      */
-    async cashExcel(insertCashDto : Array<InsertCashDto>){
-        try{    
+    async cashExcel(insertCashDto: Array<InsertCashDto>) {
+        try {
             //console.log(insertCashDto);
             const cashList = await this.getCashTypeList();
             const itemList = await this.getItems();
             //console.log(cashList);
             console.log(insertCashDto);
-            const cashMatcher = new CashExcel(insertCashDto,cashList.list, itemList);
+            const cashMatcher = new CashExcel(insertCashDto, cashList.list, itemList);
             const results = cashMatcher.compare();
 
             console.log(results);
             //엑셀 생성
-            const createExcel = await createExcelCash(results.duplicates,results.noMatches);
+            const createExcel = await createExcelCash(results.duplicates, results.noMatches);
             const url = createExcel.url;
 
             //발송목록 이동 처리
             results.matches.forEach(async (e) => {
                 await this.completeConsulting(e.id);
             });
-            return {success:true, url};
-        }catch(err){
+            return { success: true, url };
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -1450,24 +1476,24 @@ export class ErpService {
     }
 
     /**item 테이블 데이터 가져오기 */
-    async getItems(){
-        try{
+    async getItems() {
+        try {
             const list = await this.prisma.item.findMany();
 
             return list;
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
 
     async getCashTypeList() {
-        try{
-             //날짜 별 조회 추가 예정
-             const list = await this.prisma.order.findMany({
+        try {
+            //날짜 별 조회 추가 예정
+            const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: false,
                     isComplete: false,
@@ -1497,7 +1523,7 @@ export class ErpService {
                     },
                     orderItems: {
                         select: {
-                            id : true,
+                            id: true,
                             item: true,
                             type: true,
                         }
@@ -1505,8 +1531,8 @@ export class ErpService {
                 }
             });
 
-            return {success:true, list};
-        }catch(err){
+            return { success: true, list };
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -1519,16 +1545,16 @@ export class ErpService {
      * 가격 일괄 업데이트
      * @returns {success:boolean, status:number}
      */
-    async updatePrice(){
-        try{
+    async updatePrice() {
+        try {
             const itemList = await this.getItems();
             const list = await this.prisma.order.findMany({
-                orderBy:{
-                    id:"asc"
+                orderBy: {
+                    id: "asc"
                 },
-                select:{
-                    orderItems:true,
-                    id:true
+                select: {
+                    orderItems: true,
+                    id: true
                 }
             });
 
@@ -1536,78 +1562,135 @@ export class ErpService {
             list.forEach(async e => {
                 console.log(e.id)
 
-                const getOrderPrice = new GetOrderSendPrice(e.orderItems,itemList);
+                const getOrderPrice = new GetOrderSendPrice(e.orderItems, itemList);
                 const price = getOrderPrice.getPrice();
-                console.log(e.id +' / ' +price);
+                console.log(e.id + ' / ' + price);
                 await this.prisma.order.update({
-                    where:{id:e.id},data:{price:price}
-                }).catch(err =>(console.log(err)));
-                  
+                    where: { id: e.id }, data: { price: price }
+                }).catch(err => (console.log(err)));
+
             });
 
-            return {success:true,status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
 
-    async combineOrder(combineOrderDto:CombineOrderDto){
-        try{
+    /**
+     * 입금 상담 목록에서 합배송 처리
+     * @param combineOrderDto 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
+    async combineOrder(combineOrderDto: CombineOrderDto) {
+        try {
             await this.prisma.$transaction(async (tx) => {
                 const maxCombineNum = await tx.order.aggregate({
-                    _max:{
-                        combineNum:true
+                    _max: {
+                        combineNum: true
                     }
                 });
 
-                let newCombineNum = maxCombineNum._max.combineNum + 1;
+                let newCombineNum = (maxCombineNum._max.combineNum || 0) + 1;
 
                 //새 combine order 삽입
                 await tx.order.updateMany({
-                    where:{
-                        id:{
-                            in:combineOrderDto.orderIdArr
+                    where: {
+                        id: {
+                            in: combineOrderDto.orderIdArr
                         },
-                        isComplete:false
+                        isComplete: false
                     },
-                    data:{
-                        combineNum:newCombineNum,
-                        orderSortNum:5
+                    data: {
+                        combineNum: newCombineNum,
+                        orderSortNum: 5 //orderSortNum update!
                     }
                 });
 
                 //배송 주소 업데이트
                 const patients = await tx.order.findMany({
-                    where:{
-                        id:{
-                            in:combineOrderDto.orderIdArr
+                    where: {
+                        id: {
+                            in: combineOrderDto.orderIdArr
                         },
-                        isComplete:false
+                        isComplete: false
                     },
-                    select:{
-                        patientId:true,
+                    select: {
+                        patientId: true,
                     }
                 });
-                
-                 // for...of 루프를 사용하여 비동기 작업을 순차적으로 처리
+
+                // for...of 루프를 사용하여 비동기 작업을 순차적으로 처리
                 for (const e of patients) {
                     await tx.patient.update({
-                        where:{id:e.patientId},
-                        data:{addr:combineOrderDto.addr}
+                        where: { id: e.patientId },
+                        data: { addr: combineOrderDto.addr }
                     });
                 };
             });
 
-            return {success:true, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    async separate(separateDto: SepareteDto) {
+        try {
+            await this.prisma.$transaction(async (tx) => {
+                //오더 정보 조회
+                const orderOne = await tx.order.findUnique({
+                    where: { id: separateDto.orderId }
+                });
+
+                //orderSortNum 변경
+                orderOne.orderSortNum = 6;
+
+                const orderAmount = separateDto.separate.length;
+
+                //발송목록 id
+                const sendListId = await this.insertToSendList(tx,orderAmount);
+
+                //분리배송 용 tempOrder 생성
+                for (const e of separateDto.separate){
+                    if(e.sendTax){
+                        await tx.order.update({
+                            where:{id:separateDto.orderId},
+                            data:{price:orderOne.price+3500}
+                        });
+                    }
+                    const res = await this.createTempOrder(orderOne,separateDto.orderId,sendListId,tx,e.addr);
+
+                    if(!res.success) throw Error();
+                    else{
+                        await tx.tempOrderItem.create({
+                            data:{
+                                item:e.orderItem,
+                                tempOrderId:res.id
+                            }
+                        });
+                    }
+                }
+            });
+
+            return {success:true, status:HttpStatus.OK};
+
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
