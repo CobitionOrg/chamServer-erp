@@ -168,6 +168,11 @@ export class SendService {
                                 select: { item: true, type: true }
                             }
                         }
+                    },
+                    tempOrderItems:{
+                        select:{
+                            item:true
+                        }
                     }
                 }
             });
@@ -217,7 +222,12 @@ export class SendService {
                                 select: { item: true, type: true }
                             }
                         }
-                    }
+                    },
+                    tempOrderItems:{
+                        select:{
+                            item:true
+                        }
+                    }  
                 }
             });
 
