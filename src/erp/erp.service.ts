@@ -253,6 +253,7 @@ export class ErpService {
                     orderSortNum: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -661,6 +662,7 @@ export class ErpService {
                     date: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -1295,13 +1297,16 @@ export class ErpService {
             delete updateSurveyDto.patient;
             delete updateSurveyDto.orderItems;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            const orderData = {...updateSurveyDto, price: price};
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
@@ -1355,13 +1360,16 @@ export class ErpService {
             delete updateSurveyDto.orderItems;
             delete updateSurveyDto.orderBodyType;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            const orderData = {...updateSurveyDto, price: price};
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
