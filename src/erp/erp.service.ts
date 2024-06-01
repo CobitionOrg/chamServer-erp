@@ -24,6 +24,7 @@ import { GetOrderSendPrice } from 'src/util/getOrderPrice';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
+import { sortItems } from 'src/util/sortItems';
 
 @Injectable()
 export class ErpService {
@@ -269,7 +270,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
