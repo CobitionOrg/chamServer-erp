@@ -689,7 +689,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
