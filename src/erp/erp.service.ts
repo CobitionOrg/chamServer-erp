@@ -1332,8 +1332,10 @@ export class ErpService {
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             const price = getOrderPrice.getPrice();
-            const orderData = {...updateSurveyDto, price: price};
-
+            let orderSortNum = updateSurveyDto.isPickup ? -1
+                : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
+            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
+            
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {
