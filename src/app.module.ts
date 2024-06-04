@@ -15,8 +15,10 @@ import { LogService } from './log/log.service';
 import { LogModule } from './log/log.module';
 import { ExchangeController } from './exchange/exchange.controller';
 import { ExchangeModule } from './exchange/exchange.module';
+import { APP_FILTER } from '@nestjs/core';
+import { HttpExceptionFilter } from './filter/httpExceptionFilter';
 @Module({
-  
+
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -28,11 +30,18 @@ import { ExchangeModule } from './exchange/exchange.module';
     LogModule,
     ExchangeModule
   ],
-  controllers: [AppController ],
-  providers: [AppService,Logger,],
+  controllers: [AppController],
+  providers: [
+    AppService, 
+    Logger, 
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
-export class AppModule implements NestModule{
-    configure(consumer:MiddlewareConsumer){
-      consumer.apply(LoggerMiddleware).forRoutes('*');
-    }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
 }

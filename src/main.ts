@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { winstonLogger } from './util/winston.util';
 import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
+import { HttpExceptionFilter } from './filter/httpExceptionFilter';
 
 
 async function bootstrap() {
@@ -11,6 +12,9 @@ async function bootstrap() {
     cors:true,
     logger:winstonLogger
   });
+
+  //예외 필터 연결
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.use(express.json({limit:'50mb'}));
   app.useGlobalPipes(
@@ -32,6 +36,7 @@ async function bootstrap() {
  
   const document = SwaggerModule.createDocument(app,config);
   SwaggerModule.setup('api',app, document);
-  await app.listen(3000);
+  await app.listen(3000); 
 }
 bootstrap();
+ 
