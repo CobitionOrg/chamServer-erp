@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, UseFilters } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExchangeService } from './exchange.service';
-import { CreateExchangeDto } from './Dto/createExchange';
+import { CreateExchangeDto } from './Dto/createExchange.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 
