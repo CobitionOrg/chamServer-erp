@@ -16,9 +16,9 @@ export class GetOrderSendPrice{
     getPrice(){
         let priceSum = 0;
 
-        const checkSend = this.checkSend(this.isPickup);
+        const checkSend = this.checkSend();
 
-        if(checkSend){
+        if(checkSend && this.isPickup === false){
             priceSum+=3500;
         }
 
@@ -60,7 +60,7 @@ export class GetOrderSendPrice{
     }
 
     //택배 주문 시 택배비 받는 주문인지를 체크
-    checkSend(isPickup: boolean){
+    checkSend(){
         let checkFlag = false;
 
         //택배비 받는 리스트
@@ -94,10 +94,6 @@ export class GetOrderSendPrice{
         //별도 주문 제외하고 주문 내역이 하나인데 그 하나가 택배비 받는 오더일 때
         if(check.length ===1 && sendTax.includes(check[0].item)){
             checkFlag = true;
-            // 방문 수령일 경우
-            if(isPickup) {
-                checkFlag = false;
-            }
         }
 
         //별도 주문만 있을 때
