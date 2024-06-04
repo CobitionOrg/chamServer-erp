@@ -73,6 +73,10 @@ export class ExchangeService {
         });
     }
 
+    /**
+     * 교환,누락,환불 리스트 가져오기
+     * @returns {success:boolean,list,msg:string}
+     */
     async getExchangeList(){
         const res = await this.exchangeRepository.getExchangeList();
 

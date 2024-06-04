@@ -162,6 +162,10 @@ export class ExchangeRepository {
         }
     }
 
+    /**
+     * 교환,누락,환불 리스트 가져오기
+     * @returns 
+     */
     async getExchangeList(){
         try{
             const list = await this.prisma.order.findMany({
