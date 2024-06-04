@@ -13,6 +13,8 @@ import { ErpService } from './erp/erp.service';
 import { ErpModule } from './erp/erp.module';
 import { LogService } from './log/log.service';
 import { LogModule } from './log/log.module';
+import { ExchangeController } from './exchange/exchange.controller';
+import { ExchangeModule } from './exchange/exchange.module';
 @Module({
   
   imports: [
@@ -23,7 +25,8 @@ import { LogModule } from './log/log.module';
     SurveyModule,
     AdminModule,
     ErpModule,
-    LogModule
+    LogModule,
+    ExchangeModule
   ],
   controllers: [AppController ],
   providers: [AppService,Logger,],

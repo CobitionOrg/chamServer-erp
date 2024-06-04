@@ -442,5 +442,14 @@ export class ErpController {
 
         return res;
     }
+
+    @ApiOperation({summary:'완료 처리 된 발송목록 조회'})
+    @Get('/completeSendList')
+    async completeSendList(@Headers() header){
+        this.logger.log('완료 처리 된 발송목록 조회');
+        const res = await this.sendService.completeSendList();
+
+        return res;
+    }
        
 }

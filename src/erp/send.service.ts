@@ -676,5 +676,39 @@ export class SendService {
         }
     }
 
-    
+    /**
+     * 완료 처리 된 발송목록 조회
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                title: string;
+                amount: number;
+                date: Date;
+                full: boolean;
+                useFlag: boolean;
+                fixFlag: boolean;
+            }[];
+            status: HttpStatus;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async completeSendList(){
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{useFlag:false}
+            });
+
+            return {success:true, list, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }
