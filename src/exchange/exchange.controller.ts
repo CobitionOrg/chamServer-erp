@@ -20,7 +20,6 @@ export class ExchangeController {
     }
 
     @ApiOperation({ summary: '교환,환불,누락 건으로 새 오더 생성' })
-    @Public()
     @Post('/createExchange')
     @UseFilters(new HttpExceptionFilter())
     async createExchange(@Body() createExchangeDto: CreateExchangeDto) {
@@ -37,4 +36,22 @@ export class ExchangeController {
         }
         return res;
     } 
+
+    @ApiOperation({summary: '교환 환불,누락 오더 리스트 가져오기'})
+    @Public()
+    @Get('/getExchangeList')
+    async getExchageList(){
+        const res:any = await this.exchangeService.getExchangeList();
+        if(res.status != 200){
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return res;
+    }
 }

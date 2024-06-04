@@ -429,7 +429,7 @@ export class SendService {
 
             sendExcelDto.forEach(async (e) => {
                 console.log(e);
-                const qry = await this.prisma.tempOrder.update({
+                const qry = this.prisma.tempOrder.update({
                     where: {
                         id: e.id
                     },
@@ -437,6 +437,8 @@ export class SendService {
                         sendNum:e.sendNum
                     }
                 });
+
+                qryArr.push(qry);
 
             });
 
@@ -711,4 +713,6 @@ export class SendService {
             }
         }
     }
+
+
 }

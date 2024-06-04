@@ -16,6 +16,11 @@ export class ExchangeService {
 
     private readonly logger = new Logger(ExchangeService.name);
 
+    /**
+     * 교환,누락,환불 건 오더 생성
+     * @param createExchangeDto 
+     * @returns {success:boolean, status:HttpStatus,msg:string}
+     */
     async createExchange(createExchangeDto : CreateExchangeDto){
         return await this.prisma.$transaction(async (tx) => {
             const exOrder = await this.exchangeRepository.getExOrder(createExchangeDto.id,tx);
@@ -48,8 +53,11 @@ export class ExchangeService {
             // console.log(objOrderItems);
             // console.log(objOrderBodyType);
 
+            //오더 생성
             const newOrder = await this.exchangeRepository.insertOrder(tx, objOrder, createExchangeDto.orderSortNum);
+            //오더 아이템 생성
             const newOrderItem = await this.exchangeRepository.insertOrderItems(tx,objOrderItems,newOrder.id);
+            //오더 바디 타입 생성
             const newOrderBodyType = await this.exchangeRepository.insertOrderBodyType(tx,objOrderBodyType,newOrder.id);
 
             // console.log(newOrder);
@@ -60,13 +68,22 @@ export class ExchangeService {
                 return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
             }
 
-            return {success:true, status:HttpStatus.OK};
+            return {success:true, status:HttpStatus.CREATED};
 
         });
+    }
 
-        
+    async getExchangeList(){
+        const res = await this.exchangeRepository.getExchangeList();
 
-      
+        if(!res.success){
+            return {success:false,status:res.status,msg:''};
+        }
+
+        return res;
     }
 }
+
+
+
  

@@ -59,6 +59,13 @@ export class ExchangeRepository {
         }
     }
 
+    /**
+     * 오더 생성
+     * @param tx 
+     * @param objOrder 
+     * @param orderSortNum 
+     * @returns {success:boolean, id:number}
+     */
     async insertOrder(tx, objOrder:ExOrderObjDto, orderSortNum:number){
         try{
             const newOrder = await tx.order.create({
@@ -89,6 +96,13 @@ export class ExchangeRepository {
         }
     }
 
+    /**
+     * 오더 아이템 생성
+     * @param tx 
+     * @param objOrderItems 
+     * @param orderId 
+     * @returns {success:boolean}
+     */
     async insertOrderItems(tx,objOrderItems:Array<ExOrderItemObjDto>,orderId:number){
         try{
             const qryArr = [];
@@ -117,6 +131,13 @@ export class ExchangeRepository {
         }
     }
 
+    /**
+     * 오더 바디 타입 생성
+     * @param tx 
+     * @param objOrderBodyType 
+     * @param orderId 
+     * @returns {success:boolean}
+     */
     async insertOrderBodyType(tx, objOrderBodyType:ExOrderBodyTypeDto,orderId:number){
         try{
             await tx.orderBodyType.create({
@@ -138,6 +159,59 @@ export class ExchangeRepository {
                 success:false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             };
+        }
+    }
+
+    async getExchangeList(){
+        try{
+            const list = await this.prisma.order.findMany({
+                where:{
+                    orderSortNum:{
+                        gt:-3,
+                        lt:0
+                    },
+                    isComplete:false
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    },
+                }
+            });
+
+            return {success:true, list, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
         }
     }
 }
