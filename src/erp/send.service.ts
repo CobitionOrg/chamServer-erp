@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
@@ -498,6 +498,31 @@ export class SendService {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
+        }
+    }
+
+
+    async getCompleteSend() {
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{
+                    useFlag:false
+                },
+                orderBy:{
+                    title:'asc'
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 

@@ -52,10 +52,13 @@ export class ExchangeRepository {
             return exOrder;
         } catch (err) {
             this.logger.error(err);
-            return {
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -89,10 +92,13 @@ export class ExchangeRepository {
             return {success:true,id:newOrder.id};
         }catch(err){
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success:false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            };
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -124,10 +130,13 @@ export class ExchangeRepository {
             return {success:true};
         }catch(err){
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success:false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            };
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -155,10 +164,13 @@ export class ExchangeRepository {
             return {success:true};
         }catch(err){
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success:false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            };
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -171,8 +183,8 @@ export class ExchangeRepository {
             const list = await this.prisma.order.findMany({
                 where:{
                     orderSortNum:{
-                        gt:-3,
-                        lt:0
+                        gt:-4,
+                        lt:-1
                     },
                     isComplete:false
                 },
@@ -212,10 +224,13 @@ export class ExchangeRepository {
             return {success:true, list, status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success:false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
