@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
@@ -429,7 +429,7 @@ export class SendService {
 
             sendExcelDto.forEach(async (e) => {
                 console.log(e);
-                const qry = await this.prisma.tempOrder.update({
+                const qry = this.prisma.tempOrder.update({
                     where: {
                         id: e.id
                     },
@@ -437,6 +437,8 @@ export class SendService {
                         sendNum:e.sendNum
                     }
                 });
+
+                qryArr.push(qry);
 
             });
 
@@ -496,6 +498,31 @@ export class SendService {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
+        }
+    }
+
+
+    async getCompleteSend() {
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{
+                    useFlag:false
+                },
+                orderBy:{
+                    title:'asc'
+                }
+            });
+
+            return {success:true, list};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -676,5 +703,41 @@ export class SendService {
         }
     }
 
-    
+    /**
+     * 완료 처리 된 발송목록 조회
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                title: string;
+                amount: number;
+                date: Date;
+                full: boolean;
+                useFlag: boolean;
+                fixFlag: boolean;
+            }[];
+            status: HttpStatus;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            list?: undefined;
+        }>
+     */
+    async completeSendList(){
+        try{
+            const list = await this.prisma.sendList.findMany({
+                where:{useFlag:false}
+            });
+
+            return {success:true, list, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            return {
+                success:false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
 }

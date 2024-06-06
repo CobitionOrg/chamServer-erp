@@ -1633,6 +1633,14 @@ export class ErpService {
         }
     }
 
+    /**
+     * 분리발송 작업
+     * @param separateDto 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
     async separate(separateDto: SepareteDto) {
         try {
             await this.prisma.$transaction(async (tx) => {

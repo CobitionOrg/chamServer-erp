@@ -310,6 +310,15 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary:'발송 완료된 발송목록 리스트 가져오기'})
+    @Get('/getCompleteSend')
+    async getCompleteSend(@Headers() headers){
+        this.logger.log('발송 완료된 발송목록 리스트 가져오기');
+        const res = await this.sendService.getCompleteSend();
+        return res;
+    }
+
+    
     @ApiOperation({summary:'송장 리스트 완료 처리'})
     @Patch('/completeSend/:id')
     async completeSend(@Param("id") id:number,@Headers() header){
@@ -439,6 +448,15 @@ export class ErpController {
     async separate(@Body() separateDto:SepareteDto, @Headers() header){
         this.logger.log("분리 배송 처리");
         const res = await this.erpService.separate(separateDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'완료 처리 된 발송목록 조회'})
+    @Get('/completeSendList')
+    async completeSendList(@Headers() header){
+        this.logger.log('완료 처리 된 발송목록 조회');
+        const res = await this.sendService.completeSendList();
 
         return res;
     }
