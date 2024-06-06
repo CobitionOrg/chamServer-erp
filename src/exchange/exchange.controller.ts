@@ -1,9 +1,10 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, HttpStatus, Logger, Post, Query, UseFilters } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExchangeService } from './exchange.service';
 import { CreateExchangeDto } from './Dto/createExchange.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { GetListDto } from 'src/erp/Dto/getList.dto';
 
 @Controller('exchange')
 @ApiTags('About exchange, refund, omission')
@@ -40,8 +41,8 @@ export class ExchangeController {
     @ApiOperation({summary: '교환 환불,누락 오더 리스트 가져오기'})
     @Public()
     @Get('/getExchangeList')
-    async getExchageList(){
-        const res:any = await this.exchangeService.getExchangeList();
+    async getExchageList(@Query() getListDto : GetListDto, @Headers() Header){
+        const res:any = await this.exchangeService.getExchangeList(getListDto);
         if(res.status != 200){
             throw new HttpException({
                 success: false,
