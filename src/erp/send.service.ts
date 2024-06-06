@@ -9,6 +9,7 @@ import { getItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice } from "src/util/getOrderPrice";
+import { getSortedList } from "src/util/sortSendList";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -177,7 +178,9 @@ export class SendService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = getSortedList(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {

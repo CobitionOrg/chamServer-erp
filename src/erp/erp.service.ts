@@ -23,6 +23,7 @@ import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
+import { sortItems } from 'src/util/sortItems';
 
 @Injectable()
 export class ErpService {
@@ -251,6 +252,7 @@ export class ErpService {
                     orderSortNum: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -268,7 +270,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -657,6 +661,7 @@ export class ErpService {
                     date: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -685,7 +690,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -1316,14 +1323,19 @@ export class ErpService {
             delete updateSurveyDto.patient;
             delete updateSurveyDto.orderItems;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
-
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            let orderSortNum = updateSurveyDto.isPickup ? -1
+                : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
+            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
+            
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {
@@ -1376,13 +1388,16 @@ export class ErpService {
             delete updateSurveyDto.orderItems;
             delete updateSurveyDto.orderBodyType;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            const orderData = {...updateSurveyDto, price: price};
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
