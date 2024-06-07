@@ -5,6 +5,7 @@ import { CreateExchangeDto } from './Dto/createExchange.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { CompleteRefundDto } from './Dto/completeRefund.dto';
 
 @Controller('exchange')
 @ApiTags('About exchange, refund, omission')
@@ -57,9 +58,9 @@ export class ExchangeController {
     }
 
     @ApiOperation({summary:'환불 완료 처리'})
-    @Post('/completeRefund/:id')
-    async completeRefund(@Param('id') id:number, @Headers() Headers){
-        const res:any = await this.exchangeService.completeRefund(id);
+    @Post('/completeRefund')
+    async completeRefund(@Body('id') completeRefundDto : CompleteRefundDto, @Headers() Headers){
+        const res:any = await this.exchangeService.completeRefund(completeRefundDto);
         
         if(res.status != 200){
             throw new HttpException({
