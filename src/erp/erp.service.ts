@@ -839,7 +839,7 @@ export class ErpService {
                             }
                         }); //제일 마지막 발송일자 가져오기
                         const lastTitle = sendList[sendList.length - 1].title;
-                        const date = new Date(lastTitle);
+                        const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
                         const title = getSendTitle(date);
                         console.log(title);
 
@@ -910,7 +910,7 @@ export class ErpService {
                 console.log(sendList);
 
                 const lastTitle = sendList.length != 0 ? sendList[sendList.length - 1].title : new Date();
-                const date = new Date(lastTitle);
+                const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
                 console.log(date);
                 const title = getSendTitle(date);
                 //console.log(title);

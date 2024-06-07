@@ -178,7 +178,7 @@ export class ExchangeRepository {
      * 교환,누락,환불 리스트 가져오기
      * @returns 
      */
-    async getExchangeList(){
+    async getExchangeList(orderConditions, patientConditions){
         try{
             const list = await this.prisma.order.findMany({
                 where:{
@@ -186,7 +186,9 @@ export class ExchangeRepository {
                         gt:-4,
                         lt:-1
                     },
-                    isComplete:false
+                    isComplete:false,
+                    ...orderConditions,
+                    ...patientConditions
                 },
                 select: {
                     id: true,
