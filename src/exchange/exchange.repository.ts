@@ -236,6 +236,15 @@ export class ExchangeRepository {
         }
     }
 
+    /**
+     * 환불 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
     async completeRefund(id:number){
         try{
             await this.prisma.order.update({
