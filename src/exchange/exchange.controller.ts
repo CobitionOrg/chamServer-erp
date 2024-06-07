@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpException, HttpStatus, Logger, Post, Query, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, HttpStatus, Logger, Param, Post, Query, UseFilters } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExchangeService } from './exchange.service';
 import { CreateExchangeDto } from './Dto/createExchange.dto';
@@ -54,5 +54,24 @@ export class ExchangeController {
         }
 
         return res;
+    }
+
+    @ApiOperation({summary:'환불 완료 처리'})
+    @Post('/completeRefund/:id')
+    async completeRefund(@Param('id') id:number, @Headers() Headers){
+        const res:any = await this.exchangeService.completeRefund(id);
+        
+        if(res.status != 200){
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return res;
+
     }
 }

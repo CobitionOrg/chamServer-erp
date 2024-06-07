@@ -134,6 +134,11 @@ export class ExchangeService {
 
         return res;
     }
+
+    async completeRefund(id:number){
+        const res = await this.exchangeRepository.completeRefund(id);
+        return res;
+    }
 }
 
 

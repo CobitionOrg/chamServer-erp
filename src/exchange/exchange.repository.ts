@@ -235,4 +235,24 @@ export class ExchangeRepository {
             );
         }
     }
+
+    async completeRefund(id:number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{isComplete:true}
+            });
+
+            return {success:true,status:HttpStatus.OK,msg:'완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+        }
+    }
 }
