@@ -6,6 +6,7 @@ import { ExOrderObjDto } from './Dto/exOrderObj.dto';
 import { ExOrderItemObjDto } from './Dto/exOrderItemObj.dto';
 import { ExOrderBodyTypeDto } from './Dto/exOrderBodyType.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { CompleteRefundDto } from './Dto/completeRefund.dto';
 
 @Injectable()
 export class ExchangeService {
@@ -132,6 +133,23 @@ export class ExchangeService {
             return {success:false,status:res.status,msg:''};
         }
 
+        return res;
+    }
+
+    /**
+     * 환불 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async completeRefund(completeRefundDto:CompleteRefundDto){
+        if(completeRefundDto.orderSortNum !== -4) {
+            return {success:false, status:HttpStatus.BAD_REQUEST,msg:'환불 주문만 완료 처리 가능합니다'};
+        }
+        const res = await this.exchangeRepository.completeRefund(completeRefundDto.orderId);
         return res;
     }
 }

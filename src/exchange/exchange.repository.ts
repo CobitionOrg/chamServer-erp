@@ -235,4 +235,33 @@ export class ExchangeRepository {
             );
         }
     }
+
+    /**
+     * 환불 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async completeRefund(id:number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{isComplete:true}
+            });
+
+            return {success:true,status:HttpStatus.OK,msg:'완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+        }
+    }
 }
