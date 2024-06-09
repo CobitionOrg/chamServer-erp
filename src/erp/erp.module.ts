@@ -8,6 +8,7 @@ import { UserService } from 'src/user/user.service';
 import { SendService } from './send.service';
 import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
+import { IpGuard } from './gaurds/ip.guard';
 
 @Module({
     controllers:[ErpController],
@@ -18,7 +19,8 @@ import { LogRepository } from 'src/log/log.repository';
         UserService,
         SendService,
         LogService,
-        LogRepository
+        LogRepository,
+        IpGuard
     ]
 })
 

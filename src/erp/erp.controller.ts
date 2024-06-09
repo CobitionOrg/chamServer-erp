@@ -19,6 +19,7 @@ import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { LogService } from 'src/log/log.service';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
+import { IpGuard } from './gaurds/ip.guard';
 
 @Controller('erp')
 @UseGuards(AuthGuard)
@@ -139,13 +140,15 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'신환 용 엑셀 다운로드'})
+    @UseGuards(IpGuard)
     @Get('/newPatientExcel')
-    async newPatientExcel(@Headers() header){
+    async newPatientExcel(){
         this.logger.log('신환 용 엑셀 파일 다운로드');
         return await this.erpService.newPatientExcel();
     }
 
     @ApiOperation({summary:'차팅 용 엑셀 다운로드'})
+    @UseGuards(IpGuard)
     @Get('/chatingExcel/:id')
     async chatingExcel(@Param("id") id:number){
         this.logger.log('차팅 용 엑셀 파일 다운로드');
@@ -260,6 +263,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'송장번호를 위한 엑셀'})
+    @UseGuards(IpGuard)
     @Get('/sendNumExcel/:id')
     async sendNumExcel(@Param("id") id:number, @Headers() header){
         this.logger.log('송장번호를 위한 엑셀');
@@ -277,6 +281,7 @@ export class ErpController {
     }
   
     @ApiOperation({summary:'송장번호 엑셀 업로드해서 송장번호 업데이트'})
+    @UseGuards(IpGuard)
     @Patch('/setSendNum')
     async setSendNum(@Body() sendExcelDto:SendOrder[], @Headers() header){
         this.logger.log('송장번호 저장');
