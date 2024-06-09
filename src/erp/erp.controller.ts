@@ -149,10 +149,10 @@ export class ErpController {
 
     @ApiOperation({summary:'차팅 용 엑셀 다운로드'})
     @UseGuards(IpGuard)
-    @Get('/chatingExcel')
-    async chatingExcel(){
+    @Get('/chatingExcel/:id')
+    async chatingExcel(@Param("id") id:number){
         this.logger.log('차팅 용 엑셀 파일 다운로드');
-        return await this.erpService.chatingExcel();
+        return await this.sendService.chatingExcel(id);
     }
 
     @Public()
