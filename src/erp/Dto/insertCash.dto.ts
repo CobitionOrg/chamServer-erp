@@ -1,4 +1,9 @@
 export interface InsertCashDto {
+    cashExcelDto: Array<InsertCashDto>
+    date: string
+}
+
+export interface CashExcelDto {
     bank:string;  //은행
     cash:string; //입금 금액
     cashReceipt:string; //현금 영수증?

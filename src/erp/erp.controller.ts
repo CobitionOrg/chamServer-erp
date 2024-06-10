@@ -323,7 +323,7 @@ export class ErpController {
         return res;
     }
 
-    
+
     @ApiOperation({summary:'송장 리스트 완료 처리'})
     @Patch('/completeSend/:id')
     async completeSend(@Param("id") id:number,@Headers() header){
@@ -369,7 +369,7 @@ export class ErpController {
     //로직 보강 처리
     @ApiOperation({summary:'입금 파일 데이터 업로드'})
     @Post('/cashExcel')
-    async cashExcel(@Body() insertCashDto : Array<InsertCashDto>){
+    async cashExcel(@Body() insertCashDto : InsertCashDto){
         this.logger.log('입금 파일 데이터 업로드');
         return await this.erpService.cashExcel(insertCashDto);
     }
