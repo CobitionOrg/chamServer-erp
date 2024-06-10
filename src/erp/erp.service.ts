@@ -201,8 +201,12 @@ export class ErpService {
                 // 한국 시간으로 바꾸기
                 const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
 
-                const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
-                const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
+                const startDate = new Date(kstDate.getTime());
+                startDate.setUTCHours(0, 0, 0, 0);
+                
+                const endDate = new Date(kstDate.getTime());
+                endDate.setUTCHours(23, 59, 59, 999);
+
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
