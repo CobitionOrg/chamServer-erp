@@ -47,7 +47,7 @@ export class GetOrderSendPrice{
                     }
                 })
             }else{
-                if(e.item.length>0){
+                if(Array.isArray(e.item)){  //재진 설문 시 배열로 넘어올 때
                     e.item.forEach(item => {
                         for(let i = 0; this.itemList.length; i++){
                             if(item!="" && this.itemList[i].item.includes(item)){
@@ -56,6 +56,13 @@ export class GetOrderSendPrice{
                             }
                         }
                     })
+                }else{ //초진 설문일 때
+                    for(let i = 0; this.itemList.length; i++){
+                        if(e.item!="" && this.itemList[i].item.includes(e.item)){
+                            priceSum+=this.itemList[i].price;
+                            break;
+                        }
+                    }
                 }
                
             }
