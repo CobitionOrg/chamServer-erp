@@ -24,6 +24,7 @@ import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
+import { getKstDate } from 'src/util/getKstDate';
 
 @Injectable()
 export class ErpService {
@@ -1378,26 +1379,27 @@ export class ErpService {
      * @param insertCashDto 
      * @returns {success:boolean, url:string}
      */
-    async cashExcel(insertCashDto: Array<InsertCashDto>) {
+    async cashExcel(insertCashDto: InsertCashDto) {
         try {
             //console.log(insertCashDto);
-            const cashList = await this.getCashTypeList();
+            const {startDate,endDate} = getKstDate(insertCashDto.date);
+            const cashList = await this.getCashTypeList(startDate,endDate);
             const itemList = await this.getItems();
             //console.log(cashList);
-            console.log(insertCashDto);
-            const cashMatcher = new CashExcel(insertCashDto, cashList.list, itemList);
+            //console.log(insertCashDto);
+            const cashMatcher = new CashExcel(insertCashDto.cashExcelDto, cashList.list, itemList);
             const results = cashMatcher.compare();
 
             console.log(results);
             //엑셀 생성
-            const createExcel = await createExcelCash(results.duplicates, results.noMatches);
-            const url = createExcel.url;
+            // const createExcel = await createExcelCash(results.duplicates, results.noMatches);
+            // const url = createExcel.url;
 
-            //발송목록 이동 처리
-            results.matches.forEach(async (e) => {
-                await this.completeConsulting(e.id);
-            });
-            return { success: true, url };
+            // //발송목록 이동 처리
+            // results.matches.forEach(async (e) => {
+            //     await this.completeConsulting(e.id);
+            // });
+            // return { success: true, url };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -1422,14 +1424,18 @@ export class ErpService {
         }
     }
 
-    async getCashTypeList() {
+    async getCashTypeList(startDate,endDate) {
         try {
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
                     consultingType: false,
                     isComplete: false,
-                    payType: '계좌이체'
+                    payType: '계좌이체',
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
                 },
                 select: {
                     id: true,
@@ -1444,6 +1450,7 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
+                    price:true,
                     orderSortNum: true,
                     patient: {
                         select: {
