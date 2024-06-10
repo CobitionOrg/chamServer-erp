@@ -141,10 +141,10 @@ export class ErpController {
 
     @ApiOperation({summary:'신환 용 엑셀 다운로드'})
     @UseGuards(IpGuard)
-    @Get('/newPatientExcel')
-    async newPatientExcel(){
+    @Get('/newPatientExcel/:date')
+    async newPatientExcel(@Param('date') date:string){
         this.logger.log('신환 용 엑셀 파일 다운로드');
-        return await this.erpService.newPatientExcel();
+        return await this.erpService.newPatientExcel(date);
     }
 
     @ApiOperation({summary:'차팅 용 엑셀 다운로드'})

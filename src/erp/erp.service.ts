@@ -1075,11 +1075,13 @@ export class ErpService {
 
     /**
      * 신규 환자 등록 용 엑셀
+     * @param date
      * @returns {success:true,status:HttpStatus.OK,url};
      */
-    async newPatientExcel() {
+    async newPatientExcel(date:string) {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
+            const {startDate,endDate} = getKstDate(date);
 
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
@@ -1087,6 +1089,10 @@ export class ErpService {
                     consultingType: false,
                     isComplete: false,
                     isFirst: true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
                 },
                 select: {
                     patient: {
