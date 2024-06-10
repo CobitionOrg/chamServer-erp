@@ -178,7 +178,7 @@ export class ExchangeRepository {
      * 교환,누락,환불 리스트 가져오기
      * @returns 
      */
-    async getExchangeList(){
+    async getExchangeList(orderConditions, patientConditions){
         try{
             const list = await this.prisma.order.findMany({
                 where:{
@@ -186,7 +186,9 @@ export class ExchangeRepository {
                         gt:-4,
                         lt:-1
                     },
-                    isComplete:false
+                    isComplete:false,
+                    ...orderConditions,
+                    ...patientConditions
                 },
                 select: {
                     id: true,
@@ -231,6 +233,35 @@ export class ExchangeRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 환불 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async completeRefund(id:number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{isComplete:true}
+            });
+
+            return {success:true,status:HttpStatus.OK,msg:'완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
         }
     }
 }

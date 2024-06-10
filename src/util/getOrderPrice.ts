@@ -4,10 +4,12 @@ import { exceptions } from "winston";
 export class GetOrderSendPrice{
     orderItems : Array<any>;
     itemList : Array<any>;
+    isPickup: boolean;
 
-    constructor(orderItems: any, itemList:any){
+    constructor(orderItems: any, itemList:any, isPickup: boolean = false){
         this.orderItems = orderItems;
-        this.itemList = itemList
+        this.itemList = itemList;
+        this.isPickup = isPickup;
     }
 
     //일단 주문 내역 금액만 합계
@@ -16,7 +18,7 @@ export class GetOrderSendPrice{
 
         const checkSend = this.checkSend();
 
-        if(checkSend){
+        if(checkSend && this.isPickup === false){
             priceSum+=3500;
         }
 

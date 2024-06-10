@@ -9,22 +9,23 @@ import { getItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice } from "src/util/getOrderPrice";
+import { getSortedList } from "src/util/sortSendList";
 
 //발송 목록 조회 기능
 @Injectable()
 export class SendService {
     constructor(
-        private prisma : PrismaService,
-        private erpService : ErpService
-    ){}
+        private prisma: PrismaService,
+        private erpService: ErpService
+    ) { }
 
     private readonly logger = new Logger(SendService.name);
 
-      /**
-     * 오더 테이블에서 발송 목록 가져오기
-     * @returns 
-     */
-      async getSendOne() {
+    /**
+   * 오더 테이블에서 발송 목록 가져오기
+   * @returns 
+   */
+    async getSendOne() {
         try {
             const list = await this.prisma.order.findMany({
                 where: {
@@ -131,15 +132,15 @@ export class SendService {
      * 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(id:number) {
+    async getOrderTempList(id: number) {
         try {
             const list = await this.prisma.tempOrder.findMany({
-                where:{
-                    sendListId:id
+                where: {
+                    sendListId: id
                 },
                 orderBy: {
                     //id: 'asc',
-                    orderSortNum:'asc' //sortNum으로 order by 해야됨
+                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
                 },
                 select: {
                     id: true,
@@ -147,9 +148,9 @@ export class SendService {
                     date: true,
                     isFirst: true,
                     orderSortNum: true,
-                    sendNum:true,
+                    sendNum: true,
                     payType: true,
-                    addr:true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
@@ -163,21 +164,23 @@ export class SendService {
                             id: true,
                             message: true,
                             cachReceipt: true,
-                            price:true,
+                            price: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    tempOrderItems:{
-                        select:{
-                            item:true
+                    tempOrderItems: {
+                        select: {
+                            item: true
                         }
                     }
                 }
             });
 
-            return { success: true, list };
+            const sortedList = getSortedList(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -192,7 +195,7 @@ export class SendService {
      * @param id 
      * @returns 
      */
-    async getOrderTempOne(id:number){
+    async getOrderTempOne(id: number) {
         try {
             const list = await this.prisma.tempOrder.findFirst({
                 where: {
@@ -223,11 +226,11 @@ export class SendService {
                             }
                         }
                     },
-                    tempOrderItems:{
-                        select:{
-                            item:true
+                    tempOrderItems: {
+                        select: {
+                            item: true
                         }
-                    }  
+                    }
                 }
             });
 
@@ -246,15 +249,15 @@ export class SendService {
      * @param surveyDto 
      * @returns 
      */
-    async updateSendOrder(surveyDto:UpdateSurveyDto){
-        try{
+    async updateSendOrder(surveyDto: UpdateSurveyDto) {
+        try {
             const insertOrder = surveyDto.answers;
             const patientId = surveyDto.patientId;
             const orderId = surveyDto.orderId;
 
-            const objPatient:any = {};
-            const objOrder:any = {};
-            const objOrderItem:any = [];
+            const objPatient: any = {};
+            const objOrder: any = {};
+            const objOrderItem: any = [];
 
             //console.log(insertOrder);
 
@@ -277,27 +280,27 @@ export class SendService {
             });
 
             const itemList = await this.erpService.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem,itemList);
+            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
 
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
-                    where:{
-                        id:patientId
+                    where: {
+                        id: patientId
                     },
-                    data:{
-                        addr:objPatient.addr,
-                        phoneNum:objPatient.phoneNum
+                    data: {
+                        addr: objPatient.addr,
+                        phoneNum: objPatient.phoneNum
                     }
                 });
 
                 const order = await tx.order.update({
-                    where:{
-                        id:orderId
+                    where: {
+                        id: orderId
                     },
-                    data:{
-                        cachReceipt:objOrder.cashReceipt,
-                        price:price
+                    data: {
+                        cachReceipt: objOrder.cashReceipt,
+                        price: price
                     }
                 });
 
@@ -305,15 +308,15 @@ export class SendService {
                 console.log(objOrderItem)
                 const items = [];
                 objOrderItem.forEach((e) => {
-                    if(e.type =='assistant'){
+                    if (e.type == 'assistant') {
                         //assistant는 string
                         const obj = {
-                            item:e.item,
-                            type:e.type,
-                            orderId:orderId
+                            item: e.item,
+                            type: e.type,
+                            orderId: orderId
                         }
                         items.push(obj);
-                    }else{
+                    } else {
                         //나머지는 array
                         const arr = [...e.item];
                         arr.forEach((i) => {
@@ -322,29 +325,29 @@ export class SendService {
                                 type: e.type,
                                 orderId: orderId
                             }
-    
+
                             items.push(obj);
                         });
                     }
-                   
+
                 });
 
                 //기존 order items 제거
                 await tx.orderItem.deleteMany({
-                    where:{
-                        orderId:orderId
+                    where: {
+                        orderId: orderId
                     }
                 });
 
                 //새 order items 생성
                 const orderItem = await tx.orderItem.createMany({
-                    data:items
+                    data: items
                 });
             });
 
             return { success: true, status: HttpStatus.CREATED };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -362,41 +365,41 @@ export class SendService {
             url: any;
         } 
      */
-    async sendNumExcel(id:number){
-        try{
+    async sendNumExcel(id: number) {
+        try {
             const send = await this.getOrderTempList(id);
             const list = send.list;
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("송장 시트");
 
-            const headers = ['이름',' ','주소',' ','번호','1',' ','10','주문수량',' ','메세지','발송자','발송주소','번호'];
-            const headerWidths = [16,3,40,3,20,4,3,4,40,3,20,20,35,35];
+            const headers = ['이름', ' ', '주소', ' ', '번호', '1', ' ', '10', '주문수량', ' ', '메세지', '발송자', '발송주소', '번호'];
+            const headerWidths = [16, 3, 40, 3, 20, 4, 3, 4, 40, 3, 20, 20, 35, 35];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;
 
-            headerRow.eachCell((cell,colNum) => {
+            headerRow.eachCell((cell, colNum) => {
                 styleHeaderCell(cell);
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
             list.forEach((e) => {
-                const { name,phoneNum } = e.patient; 
+                const { name, phoneNum } = e.patient;
                 const addr = e.addr;
                 const message = e.order.message;
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
-                
-                for(let i = 0; i<orderItemList.length; i++){
+
+                for (let i = 0; i < orderItemList.length; i++) {
                     let item = getItem(orderItemList[i].item);
-                    if(item !== ''){
-                        if(i==orderItemList.length-1) orderStr+=`${item}`
-                        else orderStr+=`${item}+`
+                    if (item !== '') {
+                        if (i == orderItemList.length - 1) orderStr += `${item}`
+                        else orderStr += `${item}+`
                     }
                 }
 
-                const rowDatas = [name, '', addr, '', phoneNum,'1','','10',orderStr,'',message,'참명인한의원','서울시 은평구 은평로 104 3층 참명인한의원','02-356-8870'];
+                const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
             });
@@ -404,8 +407,8 @@ export class SendService {
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
 
-            return { success:true, status:HttpStatus.OK, url };
-        }catch(err){
+            return { success: true, status: HttpStatus.OK, url };
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -422,8 +425,8 @@ export class SendService {
             status: HttpStatus;
         }
      */
-    async setSendNum(sendExcelDto:SendOrder[]){
-        try{
+    async setSendNum(sendExcelDto: SendOrder[]) {
+        try {
             console.log(sendExcelDto);
             const qryArr = [];
 
@@ -434,7 +437,7 @@ export class SendService {
                         id: e.id
                     },
                     data: {
-                        sendNum:e.sendNum
+                        sendNum: e.sendNum
                     }
                 });
 
@@ -442,17 +445,17 @@ export class SendService {
 
             });
 
-            await Promise.all([...qryArr]).then((value) =>{
+            await Promise.all([...qryArr]).then((value) => {
                 console.log(value);
-                return {success:true,status:HttpStatus.OK};
+                return { success: true, status: HttpStatus.OK };
             }).catch((err) => {
                 this.logger.error(err);
-                return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+                return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
             });
 
-            return {success:true,status:HttpStatus.OK};
+            return { success: true, status: HttpStatus.OK };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -480,19 +483,19 @@ export class SendService {
             list?: undefined;
         }>
      */
-    async getSendList(){
-        try{
+    async getSendList() {
+        try {
             const list = await this.prisma.sendList.findMany({
-                where:{
-                    useFlag:true
+                where: {
+                    useFlag: true
                 },
-                orderBy:{
-                    title:'asc'
+                orderBy: {
+                    title: 'asc'
                 }
             });
 
-            return {success:true, list};
-        }catch(err){
+            return { success: true, list };
+        } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
@@ -503,23 +506,23 @@ export class SendService {
 
 
     async getCompleteSend() {
-        try{
+        try {
             const list = await this.prisma.sendList.findMany({
-                where:{
-                    useFlag:false
+                where: {
+                    useFlag: false
                 },
-                orderBy:{
-                    title:'asc'
+                orderBy: {
+                    title: 'asc'
                 }
             });
 
-            return {success:true, list};
-        }catch(err){
+            return { success: true, list };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
@@ -534,22 +537,22 @@ export class SendService {
             status: HttpStatus;
         }> 
      */
-    async completeSend(id:number){
-        try{
+    async completeSend(id: number) {
+        try {
             await this.prisma.sendList.update({
-                where:{
-                    id:id
+                where: {
+                    id: id
                 },
-                data:{
-                    useFlag:false
+                data: {
+                    useFlag: false
                 }
             });
 
-            return {success:true, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -563,22 +566,22 @@ export class SendService {
             status: HttpStatus;
         }>
      */
-    async fixSendList(id:number){
-        try{
+    async fixSendList(id: number) {
+        try {
             await this.prisma.sendList.update({
-                where:{
-                    id:id
+                where: {
+                    id: id
                 },
-                data:{
-                    fixFlag:true,
+                data: {
+                    fixFlag: true,
                 }
             });
 
-            return {success:true, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -592,22 +595,22 @@ export class SendService {
             status: HttpStatus;
         }>
      */
-    async cancelFix(id:number){
-        try{
+    async cancelFix(id: number) {
+        try {
             await this.prisma.sendList.update({
-                where:{
-                    id:id
+                where: {
+                    id: id
                 },
-                data:{
-                    fixFlag:false
+                data: {
+                    fixFlag: false
                 }
             });
 
-            return {success:true, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -618,29 +621,29 @@ export class SendService {
      * @param updateTitleDto 
      * @returns {success:boolean; status:number}
      */
-    async updateSendTitle(updateTitleDto: UpdateTitleDto){
-        try{
+    async updateSendTitle(updateTitleDto: UpdateTitleDto) {
+        try {
             let check = await this.checkSendTitle(updateTitleDto.title);
 
-            if(check.success){
+            if (check.success) {
                 await this.prisma.sendList.update({
-                    where:{
-                        id:updateTitleDto.id
+                    where: {
+                        id: updateTitleDto.id
                     },
-                    data:{
-                        title:updateTitleDto.title
+                    data: {
+                        title: updateTitleDto.title
                     }
                 });
-    
-                return {success:true, status:HttpStatus.OK};
-            }else{
-                return {success:false, status:HttpStatus.CONFLICT};
+
+                return { success: true, status: HttpStatus.OK };
+            } else {
+                return { success: false, status: HttpStatus.CONFLICT };
             }
-           
-        }catch(err){
+
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -651,18 +654,18 @@ export class SendService {
      * @param title :string
      * @returns {success:boolean}
      */
-    async checkSendTitle(title:string){
-        try{
+    async checkSendTitle(title: string) {
+        try {
             const response = await this.prisma.sendList.findMany({
-                where:{title:title}
+                where: { title: title }
             });
 
-            if(response.length == 0) return {success:true};
-            else return {success:false};
-        }catch(err){
+            if (response.length == 0) return { success: true };
+            else return { success: false };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -684,20 +687,20 @@ export class SendService {
             list?: undefined;
         }>
      */
-    async getAllSendList(){
+    async getAllSendList() {
         //useFlag가 true인 것만 가져옵니다.false는 이미 발송 완료 처리 되었을 때 되기 때문에 발송 나간건 x
-        try{
+        try {
             const response = await this.prisma.sendList.findMany({
-                where:{useFlag:true},
-                select:{title:true, id:true, amount:true,fixFlag:true}
-            }); 
+                where: { useFlag: true },
+                select: { title: true, id: true, amount: true, fixFlag: true }
+            });
 
             console.log(response);
-            return {success:true, list:response, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, list: response, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
@@ -723,21 +726,80 @@ export class SendService {
             list?: undefined;
         }>
      */
-    async completeSendList(){
-        try{
+    async completeSendList() {
+        try {
             const list = await this.prisma.sendList.findMany({
-                where:{useFlag:false}
+                where: { useFlag: false }
             });
 
-            return {success:true, list, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, list, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             return {
-                success:false,
+                success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
+
+    /**
+    * 챠팅 용 엑셀
+    * @returns {success:true,status:HttpStatus.OK,url};
+    */
+    async chatingExcel(id:number) {
+        try {
+            // 차팅 : 핸드폰번호 주문수량 결제방식 
+
+            //날짜 조건 걸 예정
+            const res = await this.getOrderTempList(id);
+            const list = res.list;
+
+            console.log('==================');
+            console.log(list);
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("챠팅 엑셀");
+            const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
+            const headerWidths = [16, 30, 40, 10];
+
+            const headerRow = sheet.addRow(header);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            list.forEach((e) => {
+                const { name, phoneNum } = e.patient;
+                console.log(e.tempOrderItems)
+                let items = '';
+
+                for (let i = 0; i < e.order.orderItems.length; i++) {
+                    console.log(e.order.orderItems[i].item)
+                    const item = getItem(e.order.orderItems[i].item);
+                    items += `${item}/`
+                }
+
+                const payType = e.payType;
+
+                const rowDatas = [name, phoneNum, items, payType];
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.erpService.uploadFile(fileData);
+
+            return { success: true, status: HttpStatus.OK, url };
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
+        }
+    }
+
 
 
 }

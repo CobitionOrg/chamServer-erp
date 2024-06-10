@@ -23,6 +23,7 @@ import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
+import { sortItems } from 'src/util/sortItems';
 
 @Injectable()
 export class ErpService {
@@ -251,6 +252,7 @@ export class ErpService {
                     orderSortNum: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -268,7 +270,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -657,6 +661,7 @@ export class ErpService {
                     date: true,
                     remark: true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,
@@ -685,7 +690,9 @@ export class ErpService {
                 }
             });
 
-            return { success: true, list };
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
             return {
@@ -832,7 +839,7 @@ export class ErpService {
                             }
                         }); //제일 마지막 발송일자 가져오기
                         const lastTitle = sendList[sendList.length - 1].title;
-                        const date = new Date(lastTitle);
+                        const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
                         const title = getSendTitle(date);
                         console.log(title);
 
@@ -903,7 +910,7 @@ export class ErpService {
                 console.log(sendList);
 
                 const lastTitle = sendList.length != 0 ? sendList[sendList.length - 1].title : new Date();
-                const date = new Date(lastTitle);
+                const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
                 console.log(date);
                 const title = getSendTitle(date);
                 //console.log(title);
@@ -1141,76 +1148,6 @@ export class ErpService {
         }
     }
 
-    /**
-    * 챠팅 용 엑셀
-    * @returns {success:true,status:HttpStatus.OK,url};
-    */
-    async chatingExcel() {
-        try {
-            // 차팅 : 핸드폰번호 주문수량 결제방식 
-
-            //날짜 조건 걸 예정
-            const list = await this.prisma.order.findMany({
-                select: {
-                    patient: {
-                        select: {
-                            name: true,
-                            phoneNum: true,
-                        }
-                    },
-                    payType: true,
-                    orderItems: {
-                        select: {
-                            item: true,
-                        }
-                    }
-                }
-            });
-
-
-            const wb = new Excel.Workbook();
-            const sheet = wb.addWorksheet("챠팅 엑셀");
-            const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
-            const headerWidths = [16, 30, 40, 10];
-
-            const headerRow = sheet.addRow(header);
-            headerRow.height = 30.75;
-
-            headerRow.eachCell((cell, colNum) => {
-                styleHeaderCell(cell);
-                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
-            });
-
-            list.forEach((e) => {
-                const { name, phoneNum } = e.patient;
-                console.log(e.orderItems)
-                let items = '';
-
-                for (let i = 0; i < e.orderItems.length; i++) {
-                    console.log(e.orderItems[i].item)
-                    const item = getItem(e.orderItems[i].item);
-                    items += `${item}/`
-                }
-
-                const payType = e.payType;
-
-                const rowDatas = [name, phoneNum, items, payType];
-                const appendRow = sheet.addRow(rowDatas);
-            });
-
-            const fileData = await wb.xlsx.writeBuffer();
-            const url = await this.uploadFile(fileData);
-
-            return { success: true, status: HttpStatus.OK, url };
-        } catch (err) {
-            this.logger.error(err);
-            return {
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
-
-        }
-    }
 
     /**
      * 엑셀 파일 업로드
@@ -1316,14 +1253,19 @@ export class ErpService {
             delete updateSurveyDto.patient;
             delete updateSurveyDto.orderItems;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
-
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            let orderSortNum = updateSurveyDto.isPickup ? -1
+                : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
+            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
+            
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {
@@ -1376,13 +1318,16 @@ export class ErpService {
             delete updateSurveyDto.orderItems;
             delete updateSurveyDto.orderBodyType;
 
-            const orderData = updateSurveyDto;
             const items = orderItemsData.map((item) => ({
                 item: item.item,
                 type: item.type,
                 orderId: id
             }));
             console.log(items);
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const price = getOrderPrice.getPrice();
+            const orderData = {...updateSurveyDto, price: price};
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({

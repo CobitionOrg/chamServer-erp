@@ -5,6 +5,8 @@ import { PrismaService } from 'src/prisma.service';
 import { ExOrderObjDto } from './Dto/exOrderObj.dto';
 import { ExOrderItemObjDto } from './Dto/exOrderItemObj.dto';
 import { ExOrderBodyTypeDto } from './Dto/exOrderBodyType.dto';
+import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { CompleteRefundDto } from './Dto/completeRefund.dto';
 
 @Injectable()
 export class ExchangeService {
@@ -81,13 +83,77 @@ export class ExchangeService {
      * 교환,누락,환불 리스트 가져오기
      * @returns {success:boolean,list,msg:string}
      */
-    async getExchangeList(){
-        const res = await this.exchangeRepository.getExchangeList();
+    async getExchangeList(getListDto: GetListDto){
+        let orderConditions = {};
+
+        if(getListDto.date === undefined) {
+            //날짜 조건 X
+            orderConditions = {
+                consultingType: false,
+                isComplete: false
+            };
+        }else {
+            const gmtDate = new Date(getListDto.date);
+            const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
+
+            const startDate = new Date(kstDate.setHours(0,0,0,0));
+            const endDate = new Date(kstDate.setHours(23,59,59,999));
+            orderConditions = {
+                consultingType: false,
+                isComplete: false,
+                date: {
+                    gte: startDate,
+                    lt: endDate,
+                }
+            }
+        }
+
+        let patientConditions = {};
+
+        if(getListDto.searchKeyword !== "") {
+            if(getListDto.searchCategory === "all") {
+                patientConditions = {
+                    OR : [
+                        { patient: { name: { contains: getListDto.searchKeyword } } },
+                        { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
+                    ]
+                }
+            } else if (getListDto.searchCategory === "name") {
+                patientConditions = {
+                    patient: { name: { contains: getListDto.searchKeyword } }
+                }
+            } else if (getListDto.searchCategory === "num") {
+                patientConditions = {
+                    patient: { phoneNum: { contains: getListDto.searchKeyword } }
+                }
+            }
+        }
+
+
+
+        const res = await this.exchangeRepository.getExchangeList(orderConditions,patientConditions);
 
         if(!res.success){
             return {success:false,status:res.status,msg:''};
         }
 
+        return res;
+    }
+
+    /**
+     * 환불 완료 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async completeRefund(completeRefundDto:CompleteRefundDto){
+        if(completeRefundDto.orderSortNum !== -4) {
+            return {success:false, status:HttpStatus.BAD_REQUEST,msg:'환불 주문만 완료 처리 가능합니다'};
+        }
+        const res = await this.exchangeRepository.completeRefund(completeRefundDto.orderId);
         return res;
     }
 }
