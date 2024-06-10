@@ -1392,14 +1392,14 @@ export class ErpService {
 
             console.log(results);
             //엑셀 생성
-            // const createExcel = await createExcelCash(results.duplicates, results.noMatches);
-            // const url = createExcel.url;
+            const createExcel = await createExcelCash(results.duplicates, results.noMatches);
+            const url = createExcel.url;
 
             // //발송목록 이동 처리
-            // results.matches.forEach(async (e) => {
-            //     await this.completeConsulting(e.id);
-            // });
-            // return { success: true, url };
+            results.matches.forEach(async (e) => {
+                await this.completeConsulting(e.id);
+            });
+            return { success: true, url };
         } catch (err) {
             this.logger.error(err);
             return {

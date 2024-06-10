@@ -22,7 +22,8 @@ export class GetOrderSendPrice{
             priceSum+=3500;
         }
 
-        //console.log(this.orderItems);
+        console.log('////////////////////////////');
+        console.log(this.orderItems);
         this.orderItems.forEach(e => {
             if(e.type =='assistant'){
                 let assistantArr = e.item.split(',');
@@ -46,12 +47,24 @@ export class GetOrderSendPrice{
                     }
                 })
             }else{
-                for(let i = 0; i<this.itemList.length; i++){
-                    if(e.item!='' && this.itemList[i].item.includes(e.item)){
-                        priceSum+=this.itemList[i].price;
-                        break;
+                if(Array.isArray(e.item)){  //재진 설문 시 배열로 넘어올 때
+                    e.item.forEach(item => {
+                        for(let i = 0; this.itemList.length; i++){
+                            if(item!="" && this.itemList[i].item.includes(item)){
+                                priceSum+=this.itemList[i].price;
+                                break;
+                            }
+                        }
+                    })
+                }else{ //초진 설문일 때
+                    for(let i = 0; this.itemList.length; i++){
+                        if(e.item!="" && this.itemList[i].item.includes(e.item)){
+                            priceSum+=this.itemList[i].price;
+                            break;
+                        }
                     }
                 }
+               
             }
             
         });
