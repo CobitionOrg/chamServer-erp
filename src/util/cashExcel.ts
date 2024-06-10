@@ -54,8 +54,8 @@ export class CashExcel {
 
     compare() {
         this.buildHashTable();
-        console.log('-------------hash table--------------');
-        console.log(this.hashTable);
+        // console.log('-------------hash table--------------');
+        // console.log(this.hashTable);
         //console.log(this.dbData);
         //console.log(this.dbData);
         this.dbData.forEach(data => {
@@ -66,9 +66,9 @@ export class CashExcel {
                     let check = []; //금액 비교해서 동일데이터가 있는지 없는지 체크
                     let idx = [];
                     for(let i = 0; i<hashData.length; i++){
-                        //console.log(data.id + ' / '+ data.patient.name)
-                        //console.log(hashData[i].cash +' / '+data)
-                        let compare = this.comparePrice(hashData[i].cash, data)
+                        console.log(data.id + ' / '+ data.patient.name)
+                        console.log(hashData[i].cash +' / '+data)
+                        let compare = this.comparePrice(hashData[i].cash, data.price)
                         if(compare.success){
                             check.push(hashData[i]);
                             idx.push(i);
@@ -97,8 +97,8 @@ export class CashExcel {
                         })
                     } else if(check.length>1) {
                         //동명이인 중 하필 동일 금액이 있어 수동으로 처리해야 되는 경우
-                        //console.log('동일 금액이 있어 수동으로 처리해야 되는 경우 ' + data.patient.name)
-                        //console.log(hashData);
+                        // console.log('동일 금액이 있어 수동으로 처리해야 되는 경우 ' + data.patient.name)
+                        // console.log(hashData);
                         
                         //중복리스트에 등록
                         const duplicateObj = {
@@ -119,27 +119,36 @@ export class CashExcel {
                         let reverseIdx = idx.reverse();
                         //duplicates 배열에 넣고 해시테이블에서 삭제
                         reverseIdx.forEach( i => {
-                            hashData.splice(i,1);
-                            // console.log('/////////////////////');
-                            // console.log(hashData);
-                            this.hashTable.set(data.patient.name, hashData)
                             this.log.push({
                                 name : data.patient.name,
                                 log : 'duplicates',
                                 price : hashData[0].cash,
                                 id:2,
                             })
+                            hashData.splice(i,1);
+                            //console.log('/////////////////////');
+                            //console.log(hashData);
+                            this.hashTable.set(data.patient.name, hashData)
+                            
                         })
                     }
 
                 }else{
                     //동명이인이 없어 금액만 비교해서 바로 입금 처리
-                    // console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
-                    
-                    // console.log(this.hashTable.get(data.patient.name));
+                    console.log('동명이인이 없어 금액만 비교해서 바로 입금 처리 ' + data.patient.name)
+                    console.log(data.price);
+                    console.log(this.hashTable.get(data.patient.name));
+
+                    let check = this.checkDuplicateFunc(data);//중복여부 체크
+
+                    if(!check){ //중복 체크 데이터 시
+                        this.hashTable.delete(data.patient.name); //해시 테이블에서 제거
+                        return;
+                    }
+
                     // console.log(this.hashTable.get(data.patient.name).cash);
                     let cash = Array.isArray(this.hashTable.get(data.patient.name)) ? this.hashTable.get(data.patient.name)[0].cash : this.hashTable.get(data.patient.name).cash;
-                    let compare = this.comparePrice(cash, data);
+                    let compare = this.comparePrice(cash, data.price);
                     if(compare.success){
                         this.matches.push(data);
                         this.log.push({
@@ -206,17 +215,16 @@ export class CashExcel {
         // console.log(this.duplicates);
         // console.log(this.noMatches);
 
-        console.log(this.log);
+        //console.log(this.log);
         return { matches: this.matches, duplicates: this.duplicates, noMatches: this.noMatches };
 
     }
 
     //금액 비교
-    comparePrice(excelPrice:number,dbData ) :{ success: boolean; } {
-        let priceSum = this.getSum(dbData);
+    comparePrice(excelPrice:number,dbDataPrice:number ) :{ success: boolean; } {
         //console.log(dbData);
          
-        if(priceSum == excelPrice){
+        if(dbDataPrice == excelPrice){
             return {success:true};
         }else{
             return {success:false};
@@ -272,6 +280,15 @@ export class CashExcel {
         }else{ //중복데이터가 이닐 때
             return true;
         }
+    }
+
+    compareTemp() {
+        this.buildHashTable();
+
+        this.dbData.forEach(data => {
+            if (this.hashTable.has(data.patient.name)) { //해시 테이블에 이름이 있을 경우
+            }
+        }) 
     }
     
 
