@@ -24,10 +24,10 @@ export class ExchangeService {
      * @returns {success:boolean, status:HttpStatus,msg:string}
      */
     async createExchange(createExchangeDto : CreateExchangeDto){
-        return await this.prisma.$transaction(async (tx) => {
+        const res = await this.prisma.$transaction(async (tx) => {
             const exOrder = await this.exchangeRepository.getExOrder(createExchangeDto.id,tx);
 
-            // console.log(exOrder);
+            console.log(exOrder);
             // 기존 데이터가 없을 때
             if(exOrder == null){
                 return {success:false,status:HttpStatus.NO_CONTENT,msg:'해당 데이터가 존재하지 않습니다'};
@@ -73,6 +73,10 @@ export class ExchangeService {
             return {success:true, status:HttpStatus.CREATED};
 
         });
+        console.log('----------------');
+        console.log(res);
+
+        return res;
     }
 
     /**

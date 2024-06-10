@@ -527,7 +527,7 @@ export class SendService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
-    }
+    } 
 
     /**
      * 발송목록 완료 처리

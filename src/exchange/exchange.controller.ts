@@ -8,6 +8,7 @@ import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { CompleteRefundDto } from './Dto/completeRefund.dto';
 
 @Controller('exchange')
+@UseFilters(new HttpExceptionFilter())
 @ApiTags('About exchange, refund, omission')
 export class ExchangeController {
     constructor(
@@ -23,10 +24,8 @@ export class ExchangeController {
 
     @ApiOperation({ summary: '교환,환불,누락 건으로 새 오더 생성' })
     @Post('/createExchange')
-    @UseFilters(new HttpExceptionFilter())
     async createExchange(@Body() createExchangeDto: CreateExchangeDto) {
         const res:any = await this.exchangeService.createExchange(createExchangeDto);
-        
         if (res.status != 201) {
             throw new HttpException({
                 success: false,
@@ -36,11 +35,11 @@ export class ExchangeController {
                 res.status
             );
         }
-        return res;
+
+        return {success:true, status:HttpStatus.CREATED};
     } 
 
     @ApiOperation({summary: '교환 환불,누락 오더 리스트 가져오기'})
-    @Public()
     @Get('/getExchangeList')
     async getExchageList(@Query() getListDto : GetListDto, @Headers() Header){
         const res:any = await this.exchangeService.getExchangeList(getListDto);
