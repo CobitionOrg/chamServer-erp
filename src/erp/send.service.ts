@@ -834,7 +834,12 @@ export class SendService {
                         }
                     }
                 }
-            })
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet('감비환장부');
+
+            const headers = []
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

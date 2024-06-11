@@ -178,16 +178,16 @@ model order {
   sendNum         String?        @db.VarChar(100)
   /// 오더에 주문된 제품 총 가격
   price           Int?           @default(0)
-  /// 해당 오더에 계좌 이체 된 금액
-  cash            Int?           @default(0)
-  /// 해당 오더에 카드로 결제된 금액
-  card            Int?           @default(0)
   /// 특이 사항
   remark          String?
   /// 방문 수령 여부 true: 방문 수령, false: 택배 배송
   isPickup        Boolean?       @default(false)
   /// 합배송 번호
   combineNum      Int?           @default(0)
+  /// 해당 오더에 카드로 결제된 금액
+  card            Int?           @default(0)
+  /// 해당 오더에 계좌 이체 된 금액
+  cash            Int?           @default(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -198,7 +198,7 @@ model order {
 
 model tempOrder {
   /// index key
-  id              Int      @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   /// 알게 된 경로 
   route           String
   /// 배송 요청 메세지
@@ -216,31 +216,32 @@ model tempOrder {
   /// 감량 된 킬로수
   outage          String
   /// 유선 상담 유무 -> true면 유선
-  consultingType  Boolean  @default(false)
+  consultingType  Boolean        @default(false)
   /// 유선 상담 완료 플래그
-  phoneConsulting Boolean  @default(false)
+  phoneConsulting Boolean        @default(false)
   /// 결제 완료 유무 -> 완료 시 발송목록으로
-  isComplete      Boolean  @default(false)
+  isComplete      Boolean        @default(false)
   /// 환자 key
   patientId       Int
   /// 초진 재진 유무
-  isFirst         Boolean  @default(true)
+  isFirst         Boolean        @default(true)
   /// 접수 일자
-  date            DateTime @db.DateTime(0)
+  date            DateTime       @db.DateTime(0)
   /// 정렬 번호
-  orderSortNum    Int      @default(0)
+  orderSortNum    Int            @default(0)
   /// 원 오더 key
   orderId         Int
   /// 송장 번호
-  sendNum         String?  @db.VarChar(100)
+  sendNum         String?        @db.VarChar(100)
   /// 발송목록 key
   sendListId      Int
-  addr            String?  @db.VarChar(100)
-  tempOrderItems  tempOrderItem[]
-  order           order    @relation(fields: [orderId], references: [id])
-  patient         patient  @relation(fields: [patientId], references: [id])
-  sendList        sendList @relation(fields: [sendListId], references: [id])
-
+  addr            String?        @db.VarChar(100)
+  order           order          @relation(fields: [orderId], references: [id])
+  patient         patient        @relation(fields: [patientId], references: [id])
+  sendList        sendList       @relation(fields: [sendListId], references: [id])
+  tempOrderItems  tempOrderItem?
+  addSend  addSend?
+  orderUpdateInfos orderUpdateInfo[]
   @@index([orderId], map: "tempOrder_orderId_fkey")
   @@index([patientId], map: "tempOrder_patientId_fkey")
   @@index([sendListId], map: "tempOrder_sendListId_fkey")
@@ -248,12 +249,12 @@ model tempOrder {
 
 model tempOrderItem {
   /// index key
-  id      Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   /// 주문한 아이템
-  item    String
+  item        String
   /// 해당 temp order key
-  tempOrderId Int @unique
-  tempOrder tempOrder @relation(fields:[tempOrderId], references:[id])
+  tempOrderId Int       @unique
+  tempOrder   tempOrder @relation(fields: [tempOrderId], references: [id])
 }
 
 model sendList {
@@ -271,7 +272,21 @@ model sendList {
   useFlag    Boolean     @default(true)
   /// 고정 여부
   fixFlag    Boolean     @default(false)
+  /// 비고
+  note       String?
+  addSends  addSend[]
   tempOrders tempOrder[]
+}
+
+model addSend {
+    /// index key
+    id Int @id @default(autoincrement())
+    ///다른 날로 발송 추가 되는 오더
+    tempOrderId Int @unique
+    ///해당 sendList 키
+    sendListId Int
+    tempOrder tempOrder @relation(fields:[tempOrderId], references:[id])
+    sendList sendList @relation(fields: [sendListId], references:[id])
 }
 
 model orderBodyType {
@@ -308,6 +323,26 @@ model orderItem {
   order   order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "orderItem_orderId_fkey")
+}
+
+model orderUpdateInfo {
+  /// index key
+  id   Int    @id @default(autoincrement())
+  ///업데이트 정보
+  info String @db.VarChar(45)
+  /// 업데이트 정보 아이디
+  updateInfoId Int
+  /// temp order key
+  tempOrderId Int
+  updateInfo updateInfo @relation(fields:[updateInfoId], references:[id])
+  tempOrder tempOrder @relation(fields:[tempOrderId], references:[id])
+}
+
+model updateInfo {
+  id   Int    @id @default(autoincrement())
+  ///업데이트 정보
+  info String @db.VarChar(45)
+  orderUpdateInfos orderUpdateInfo[]
 }
 
 enum Role {
