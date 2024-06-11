@@ -272,7 +272,7 @@ model sendList {
   useFlag    Boolean     @default(true)
   /// 고정 여부
   fixFlag    Boolean     @default(false)
-  /// 비고
+  /// 비고 - 안씀
   note       String?
   addSends  addSend[]
   tempOrders tempOrder[]
