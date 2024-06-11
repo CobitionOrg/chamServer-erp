@@ -800,6 +800,52 @@ export class SendService {
         }
     }
 
+    async accountBook(id:number){
+        try{
+            const tempOrderList = await this.prisma.tempOrder.findFirst({
+                where:{sendListId: id},
+                orderBy:{orderSortNum:'asc'},
+                select:{
+                    id: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+                            price: true,
+                            card: true,
+                            cash: true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            item: true
+                        }
+                    }
+                }
+            })
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+        }
+    }
+
 
 
 }
