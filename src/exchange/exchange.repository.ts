@@ -158,7 +158,8 @@ export class ExchangeRepository {
                     nowDrug: objOrderBodyType.nowDrug,
                     pastDrug: objOrderBodyType.pastDrug,
                     pastSurgery: objOrderBodyType.pastSurgery,
-                    orderId: orderId,                }
+                    orderId: orderId,
+                }
             });
 
             return {success:true};

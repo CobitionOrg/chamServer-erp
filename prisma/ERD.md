@@ -84,11 +84,11 @@ erDiagram
   Int orderSortNum
   String sendNum "nullable"
   Int price "nullable"
-  Int cash "nullable"
-  Int card "nullable"
   String remark "nullable"
   Boolean isPickup "nullable"
   Int combineNum "nullable"
+  Int card "nullable"
+  Int cash "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -125,6 +125,12 @@ erDiagram
   Boolean full
   Boolean useFlag
   Boolean fixFlag
+  String note "nullable"
+}
+"addSend" {
+  Int id PK
+  Int tempOrderId FK
+  Int sendListId FK
 }
 "orderBodyType" {
   Int id PK
@@ -143,6 +149,16 @@ erDiagram
   ItemType type
   Int orderId FK
 }
+"orderUpdateInfo" {
+  Int id PK
+  String info
+  Int updateInfoId FK
+  Int tempOrderId FK
+}
+"updateInfo" {
+  Int id PK
+  String info
+}
 "log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
@@ -152,8 +168,12 @@ erDiagram
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
 "tempOrderItem" |o--|| "tempOrder" : tempOrder
+"addSend" |o--|| "tempOrder" : tempOrder
+"addSend" }o--|| "sendList" : sendList
 "orderBodyType" |o--|| "order" : order
 "orderItem" }o--|| "order" : order
+"orderUpdateInfo" }o--|| "updateInfo" : updateInfo
+"orderUpdateInfo" }o--|| "tempOrder" : tempOrder
 ```
 
 ### `user`
@@ -252,11 +272,11 @@ erDiagram
   - `orderSortNum`: 정렬 번호
   - `sendNum`: 송장 번호
   - `price`: 오더에 주문된 제품 총 가격
-  - `cash`: 해당 오더에 계좌 이체 된 금액
-  - `card`: 해당 오더에 카드로 결제된 금액
   - `remark`: 특이 사항
   - `isPickup`: 방문 수령 여부 true: 방문 수령, false: 택배 배송
   - `combineNum`: 합배송 번호
+  - `card`: 해당 오더에 카드로 결제된 금액
+  - `cash`: 해당 오더에 계좌 이체 된 금액
 
 ### `tempOrder`
 
@@ -299,6 +319,14 @@ erDiagram
   - `full`: 기준 총량을 채웠는지 여부(최대 350개)
   - `useFlag`: 사용 여부
   - `fixFlag`: 고정 여부
+  - `note`: 비고
+
+### `addSend`
+
+**Properties**
+  - `id`: index key
+  - `tempOrderId`: 다른 날로 발송 추가 되는 오더
+  - `sendListId`: 해당 sendList 키
 
 ### `orderBodyType`
 
@@ -320,3 +348,17 @@ erDiagram
   - `item`: 주문한 아이템
   - `type`: 아이템 타입
   - `orderId`: 해당 주문 오더 key
+
+### `orderUpdateInfo`
+
+**Properties**
+  - `id`: index key
+  - `info`: 업데이트 정보
+  - `updateInfoId`: 업데이트 정보 아이디
+  - `tempOrderId`: temp order key
+
+### `updateInfo`
+
+**Properties**
+  - `id`: 
+  - `info`: 업데이트 정보

@@ -10,6 +10,8 @@ import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice } from "src/util/getOrderPrice";
 import { getSortedList } from "src/util/sortSendList";
+import { AddSendDto } from "./Dto/addSend.dto";
+import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -168,6 +170,11 @@ export class SendService {
                             orderItems: {
                                 select: { item: true, type: true }
                             }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
                         }
                     },
                     tempOrderItems: {
@@ -800,6 +807,109 @@ export class SendService {
         }
     }
 
+
+    /**
+     * 추가 발송일자 변경 - 장부에만 들어가는 발송일자 변경 인원들
+     * @param addSendDto 
+     * @returns {success:boolean,status:HttpStatus};
+     */
+    async addSend(addSendDto: AddSendDto){
+        try{
+            await this.prisma.addSend.create({
+                data:{
+                    tempOrderId: addSendDto.tempOrderId,
+                    sendListId: addSendDto.sendListId
+                }
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기
+     * @param id: number
+     * @returns Promise<{
+        success: boolean;
+        status: HttpStatus;
+        list: {
+            id: number;
+            info: string;
+        }[];
+     */
+    async getUpdateInfo(id: number){
+        try{
+            const list = await this.prisma.updateInfo.findMany();
+
+            const checked = await this.prisma.orderUpdateInfo.findMany({
+                where:{tempOrderId:id}
+            });
+
+            return {success:true, status:HttpStatus.OK, list, checked}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기
+     * @param insertUpdateInfoDto 
+     * @returns {success:boolean,status:HttpStatus};
+     */
+    async insertUpdateInfo(insertUpdateInfoDto: InsertUpdateInfoDto){
+        try{
+            const qryArr = insertUpdateInfoDto.infoData.map(async e => {
+                console.log(e);
+                return this.prisma.orderUpdateInfo.create({
+                    data:{
+                        info:e.info,
+                        updateInfoId: e.id,
+                        tempOrderId:insertUpdateInfoDto.tempOrderId
+                    }
+                });
+
+            });
+
+            await Promise.all([...qryArr]).then((value) => {
+                return {success:true, status:HttpStatus.CREATED};
+            }).catch((err) => {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            });
+           
+            return {success:true, status:HttpStatus.CREATED};
+
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     async accountBook(id:number){
         try{
             const tempOrderList = await this.prisma.tempOrder.findFirst({
@@ -834,7 +944,12 @@ export class SendService {
                         }
                     }
                 }
-            })
+            });
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet('감비환장부');
+
+            const headers = []
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
