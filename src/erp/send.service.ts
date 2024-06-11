@@ -172,6 +172,11 @@ export class SendService {
                             }
                         }
                     },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
                     tempOrderItems: {
                         select: {
                             item: true
