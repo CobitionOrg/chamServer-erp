@@ -22,6 +22,7 @@ import { SepareteDto } from './Dto/separteData.dto';
 import { IpGuard } from './gaurds/ip.guard';
 import { AddSendDto } from './Dto/addSend.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -479,18 +480,21 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기'})
-    @Get('/getUpdateInfo')
-    async getUpdateInfo(){
+    @Get('/getUpdateInfo/:id')
+    async getUpdateInfo(@Param("id") id: number){
         this.logger.error('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');
-        const res = await this.sendService.getUpdateInfo();
+        const res = await this.sendService.getUpdateInfo(id);
 
         return res;
     }
 
     @ApiOperation({summary:'체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기'})
     @Post('/insertUpdateInfo')
-    async insertUpdateInfo(){
+    async insertUpdateInfo(@Body() insertUpdateInfoDto: InsertUpdateInfoDto){
+        this.logger.log('체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기');
+        const res = await this.sendService.insertUpdateInfo(insertUpdateInfoDto);
         
+        return res;
     }
 
     //아직 안됨

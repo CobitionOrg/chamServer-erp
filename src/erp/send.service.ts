@@ -831,6 +831,7 @@ export class SendService {
 
     /**
      * 발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기
+     * @param id: number
      * @returns Promise<{
         success: boolean;
         status: HttpStatus;
@@ -839,11 +840,15 @@ export class SendService {
             info: string;
         }[];
      */
-    async getUpdateInfo(){
+    async getUpdateInfo(id: number){
         try{
             const list = await this.prisma.updateInfo.findMany();
 
-            return {success:true, status:HttpStatus.OK, list}
+            const checked = await this.prisma.orderUpdateInfo.findMany({
+                where:{tempOrderId:id}
+            });
+
+            return {success:true, status:HttpStatus.OK, list, checked}
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
@@ -862,15 +867,33 @@ export class SendService {
      */
     async insertUpdateInfo(insertUpdateInfoDto: InsertUpdateInfoDto){
         try{
-            await this.prisma.orderUpdateInfo.create({
-                data:{
-                    info:insertUpdateInfoDto.info,
-                    updateInfoId: insertUpdateInfoDto.updateInfoId,
-                    tempOrderId:insertUpdateInfoDto.tempOrderId
-                }
+            const qryArr = insertUpdateInfoDto.infoData.map(async e => {
+                console.log(e);
+                return this.prisma.orderUpdateInfo.create({
+                    data:{
+                        info:e.info,
+                        updateInfoId: e.id,
+                        tempOrderId:insertUpdateInfoDto.tempOrderId
+                    }
+                });
+
             });
 
+            await Promise.all([...qryArr]).then((value) => {
+                return {success:true, status:HttpStatus.CREATED};
+            }).catch((err) => {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            });
+           
             return {success:true, status:HttpStatus.CREATED};
+
+
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

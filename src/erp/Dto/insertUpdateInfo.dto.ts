@@ -1,5 +1,9 @@
 export interface InsertUpdateInfoDto {
-    info: string;
-    updateInfoId : number;
+    infoData : Array<InfoData>;
     tempOrderId: number;
+}
+
+interface InfoData {
+    info: string;
+    id: number
 }
