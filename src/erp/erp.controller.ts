@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -20,8 +20,12 @@ import { LogService } from 'src/log/log.service';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
 import { IpGuard } from './gaurds/ip.guard';
+import { AddSendDto } from './Dto/addSend.dto';
+import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 
 @Controller('erp')
+@UseFilters(new HttpExceptionFilter())
 @UseGuards(AuthGuard)
 @ApiTags('erp api')
 export class ErpController {
@@ -465,5 +469,39 @@ export class ErpController {
 
         return res;
     }
-       
+      
+    @ApiOperation({summary:'추가 발송일자 변경'})
+    @Post('/addSend')
+    async addSend(@Body() addSendDto: AddSendDto){
+        this.logger.log('추가 발송일자 변경 - 장부에만 들어가는 발송일자 변경 인원들');
+        const res = await this.sendService.addSend(addSendDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기'})
+    @Get('/getUpdateInfo/:id')
+    async getUpdateInfo(@Param("id") id: number){
+        this.logger.error('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');
+        const res = await this.sendService.getUpdateInfo(id);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기'})
+    @Post('/insertUpdateInfo')
+    async insertUpdateInfo(@Body() insertUpdateInfoDto: InsertUpdateInfoDto){
+        this.logger.log('체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기');
+        const res = await this.sendService.insertUpdateInfo(insertUpdateInfoDto);
+        
+        return res;
+    }
+
+    //아직 안됨
+    @ApiOperation({summary:'장부 출력'})
+    @Get('/accountBook/:id')
+    async accountBook(@Param("id") id: number){
+        this.logger.log('장부 출력');
+        
+    }
 }
