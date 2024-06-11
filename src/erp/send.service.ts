@@ -815,6 +815,16 @@ export class SendService {
      */
     async addSend(addSendDto: AddSendDto){
         try{
+            const data = await this.prisma.addSend.findMany({
+                where:{tempOrderId:addSendDto.tempOrderId}
+            });
+
+            if(data.length>0){ //이미 addSend 처리 되있을 경우 기존 데이터 삭제
+                await this.prisma.addSend.deleteMany({
+                    where:{tempOrderId:addSendDto.tempOrderId}
+                });
+            }
+
             await this.prisma.addSend.create({
                 data:{
                     tempOrderId: addSendDto.tempOrderId,
