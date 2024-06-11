@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as Excel from 'exceljs'
 import axios from 'axios';
@@ -258,6 +258,8 @@ export class ErpService {
                     remark: true,
                     isPickup: true,
                     price: true,
+                    card: true,
+                    cash: true,
                     patient: {
                         select: {
                             id: true,
@@ -740,6 +742,32 @@ export class ErpService {
     }
 
     /**
+     * 총 금액과 card, cash 결제액 합이 일치하는지
+     */
+    async checkPaymentAmount(id: number) {
+        try {
+            const { price, card, cash } = await this.prisma.order.findUnique({
+                where: {
+                    id: id
+                },
+                select: {
+                    price: true,
+                    card: true,
+                    cash: true,
+                }
+            });
+
+            return price === card + cash;
+        } catch (err) {
+            this.logger.error(err);
+            return {
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+            }
+        }
+    }
+
+    /**
      * 발송 목록으로 이동 처리(상담 완료 처리)
      * @param id 
      * @returns Promise<{
@@ -749,10 +777,18 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
-            console.log(id);
-            console.log(typeof id);
-            //트랜젝션 시작
-            await this.prisma.$transaction(async (tx) => {
+            const PaymentAmountCheck = await this.checkPaymentAmount(id);
+            if(!PaymentAmountCheck) {
+                throw new HttpException(
+                    {
+                        status: HttpStatus.UNPROCESSABLE_ENTITY,
+                        error: "금액과 결제액 불일치"
+                    },
+                    HttpStatus.UNPROCESSABLE_ENTITY
+                )
+            } else {
+                //트랜젝션 시작
+                await this.prisma.$transaction(async (tx) => {
 
                 //발송 목록으로 이동 처리
                 const sendOne = await tx.order.update({
@@ -784,15 +820,15 @@ export class ErpService {
 
                 if(!res.success) throw error();
 
-            });
+                });
 
-
-            return { success: true, status: HttpStatus.OK };
+                return { success: true, status: HttpStatus.OK };
+            }
         } catch (err) {
             this.logger.error(err);
             return {
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
+                status: err.status || HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
     }
