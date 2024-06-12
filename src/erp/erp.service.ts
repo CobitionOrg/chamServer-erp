@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as Excel from 'exceljs'
 import axios from 'axios';
@@ -1405,9 +1405,10 @@ export class ErpService {
             const createExcel = await createExcelCash(results.duplicates, results.noMatches);
             const url = createExcel.url;
 
-            // //발송목록 이동 처리
+            // //발송목록 이동 처리 & cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
             results.matches.forEach(async (e) => {
                 await this.completeConsulting(e.id);
+                await this.cashUpdate(e.id, e.price);
             });
             return { success: true, url };
         } catch (err) {
@@ -1431,6 +1432,33 @@ export class ErpService {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
+        }
+    }
+
+    /**
+     * cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
+     * @param id 
+     * @param price 
+     * @returns Promise<{
+            success: boolean;
+        }>
+     */
+    async cashUpdate(id: number, price: number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{cash:price}
+            });
+
+            return {success:true};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
         }
     }
 
