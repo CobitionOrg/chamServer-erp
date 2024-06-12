@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { BcryptUtilClass } from 'src/util/bcrypt.util';
@@ -59,10 +59,12 @@ export class UserService {
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -83,10 +85,12 @@ export class UserService {
             else return { success: true };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            };
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -130,10 +134,12 @@ export class UserService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            };
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -187,10 +193,12 @@ export class UserService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            };
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -217,10 +225,12 @@ export class UserService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            }
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -243,10 +253,12 @@ export class UserService {
             return { data: res, success: true };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            };
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -294,10 +306,12 @@ export class UserService {
             return res;
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            };
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -334,10 +348,12 @@ export class UserService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            }
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -365,10 +381,12 @@ export class UserService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            }
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

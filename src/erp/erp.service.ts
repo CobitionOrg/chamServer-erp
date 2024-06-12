@@ -32,7 +32,7 @@ export class ErpService {
         private prisma: PrismaService,
         private jwtService: JwtService,
         private adminService: AdminService,
-    ) { }
+    ) {}
 
     private readonly logger = new Logger(ErpService.name);
 
@@ -153,10 +153,12 @@ export class ErpService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -280,10 +282,12 @@ export class ErpService {
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -419,10 +423,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -521,10 +527,12 @@ export class ErpService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -555,10 +563,12 @@ export class ErpService {
             else return { success: true, patient: res };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -584,10 +594,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -700,10 +712,12 @@ export class ErpService {
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -732,10 +746,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -790,10 +806,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -933,10 +951,12 @@ export class ErpService {
             }
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1007,10 +1027,12 @@ export class ErpService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1070,10 +1092,12 @@ export class ErpService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1152,10 +1176,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1182,10 +1208,12 @@ export class ErpService {
             return fileUrl;
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1214,10 +1242,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1242,10 +1272,12 @@ export class ErpService {
                 return { success: true, check: false, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1305,10 +1337,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1377,10 +1411,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1413,10 +1449,12 @@ export class ErpService {
             return { success: true, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1428,10 +1466,12 @@ export class ErpService {
             return list;
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1511,10 +1551,12 @@ export class ErpService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1551,10 +1593,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1616,10 +1660,12 @@ export class ErpService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1673,10 +1719,12 @@ export class ErpService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

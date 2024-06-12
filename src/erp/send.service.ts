@@ -72,10 +72,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -123,10 +125,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -190,10 +194,12 @@ export class SendService {
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -244,10 +250,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -356,10 +364,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
 
         }
     }
@@ -417,10 +427,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -464,10 +476,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -504,10 +518,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -558,10 +574,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -587,10 +605,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -616,10 +636,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -649,10 +671,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -671,10 +695,12 @@ export class SendService {
             else return { success: false };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -706,10 +732,12 @@ export class SendService {
             return { success: true, list: response, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -742,10 +770,12 @@ export class SendService {
             return { success: true, list, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -799,10 +829,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
 
         }
     }
