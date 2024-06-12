@@ -8,16 +8,20 @@ import {
   Logger,
   Post,
   Query,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { SurveyService } from './survey.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderUpd } from 'src/auth/decorators/order.decorator';
+import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 
 @Controller('survey')
+@UseFilters(new HttpExceptionFilter())
+@ApiTags('설문 관련 api')
 export class SurveyController {
   constructor(private readonly surveyService: SurveyService) {}
   private readonly logger = new Logger(SurveyController.name);

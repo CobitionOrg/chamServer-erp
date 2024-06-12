@@ -1,9 +1,11 @@
-import { Controller, Get, Logger, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { LogService } from './log.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 
 @Controller('log')
+@UseFilters(new HttpExceptionFilter())
 @ApiTags('log')
 @UseGuards(AuthGuard)
 export class LogController {

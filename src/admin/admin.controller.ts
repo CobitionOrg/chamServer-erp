@@ -1,12 +1,14 @@
-import { Body, Controller, Logger, Post, Headers, Get, UseGuards, Param, Patch, Head } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Headers, Get, UseGuards, Param, Patch, Head, UseFilters } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InsertQuestionDto } from './Dto/question.dto';
 import { getToken } from 'src/util/token';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { PermitListDto } from './Dto/permitUser.dto';
+import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 
 @Controller('admin')
+@UseFilters(new HttpExceptionFilter())
 @ApiTags('admin api')
 export class AdminController {
     constructor(
