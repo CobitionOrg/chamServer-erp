@@ -756,14 +756,18 @@ export class ErpService {
                     cash: true,
                 }
             });
-
-            return price === card + cash;
+            if (price !== card + cash) {
+                return { success: false };
+            }
+            return { success: true };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-            }
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -777,8 +781,8 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
-            const PaymentAmountCheck = await this.checkPaymentAmount(id);
-            if(!PaymentAmountCheck) {
+            const paymentAmountCheck = await this.checkPaymentAmount(id);
+            if(!paymentAmountCheck.success) {
                 throw new HttpException(
                     {
                         status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -826,10 +830,12 @@ export class ErpService {
             }
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
-                status: err.status || HttpStatus.INTERNAL_SERVER_ERROR
-            }
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                err.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
