@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus, HttpException } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma.service';
@@ -14,7 +14,7 @@ export class SurveyService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(SurveyService.name);
 
@@ -27,7 +27,7 @@ export class SurveyService {
       const res = await this.prisma.question.findMany({
         where: {
           type: 'first',
-          useFlag:1
+          useFlag: 1
         },
         select: {
           id: true,
@@ -35,8 +35,8 @@ export class SurveyService {
           type: true,
           choice: true,
           note: true,
-          questionCode:true,
-          orderType:true,
+          questionCode: true,
+          orderType: true,
           answers: {
             select: {
               id: true,
@@ -49,10 +49,12 @@ export class SurveyService {
       return { success: true, status: HttpStatus.OK, data: res };
     } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -65,7 +67,7 @@ export class SurveyService {
       const res = await this.prisma.question.findMany({
         where: {
           type: 'return',
-          useFlag:1
+          useFlag: 1
         },
         select: {
           id: true,
@@ -73,8 +75,8 @@ export class SurveyService {
           type: true,
           choice: true,
           note: true,
-          questionCode:true,
-          orderType:true,
+          questionCode: true,
+          orderType: true,
           answers: {
             select: {
               id: true,
@@ -87,10 +89,12 @@ export class SurveyService {
       return { success: true, status: HttpStatus.OK, data: res };
     } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -151,10 +155,12 @@ export class SurveyService {
       }
     } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -162,14 +168,14 @@ export class SurveyService {
    * 오더 업데이트 질문만 가져오기
    * @returns 
    */
-  async updateSurvey(){
-    try{
+  async updateSurvey() {
+    try {
       const res = await this.prisma.question.findMany({
         where: {
           type: 'first',
-          useFlag:1,
-          id:{
-            in:[7,8,9,10]
+          useFlag: 1,
+          id: {
+            in: [7, 8, 9, 10]
           }
         },
         select: {
@@ -178,8 +184,8 @@ export class SurveyService {
           type: true,
           choice: true,
           note: true,
-          questionCode:true,
-          orderType:true,
+          questionCode: true,
+          orderType: true,
           answers: {
             select: {
               id: true,
@@ -190,12 +196,14 @@ export class SurveyService {
       });
 
       return { success: true, status: HttpStatus.OK, data: res };
-    }catch(err){
+    } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -218,58 +226,60 @@ export class SurveyService {
           }[];
       }
    */
-  async getMyOrder(getOrderDto:GetOrderDto){
-    try{
+  async getMyOrder(getOrderDto: GetOrderDto) {
+    try {
       const userId = await this.getUserId(getOrderDto);
 
       console.log(userId);
 
       const order = await this.prisma.order.findFirst({
-        where:{
-          patientId : userId.id,
+        where: {
+          patientId: userId.id,
           isComplete: false
         },
-        select:{
-          id:true,
-          payType:true,
-          isComplete:true,
-          patient:{
-            select:{
-              id:true,
-              name:true,
-              addr:true,
+        select: {
+          id: true,
+          payType: true,
+          isComplete: true,
+          patient: {
+            select: {
+              id: true,
+              name: true,
+              addr: true,
             }
           },
-          orderItems:{
-            select:{
-              item:true,
-              type:true,
+          orderItems: {
+            select: {
+              item: true,
+              type: true,
             }
           }
         }
-        
+
       });
       console.log(order);
 
-      if(!order) {
-        return {success:false, msg:'주문하신 내역이 없습니다'};
+      if (!order) {
+        return { success: false, msg: '주문하신 내역이 없습니다' };
       }
 
       //조회 용 토큰 발행
       const payload = {
-        patientId : order.patient.id,
-        orderId : order.id
+        patientId: order.patient.id,
+        orderId: order.id
       };
-      
+
       const orderUpd_token = await this.jwtService.signAsync(payload)
 
-      return {success:true, order,token:orderUpd_token}
-    }catch(err){
+      return { success: true, order, token: orderUpd_token }
+    } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -282,25 +292,27 @@ export class SurveyService {
       status?: undefined;
     }
    */
-  async getUserId(getOrderDto:GetOrderDto){
-    try{
+  async getUserId(getOrderDto: GetOrderDto) {
+    try {
       const userId = await this.prisma.patient.findFirst({
-        where:{
-          name:getOrderDto.name,
-          phoneNum:getOrderDto.phoneNum
+        where: {
+          name: getOrderDto.name,
+          phoneNum: getOrderDto.phoneNum
         },
-        select:{
-          id:true
+        select: {
+          id: true
         }
       });
 
-      return {success:true,id:userId.id}
-    }catch(err){
+      return { success: true, id: userId.id }
+    } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -309,23 +321,25 @@ export class SurveyService {
    * @returns 
    */
   async getItems() {
-    try{
+    try {
       const list = await this.prisma.item.findMany({
-        select:{
-          item:true,
-          isFirst:true,
-          isYoyo:true,
-          isQuestion:true,
+        select: {
+          item: true,
+          isFirst: true,
+          isYoyo: true,
+          isQuestion: true,
         }
       });
 
-      return {success:true, list};
-    }catch(err){
+      return { success: true, list };
+    } catch (err) {
       this.logger.error(err);
-      return {
+      throw new HttpException({
         success: false,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }
