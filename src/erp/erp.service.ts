@@ -1743,8 +1743,8 @@ export class ErpService {
         try{
             if(cancelOrderDto.isFirst){
                 //초진 일 시 환자 데이터까지 삭제
-                const orderId = cancelOrderDto.id;
-                const patientId = cancelOrderDto.patient.id;
+                const orderId = cancelOrderDto.orderId;
+                const patientId = cancelOrderDto.patientId;
 
                 await this.prisma.$transaction(async (tx) => {
                     //orderBodyType 삭제
@@ -1772,7 +1772,7 @@ export class ErpService {
                 return {success:true, status:HttpStatus.OK, msg:'초진 삭제'}
             }else{
                 //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
-                const orderId = cancelOrderDto.id;
+                const orderId = cancelOrderDto.orderId;
 
                 //오더만 isComplete를 true로 변경
                 await this.prisma.order.update({
