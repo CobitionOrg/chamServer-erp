@@ -72,10 +72,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -123,10 +125,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -190,10 +194,12 @@ export class SendService {
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -244,10 +250,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -356,10 +364,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
 
         }
     }
@@ -417,10 +427,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -464,10 +476,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -504,10 +518,12 @@ export class SendService {
             return { success: true, list };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -558,10 +574,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -587,10 +605,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -616,10 +636,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -649,10 +671,12 @@ export class SendService {
 
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -671,10 +695,12 @@ export class SendService {
             else return { success: false };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -706,10 +732,12 @@ export class SendService {
             return { success: true, list: response, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -742,10 +770,12 @@ export class SendService {
             return { success: true, list, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -799,10 +829,12 @@ export class SendService {
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
             this.logger.error(err);
-            return {
+            throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
 
         }
     }
@@ -959,7 +991,20 @@ export class SendService {
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet('감비환장부');
 
-            const headers = []
+            const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
+            const headerWidths = [5,16,5,16,10,10,16,16,12,25,18];
+
+            const headerRow = sheet.addRow(headers);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            // tempOrderList.array.forEach(element => {
+                
+            // });
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
@@ -967,7 +1012,7 @@ export class SendService {
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
-            )
+            );
         }
     }
 

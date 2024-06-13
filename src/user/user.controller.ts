@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers,Patch, Param } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, UseGuards,Request,Headers,Patch, Param, UseFilters } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { UserService } from './user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -9,8 +9,10 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { AttendanceDto } from './Dto/attendance.dto';
 import { getToken } from 'src/util/token';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
+import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 
 @Controller('user')
+@UseFilters(new HttpExceptionFilter())
 @ApiTags('user api')
 export class UserController {
     constructor(

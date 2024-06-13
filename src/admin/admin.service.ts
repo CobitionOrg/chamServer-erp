@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { InsertQuestionDto } from './Dto/question.dto';
@@ -32,10 +32,12 @@ export class AdminService {
             else return {success:false}
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
        
     }
@@ -87,10 +89,12 @@ export class AdminService {
             return {success:true,status:HttpStatus.CREATED};
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -115,10 +119,12 @@ export class AdminService {
             return {success:true,status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -145,10 +151,12 @@ export class AdminService {
             
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -176,10 +184,12 @@ export class AdminService {
             return {success:true, data};
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -196,10 +206,12 @@ export class AdminService {
             return {success:true,data};
         }catch(err){
             this.logger.error(err);
-            return {
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR
-            };
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
     
