@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -23,6 +23,7 @@ import { IpGuard } from './gaurds/ip.guard';
 import { AddSendDto } from './Dto/addSend.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
+import { CancelOrderDto } from './Dto/cancelOrder.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -237,6 +238,16 @@ export class ErpController {
                 header
             );
         }
+
+        return res;
+    }
+
+
+    @ApiOperation({summary:'주문 목록에서 주문 취소 처리'})
+    @Delete('/cancel')
+    async cancelOrder(@Body() cacelOrderDto: CancelOrderDto){
+        this.logger.log('주문 목록에서 주문 취소 처리');
+        const res = await this.erpService.cancelOrder(cacelOrderDto);
 
         return res;
     }

@@ -25,6 +25,7 @@ import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
 import { getKstDate } from 'src/util/getKstDate';
+import { CancelOrderDto } from './Dto/cancelOrder.dto';
 
 @Injectable()
 export class ErpService {
@@ -1727,4 +1728,60 @@ export class ErpService {
             );
         }
     }
+
+    async cancelOrder(cancelOrderDto: CancelOrderDto){
+        try{
+            if(cancelOrderDto.isFirst){
+                //초진 일 시 환자 데이터까지 삭제
+                const orderId = cancelOrderDto.id;
+                const patientId = cancelOrderDto.patient.id;
+
+                await this.prisma.$transaction(async (tx) => {
+                    //orderBodyType 삭제
+                    await tx.orderBodyType.delete({
+                        where:{orderId:orderId}
+                    }); 
+
+                    //orderItem 삭제
+                    await tx.orderItem.deleteMany({
+                        where:{orderId:orderId}
+                    });
+
+                    //order 삭제
+                    await tx.order.delete({
+                        where:{id:orderId}
+                    });
+
+                    //patient 삭제
+                    await tx.patient.delete({
+                        where:{id:patientId}
+                    });
+
+                });
+
+                return {success:true, status:HttpStatus.OK, msg:'초진 삭제'}
+            }else{
+                //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
+                const orderId = cancelOrderDto.id;
+
+                //오더만 isComplete를 true로 변경
+                await this.prisma.order.update({
+                    where:{id:orderId},
+                    data:{isComplete:true}
+                });
+
+                return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
+
+            }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+   
 }

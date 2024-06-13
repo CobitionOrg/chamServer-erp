@@ -12,6 +12,7 @@ import { GetOrderSendPrice } from "src/util/getOrderPrice";
 import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
+import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -835,7 +836,6 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
-
         }
     }
 
@@ -1016,6 +1016,44 @@ export class SendService {
         }
     }
 
+
+    async cancelSendOrder(cancelOrderDto: CancelSendOrderDto){
+        try{
+            if(cancelOrderDto.isFirst){
+                //초진 일 시 환자 데이터까지 삭제
+                const orderId = cancelOrderDto.order.id;
+                const patientId = cancelOrderDto.patient.id;
+
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.orderBodyType.delete({
+                        where:{orderId:orderId}
+                    });
+
+                    await tx.orderItem.deleteMany({
+                        where:{orderId:orderId}
+                    });
+
+                });
+            }else{
+                //재진 일 시 
+                const orderId = cancelOrderDto.order.id;
+
+                //오더만 isComplete를 true로 변경
+                await this.prisma.order.update({
+                    where:{id:orderId},
+                    data:{isComplete:true}
+                });
+            }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
 
 }
