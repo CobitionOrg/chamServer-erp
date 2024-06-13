@@ -288,7 +288,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'송장번호를 위한 엑셀'})
-    @UseGuards(IpGuard)
+    //@UseGuards(IpGuard)
     @Get('/sendNumExcel/:id')
     async sendNumExcel(@Param("id") id:number, @Headers() header){
         this.logger.log('송장번호를 위한 엑셀');
@@ -523,6 +523,7 @@ export class ErpController {
     @Get('/accountBook/:id')
     async accountBook(@Param("id") id: number){
         this.logger.log('장부 출력');
-        
+        const res = await this.sendService.accountBook(id);
+        return res;
     }
 }

@@ -5,7 +5,7 @@ import { error } from "winston";
 import * as Excel from 'exceljs'
 import { styleHeaderCell } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
-import { getItem } from "src/util/getItem";
+import { getItem, getItemAtAccount } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice } from "src/util/getOrderPrice";
@@ -952,70 +952,6 @@ export class SendService {
         }
     }
 
-    async accountBook(id:number){
-        try{
-            const tempOrderList = await this.prisma.tempOrder.findFirst({
-                where:{sendListId: id},
-                orderBy:{orderSortNum:'asc'},
-                select:{
-                    id: true,
-                    isFirst: true,
-                    orderSortNum: true,
-                    patient: {
-                        select: {
-                            id: true,
-                            name: true,
-                        }
-                    },
-                    order: {
-                        select: {
-                            id: true,
-                            message: true,
-                            cachReceipt: true,
-                            price: true,
-                            card: true,
-                            cash: true,
-                            orderItems: {
-                                select: { item: true, type: true }
-                            }
-                        }
-                    },
-                    tempOrderItems: {
-                        select: {
-                            item: true
-                        }
-                    }
-                }
-            });
-
-            const wb = new Excel.Workbook();
-            const sheet = wb.addWorksheet('감비환장부');
-
-            const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
-            const headerWidths = [5,16,5,16,10,10,16,16,12,25,18];
-
-            const headerRow = sheet.addRow(headers);
-            headerRow.height = 30.75;
-
-            headerRow.eachCell((cell, colNum) => {
-                styleHeaderCell(cell);
-                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
-            });
-
-            // tempOrderList.array.forEach(element => {
-                
-            // });
-        }catch(err){
-            this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
     /**
      * 발송 목록에서 주문 취소 처리
      * @param cancelOrderDto 
@@ -1113,6 +1049,105 @@ export class SendService {
 
                 return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
             }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async accountBook(id:number){
+        try{
+            const sendList = await this.prisma.sendList.findFirst({
+                where:{id:id},
+                select:{
+                    id:true,
+                    title:true,
+                    amount:true,
+                    tempOrders:{
+                        orderBy:{orderSortNum:'asc'},
+                        select:{
+                            id: true,
+                            isFirst: true,
+                            orderSortNum: true,
+                            patient: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                }
+                            },
+                            order: {
+                                select: {
+                                    id: true,
+                                    message: true,
+                                    payType:true,
+                                    cachReceipt: true,
+                                    price: true,
+                                    card: true,
+                                    cash: true,
+                                    remark:true,
+                                    orderItems: {
+                                        select: { item: true, type: true }
+                                    }
+                                }
+                            },
+                            tempOrderItems: {
+                                select: {
+                                    item: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const tempOrderList = sendList.tempOrders;
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet('감비환장부');
+            
+            //헤더 부분
+            sheet.mergeCells('A1:K1');
+            sheet.getCell('G1').value = '감비환 장부'
+
+            //주문 내역 부분
+            const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
+            const headerWidths = [5,16,5,16,15,10,16,16,12,25,18];
+
+            const headerRow = sheet.addRow(headers);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            tempOrderList.forEach((e,i) => {
+                const orderId = e.order.id;
+                const isFirst = e.isFirst ? '초진' : '재진';
+                const name = e.patient.name;
+                const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
+                const cash = e.order.cash == 0 ? '' : e.order.cash;
+                const card = e.order.card == 0? '' : e.order.card;
+                const message = e.order.remark ?? ''+ '/' + e.order.message;
+                const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
+           
+                const rowDatas = [i,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
+
+                const appendRow = sheet.addRow(rowDatas);
+            });
+
+            //footer 부분
+            const footer = ['','로젠','총인원','총갯수','세부','현금','카드','비고'];
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.erpService.uploadFile(fileData);
+
+            return {success:true, status: HttpStatus.OK, url};
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
