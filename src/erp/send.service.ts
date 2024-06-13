@@ -1016,33 +1016,102 @@ export class SendService {
         }
     }
 
-
+    /**
+     * 발송 목록에서 주문 취소 처리
+     * @param cancelOrderDto 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
     async cancelSendOrder(cancelOrderDto: CancelSendOrderDto){
         try{
             if(cancelOrderDto.isFirst){
                 //초진 일 시 환자 데이터까지 삭제
-                const orderId = cancelOrderDto.order.id;
-                const patientId = cancelOrderDto.patient.id;
+                const tempOrderId = cancelOrderDto.tempOrderId;
+                const orderId = cancelOrderDto.orderId;
+                const patientId = cancelOrderDto.patientId;
 
                 await this.prisma.$transaction(async (tx) => {
+                    //orderBodyType 삭제
                     await tx.orderBodyType.delete({
                         where:{orderId:orderId}
                     });
 
+                    //addSend 삭제
+                    await tx.addSend.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    });
+
+                    //temp orderItem 삭제
+                    await tx.tempOrderItem.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    });
+
+                    //orderItem 삭제
                     await tx.orderItem.deleteMany({
                         where:{orderId:orderId}
                     });
 
+                    //orderUpdateInfo 삭제
+                    await tx.orderUpdateInfo.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    })
+
+                    //tempOrder 삭제
+                    await tx.tempOrder.delete({
+                        where:{id:tempOrderId}
+                    });
+
+                    //order 삭제
+                    await tx.order.delete({
+                        where:{id:orderId}
+                    });
+
+                    //patient 삭제
+                    await tx.patient.delete({
+                        where:{id:patientId}
+                    });
+
                 });
+
+                return {success:true, status:HttpStatus.OK, msg:'초진 삭제'}
             }else{
                 //재진 일 시 
-                const orderId = cancelOrderDto.order.id;
+                const tempOrderId = cancelOrderDto.tempOrderId;
+                const orderId = cancelOrderDto.orderId;
 
-                //오더만 isComplete를 true로 변경
-                await this.prisma.order.update({
-                    where:{id:orderId},
-                    data:{isComplete:true}
+                await this.prisma.$transaction(async (tx) => {
+                    //addSend 삭제
+                    await tx.addSend.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    });
+    
+                    //temp orderItem 삭제
+                    await tx.tempOrderItem.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    });
+    
+                    //orderUpdateInfo 삭제
+                    await tx.orderUpdateInfo.deleteMany({
+                        where:{tempOrderId:tempOrderId}
+                    })
+
+                    //tempOrder 삭제
+                    await tx.tempOrder.delete({
+                        where:{id:tempOrderId}
+                    });
+
+                    //오더만 isComplete를 true로 변경
+                    await tx.order.update({
+                        where:{id:orderId},
+                        data:{isComplete:true}
+                    });
                 });
+               
+
+                return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
             }
         }catch(err){
             this.logger.error(err);

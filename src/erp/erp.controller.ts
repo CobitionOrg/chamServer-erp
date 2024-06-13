@@ -24,6 +24,7 @@ import { AddSendDto } from './Dto/addSend.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
+import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -243,11 +244,20 @@ export class ErpController {
     }
 
 
-    @ApiOperation({summary:'입금상담목록에서 주문 취소 처리'})
+    @ApiOperation({summary:'입금 상담 목록에서 주문 취소 처리'})
     @Delete('/cancel')
     async cancelOrder(@Body() cacelOrderDto: CancelOrderDto){
-        this.logger.log('입금상담목록에서 주문 취소 처리');
+        this.logger.log('입금 상담 목록에서 주문 취소 처리');
         const res = await this.erpService.cancelOrder(cacelOrderDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
+    @Delete('/cancelSend')
+    async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto){
+        this.logger.log('발송 목록에서 주문 취소 처리');
+        const res = await this.sendService.cancelSendOrder(cancelSendOrderDto);
 
         return res;
     }
