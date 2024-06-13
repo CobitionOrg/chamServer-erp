@@ -1729,6 +1729,16 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금상담목록에서 주문 취소 처리
+     * @param cancelOrderDto 
+     * @returns 
+     * Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
     async cancelOrder(cancelOrderDto: CancelOrderDto){
         try{
             if(cancelOrderDto.isFirst){

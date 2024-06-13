@@ -243,10 +243,10 @@ export class ErpController {
     }
 
 
-    @ApiOperation({summary:'주문 목록에서 주문 취소 처리'})
+    @ApiOperation({summary:'입금상담목록에서 주문 취소 처리'})
     @Delete('/cancel')
     async cancelOrder(@Body() cacelOrderDto: CancelOrderDto){
-        this.logger.log('주문 목록에서 주문 취소 처리');
+        this.logger.log('입금상담목록에서 주문 취소 처리');
         const res = await this.erpService.cancelOrder(cacelOrderDto);
 
         return res;
