@@ -65,25 +65,25 @@ export const createExcelCash = async (duplicates, noMatches) => {
   });
 
   const fileData = await wb.xlsx.writeBuffer();
-  const url = await uploadedFile(fileData);
+  const uploadedFileData = await uploadedFile(fileData);
 
-  return {success:true, url};
+  return {success:true, url:uploadedFileData.fileUrl, objectName: uploadedFileData.objectName};
 
 }
 
-
+/**s3 파일 업로드 */
 const uploadedFile = async (file: any) => {
   const presignedUrl = await generateUploadURL();
 
   //console.log(presignedUrl);
-  await axios.put(presignedUrl, {
+  await axios.put(presignedUrl.uploadURL, {
     body: file
   }, {
     headers: {
       "Content-Type": file.type,
     }
   });
-
-  let fileUrl = presignedUrl.split('?')[0];
-  return fileUrl;
+  let objectName = presignedUrl.imageName;
+  let fileUrl = presignedUrl.uploadURL.split('?')[0];
+  return {fileUrl,objectName};
 }

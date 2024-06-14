@@ -159,6 +159,11 @@ erDiagram
   Int id PK
   String info
 }
+"urlData" {
+  Int id PK
+  String url
+  String objectName
+}
 "log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
@@ -319,7 +324,7 @@ erDiagram
   - `full`: 기준 총량을 채웠는지 여부(최대 350개)
   - `useFlag`: 사용 여부
   - `fixFlag`: 고정 여부
-  - `note`: 비고
+  - `note`: 비고 - 안씀
 
 ### `addSend`
 
@@ -360,5 +365,12 @@ erDiagram
 ### `updateInfo`
 
 **Properties**
-  - `id`: 
+  - `id`: index key
   - `info`: 업데이트 정보
+
+### `urlData`
+
+**Properties**
+  - `id`: index key
+  - `url`: url
+  - `objectName`: object 이름

@@ -17,18 +17,23 @@ import { ExchangeController } from './exchange/exchange.controller';
 import { ExchangeModule } from './exchange/exchange.module';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './filter/httpExceptionFilter';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksService } from './tasks/tasks.service';
+import { TasksModule } from './tasks/tasks.module';
 @Module({
 
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     UserModule,
     SurveyModule,
     AdminModule,
     ErpModule,
     LogModule,
-    ExchangeModule
+    ExchangeModule,
+    TasksModule
   ],
   controllers: [AppController],
   providers: [
@@ -37,7 +42,7 @@ import { HttpExceptionFilter } from './filter/httpExceptionFilter';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    },
+    }, 
   ],
 })
 export class AppModule implements NestModule {
