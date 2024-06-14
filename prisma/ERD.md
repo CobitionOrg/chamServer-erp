@@ -64,6 +64,7 @@ erDiagram
   Boolean isYoyo
   Boolean isQuestion
   Int price "nullable"
+  Boolean isCommon
 }
 "order" {
   Int id PK
@@ -173,12 +174,12 @@ erDiagram
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
 "tempOrderItem" |o--|| "tempOrder" : tempOrder
-"addSend" |o--|| "tempOrder" : tempOrder
 "addSend" }o--|| "sendList" : sendList
+"addSend" |o--|| "tempOrder" : tempOrder
 "orderBodyType" |o--|| "order" : order
 "orderItem" }o--|| "order" : order
-"orderUpdateInfo" }o--|| "updateInfo" : updateInfo
 "orderUpdateInfo" }o--|| "tempOrder" : tempOrder
+"orderUpdateInfo" }o--|| "updateInfo" : updateInfo
 ```
 
 ### `user`
@@ -255,6 +256,7 @@ erDiagram
   - `isYoyo`: 요요 여부
   - `isQuestion`: 설문 관련 정보 여부
   - `price`: 가격(택배비 제외)
+  - `isCommon`: 
 
 ### `order`
 
