@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -23,6 +23,8 @@ import { IpGuard } from './gaurds/ip.guard';
 import { AddSendDto } from './Dto/addSend.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
+import { CancelOrderDto } from './Dto/cancelOrder.dto';
+import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -241,6 +243,25 @@ export class ErpController {
         return res;
     }
 
+
+    @ApiOperation({summary:'입금 상담 목록에서 주문 취소 처리'})
+    @Delete('/cancel')
+    async cancelOrder(@Body() cacelOrderDto: CancelOrderDto){
+        this.logger.log('입금 상담 목록에서 주문 취소 처리');
+        const res = await this.erpService.cancelOrder(cacelOrderDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
+    @Delete('/cancelSend')
+    async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto){
+        this.logger.log('발송 목록에서 주문 취소 처리');
+        const res = await this.sendService.cancelSendOrder(cancelSendOrderDto);
+
+        return res;
+    }
+
     //테스트용 api
     // @ApiOperation({summary:'발송 목록 세팅'})
     // @Get('/setSendList')
@@ -267,7 +288,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'송장번호를 위한 엑셀'})
-    @UseGuards(IpGuard)
+    //@UseGuards(IpGuard)
     @Get('/sendNumExcel/:id')
     async sendNumExcel(@Param("id") id:number, @Headers() header){
         this.logger.log('송장번호를 위한 엑셀');
@@ -502,6 +523,7 @@ export class ErpController {
     @Get('/accountBook/:id')
     async accountBook(@Param("id") id: number){
         this.logger.log('장부 출력');
-        
+        const res = await this.sendService.accountBook(id);
+        return res;
     }
 }
