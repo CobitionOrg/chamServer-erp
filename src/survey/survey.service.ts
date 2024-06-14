@@ -7,6 +7,7 @@ import { xml2json } from 'xml-js';
 import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { sortAllItems, sortItems } from 'src/util/sortItems';
 
 @Injectable()
 export class SurveyService {
@@ -86,8 +87,44 @@ export class SurveyService {
         },
       });
 
+      console.log(res);
       return { success: true, status: HttpStatus.OK, data: res };
     } catch (err) {
+      this.logger.error(err);
+      throw new HttpException({
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * 주문 항목 전부 가져오기
+   * @returns 
+   */
+  async getAllItem(){
+    try{
+      const common = await this.prisma.item.findMany({
+        where:{isCommon:true},
+        orderBy: [
+          { item: 'asc' },
+          { id: 'asc' },
+        ],
+        select: {id:true,item:true}
+      });
+
+      const sortedItems = common.sort((a,b) => sortAllItems(a,b));
+
+      const yoyo = await this.prisma.item.findMany({
+        where:{isYoyo:true, isCommon:false},
+        orderBy:{item:'asc'},
+        select:{item:true}
+      });
+
+      return {success:true,status:HttpStatus.OK, common:sortedItems, yoyo};
+    }catch(err){
       this.logger.error(err);
       throw new HttpException({
         success: false,

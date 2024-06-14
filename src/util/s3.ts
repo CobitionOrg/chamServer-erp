@@ -49,8 +49,8 @@ export async function deleteUploadObject(name: string){
     signatureVersion: "v4"
   });
 
-  const rawBytes = await randomBytes(16);
-  const imageName = rawBytes.toString('hex');
+  //const rawBytes = await randomBytes(16);
+  //const imageName = rawBytes.toString('hex');
 
   await s3.deleteObject({
     Bucket: bucketName,

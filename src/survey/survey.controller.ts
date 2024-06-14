@@ -46,6 +46,15 @@ export class SurveyController {
     else throw new HttpException('', res.status);
   }
 
+  @ApiOperation({summary:'주문 항목 전부 가져오기'})
+  @HttpCode(HttpStatus.OK)
+  @Get('/getAllItems')
+  async getAllItem() {
+    this.logger.log('주문 항목 전부 가져오기');
+    const res = await this.surveyService.getAllItem();
+    return res;
+  }
+
   @ApiOperation({ summary: '주소 검색 오픈 API' })
   @HttpCode(HttpStatus.OK)
   @Post('/addr')
