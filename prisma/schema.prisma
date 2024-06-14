@@ -339,10 +339,20 @@ model orderUpdateInfo {
 }
 
 model updateInfo {
+  /// index key
   id   Int    @id @default(autoincrement())
   ///업데이트 정보
   info String @db.VarChar(45)
   orderUpdateInfos orderUpdateInfo[]
+}
+
+model urlData {
+  /// index key
+  id   Int    @id @default(autoincrement())
+  /// url
+  url  String
+  /// object 이름
+  objectName String
 }
 
 enum Role {

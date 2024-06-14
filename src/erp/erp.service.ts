@@ -1237,7 +1237,9 @@ export class ErpService {
             const presignedUrl = await generateUploadURL();
 
             console.log(presignedUrl);
-            await axios.put(presignedUrl, {
+            await this.saveS3Data(presignedUrl.uploadURL, presignedUrl.imageName);
+
+            await axios.put(presignedUrl.uploadURL, {
                 body: file
             }, {
                 headers: {
@@ -1245,7 +1247,7 @@ export class ErpService {
                 }
             });
 
-            let fileUrl = presignedUrl.split('?')[0];
+            let fileUrl = presignedUrl.uploadURL.split('?')[0];
             return fileUrl;
         } catch (err) {
             this.logger.error(err);
@@ -1260,7 +1262,7 @@ export class ErpService {
 
     async s3Url() {
         const url = await generateUploadURL();
-        return { url };
+        return { url:url.uploadURL };
     }
 
     /**
@@ -1287,7 +1289,7 @@ export class ErpService {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             },
-                HttpStatus.INTERNAL_SERVER_ERROR
+                HttpStatus.INTERNAL_SERVER_ERROR 
             );
         }
     }
@@ -1481,6 +1483,9 @@ export class ErpService {
             //엑셀 생성
             const createExcel = await createExcelCash(results.duplicates, results.noMatches);
             const url = createExcel.url;
+            const objectName = createExcel.objectName;
+
+            await this.saveS3Data(url, objectName);
 
             // //발송목록 이동 처리 & cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
             results.matches.forEach(async (e) => {
@@ -1834,4 +1839,24 @@ export class ErpService {
         }
     }
    
+    async saveS3Data(url: string, objectName: string){
+        try{
+            await this.prisma.urlData.create({
+                data:{
+                    url:url,
+                    objectName:objectName
+                }
+            });
+
+            return {success:true};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
