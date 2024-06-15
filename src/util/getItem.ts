@@ -49,6 +49,8 @@ export const getItem = (item: string) => {
             return '요요3개월';
         case '요요방지환 6개월분 198,000원 (택배무료)':
             return '요요6개월';
+        case '요요방지환 9개월분 297,000원 (택배무료)':
+            return '요요9개월'
         default:
             return item;
     }
@@ -104,6 +106,8 @@ const getItemShortName = (item: string) => {
             return '요1';
         case '요요방지환 6개월분 198,000원 (택배무료)':
             return '요2';
+        case '요요방지환 9개월분 297,000원 (택배무료)':
+            return '요3';
         default:
             return item;
     }
