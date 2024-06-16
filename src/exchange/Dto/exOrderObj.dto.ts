@@ -6,8 +6,10 @@ export interface ExOrderObjDto {
     consultingTime:string;
     payType:string;
     essentialCheck:string;
+    tallWeight: string;
     outage:string;
     patientId:number;
+    isFirst:boolean;
     price:number;
     remark:string|null;
 }

@@ -26,6 +26,7 @@ export class ExchangeRepository {
                     route: true,
                     message: true,
                     cachReceipt: true,
+                    isFirst:true,
                     typeCheck: true,
                     consultingTime: true,
                     payType: true,
@@ -147,20 +148,23 @@ export class ExchangeRepository {
      * @param orderId 
      * @returns {success:boolean}
      */
-    async insertOrderBodyType(tx, objOrderBodyType:ExOrderBodyTypeDto,orderId:number){
+    async insertOrderBodyType(tx, objOrderBodyType:ExOrderBodyTypeDto,orderId:number,isFirst:boolean){
         try{
-            await tx.orderBodyType.create({
-                data:{
-                    tallWeight: objOrderBodyType.tallWeight,
-                    digestion: objOrderBodyType.digestion,
-                    sleep: objOrderBodyType.sleep,
-                    constipation: objOrderBodyType.constipation,
-                    nowDrug: objOrderBodyType.nowDrug,
-                    pastDrug: objOrderBodyType.pastDrug,
-                    pastSurgery: objOrderBodyType.pastSurgery,
-                    orderId: orderId,
-                }
-            });
+            if(isFirst){
+                await tx.orderBodyType.create({
+                    data:{
+                        tallWeight: objOrderBodyType.tallWeight ?? '',
+                        digestion: objOrderBodyType.digestion ?? '',
+                        sleep: objOrderBodyType.sleep ?? '',
+                        constipation: objOrderBodyType.constipation ?? '',
+                        nowDrug: objOrderBodyType.nowDrug ?? '',
+                        pastDrug: objOrderBodyType.pastDrug ?? '',
+                        pastSurgery: objOrderBodyType.pastSurgery ?? '',
+                        orderId: orderId,
+                    }
+                });
+    
+            }
 
             return {success:true};
         }catch(err){
