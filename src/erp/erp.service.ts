@@ -243,7 +243,7 @@ export class ErpService {
                 }
             }
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, ...patientConditions },
+                where: { ...orderConditions, ...patientConditions,orderSortNum:{gte:0} },
                 select: {
                     id: true,
                     route: true,
