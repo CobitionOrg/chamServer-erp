@@ -1658,6 +1658,7 @@ export class ErpService {
      */
     async combineOrder(combineOrderDto: CombineOrderDto) {
         try {
+            console.log(combineOrderDto.orderIdArr);
             await this.prisma.$transaction(async (tx) => {
                 const maxCombineNum = await tx.order.aggregate({
                     _max: {
@@ -1671,7 +1672,7 @@ export class ErpService {
                 await tx.order.updateMany({
                     where: {
                         id: {
-                            in: combineOrderDto.orderIdArr
+                            in: [...combineOrderDto.orderIdArr]
                         },
                         isComplete: false
                     },
@@ -1680,6 +1681,18 @@ export class ErpService {
                         orderSortNum: 5 //orderSortNum update!
                     }
                 });
+
+                await tx.tempOrder.updateMany({
+                    where: {
+                        orderId: {
+                            in: [...combineOrderDto.orderIdArr]
+                        },
+                        isComplete: false
+                    },
+                    data: {
+                        orderSortNum: 5 //orderSortNum update!
+                    }
+                })
 
                 //배송 주소 업데이트
                 const patients = await tx.order.findMany({
