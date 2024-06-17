@@ -20,6 +20,10 @@ export const getFooter = (list:Array<any>,addSend) => {
     let cash = 0; //총 현금
     let note = ''; //비고
 
+    let separate = 0;//분리 배송으로 더해진 인원 제거 숫자
+    let isSeparteId = 0; //분리배송 id
+
+
     let gam = 0;
     let ssen = 0;
     let yoyo = 0;
@@ -39,6 +43,14 @@ export const getFooter = (list:Array<any>,addSend) => {
         if(e.orderSortNum == 5){
             combine++;
         }
+
+        if(e.orderSortNum == 6) {
+            if(isSeparteId == e.order.id){
+                separate++;
+            }else{
+                isSeparteId = e.order.id;
+            }
+        }
         logen++;
     });
 
@@ -46,6 +58,7 @@ export const getFooter = (list:Array<any>,addSend) => {
     logen+=addSend.length;
     fullCount = gam + ssen + yoyo;
     detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}`;
+    orderCount-=separate; //분리 배송으로 더해진 인원 제거
 
     addSend.forEach(e => {
         let str = `${e.tempOrder.order.id} ${e.tempOrder.patient.name}`;

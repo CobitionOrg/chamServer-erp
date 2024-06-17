@@ -1171,19 +1171,45 @@ export class SendService {
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
-            tempOrderList.forEach((e,i) => {
-                const orderId = e.order.id;
-                const isFirst = e.isFirst ? '초진' : '재진';
-                const name = e.patient.name;
-                const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
-                const cash = e.order.cash == 0 ? '' : e.order.cash;
-                const card = e.order.card == 0? '' : e.order.card;
-                const message = e.order.remark+'/' ?? ''+  e.order.message;
-                const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
-           
-                const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
+            
+            let isSeparteId = 0;
 
-                const appendRow = sheet.addRow(rowDatas);
+            tempOrderList.forEach((e,i) => {
+                if(e.orderSortNum != 6) { //분리 배송이 아닐 때
+                    const orderId = e.order.id;
+                    const isFirst = e.isFirst ? '초진' : '재진';
+                    const name = e.patient.name;
+                    const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
+                    const cash = e.order.cash == 0 ? '' : e.order.cash;
+                    const card = e.order.card == 0? '' : e.order.card;
+                    const message = e.order.remark+'/' ?? ''+  e.order.message;
+                    const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
+               
+                    const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
+    
+                    const appendRow = sheet.addRow(rowDatas);
+                }else if(e.orderSortNum == 6) { //분래 배송일 시
+                    if(isSeparteId == e.order.id){
+                        console.log('already insert data');
+                    }else {
+                        isSeparteId = e.order.id;
+
+                        const orderId = e.order.id;
+                        const isFirst = e.isFirst ? '초진' : '재진';
+                        const name = e.patient.name;
+                        const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
+                        const cash = e.order.cash == 0 ? '' : e.order.cash;
+                        const card = e.order.card == 0? '' : e.order.card;
+                        const message = e.order.remark ?? '' +'/' +  e.order.message;
+                        const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
+                   
+                        const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
+        
+                        const appendRow = sheet.addRow(rowDatas);
+                    }
+
+                }
+                
             });
 
             //footer 부분
