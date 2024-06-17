@@ -13,6 +13,7 @@ import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
+import { getFooter } from "src/util/accountBook";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -1069,6 +1070,11 @@ export class SendService {
                     title:true,
                     amount:true,
                     tempOrders:{
+                        where:{
+                            NOT:{
+                                orderSortNum:-4 //환불 데이터 제외
+                            }
+                        },
                         orderBy:{orderSortNum:'asc'},
                         select:{
                             id: true,
@@ -1101,9 +1107,48 @@ export class SendService {
                                 }
                             }
                         }
+                    },
+                    addSends:{
+                        select:{
+                            tempOrder:{
+                                select:{
+                                    id: true,
+                                    isFirst: true,
+                                    orderSortNum: true,
+                                    patient: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                        }
+                                    },
+                                    order: {
+                                        select: {
+                                            id: true,
+                                            message: true,
+                                            payType:true,
+                                            cachReceipt: true,
+                                            price: true,
+                                            card: true,
+                                            cash: true,
+                                            remark:true,
+                                            orderItems: {
+                                                select: { item: true, type: true }
+                                            }
+                                        }
+                                    },
+                                    tempOrderItems: {
+                                        select: {
+                                            item: true
+                                        }
+                                    }
+                                }
+                            },
+                        }
                     }
                 }
             });
+
+            //console.log(sendList);
             
             const tempOrderList = sendList.tempOrders;
 
@@ -1116,7 +1161,7 @@ export class SendService {
 
             //주문 내역 부분
             const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
-            const headerWidths = [5,16,5,16,15,10,16,16,12,25,18];
+            const headerWidths = [5,16,9,16,15,10,16,16,12,25,18];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;
@@ -1136,13 +1181,34 @@ export class SendService {
                 const message = e.order.remark ?? ''+ '/' + e.order.message;
                 const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
            
-                const rowDatas = [i,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
+                const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
 
                 const appendRow = sheet.addRow(rowDatas);
             });
 
             //footer 부분
             const footer = ['','로젠','총인원','총갯수','세부','현금','카드','비고'];
+            const {logen, orderCount, fullCount, detail, card, cash, note } = getFooter(tempOrderList,sendList.addSends);
+            const rowDatas = [
+                '',
+                logen,
+                orderCount,
+                fullCount,
+                detail,
+                cash,
+                card,
+                note
+            ];
+
+            const footerRow = sheet.addRow(footer);
+            footerRow.height = 30.75;
+
+            footerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            const appendRow = sheet.addRow(rowDatas);
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
