@@ -90,6 +90,7 @@ erDiagram
   Int combineNum "nullable"
   Int card "nullable"
   Int cash "nullable"
+  String note "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -284,6 +285,7 @@ erDiagram
   - `combineNum`: 합배송 번호
   - `card`: 해당 오더에 카드로 결제된 금액
   - `cash`: 해당 오더에 계좌 이체 된 금액
+  - `note`: 감량 킬로수 관련 비고
 
 ### `tempOrder`
 

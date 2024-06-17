@@ -189,6 +189,7 @@ model order {
   card            Int?           @default(0)
   /// 해당 오더에 계좌 이체 된 금액
   cash            Int?           @default(0)
+  note            String?
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
