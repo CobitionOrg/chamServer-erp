@@ -1178,7 +1178,7 @@ export class SendService {
                 const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                 const cash = e.order.cash == 0 ? '' : e.order.cash;
                 const card = e.order.card == 0? '' : e.order.card;
-                const message = e.order.remark ?? ''+ '/' + e.order.message;
+                const message = e.order.remark+'/' ?? ''+  e.order.message;
                 const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
            
                 const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
@@ -1188,6 +1188,8 @@ export class SendService {
 
             //footer 부분
             const footer = ['','로젠','총인원','총갯수','세부','현금','카드','비고'];
+            // const footerWidths = [5,25,9,16,15,10,16,16,12,25,18];
+
             const {logen, orderCount, fullCount, detail, card, cash, note } = getFooter(tempOrderList,sendList.addSends);
             const rowDatas = [
                 '',
