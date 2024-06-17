@@ -200,16 +200,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                // 그리니치 천문대 표준시
-                const gmtDate = new Date(getListDto.date);
-                // 한국 시간으로 바꾸기
-                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-
-                const startDate = new Date(kstDate.getTime());
-                startDate.setUTCHours(0, 0, 0, 0);
-                
-                const endDate = new Date(kstDate.getTime());
-                endDate.setUTCHours(23, 59, 59, 999);
+                const { startDate, endDate } = getKstDate(getListDto.date);
 
                 orderConditions = {
                     consultingType: false,
@@ -1865,16 +1856,7 @@ export class ErpService {
             let orderConditions = {};
             if (getOutageListDto.date !== undefined) {
                 //날짜 조건 O
-                // 그리니치 천문대 표준시
-                const gmtDate = new Date(getOutageListDto.date);
-                // 한국 시간으로 바꾸기
-                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-
-                const startDate = new Date(kstDate.getTime());
-                startDate.setUTCHours(0, 0, 0, 0);
-                
-                const endDate = new Date(kstDate.getTime());
-                endDate.setUTCHours(23, 59, 59, 999);
+                const { startDate, endDate } = getKstDate(getOutageListDto.date);
 
                 orderConditions = {
                     date: {
