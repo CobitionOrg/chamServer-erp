@@ -1678,7 +1678,9 @@ export class ErpService {
                     },
                     data: {
                         combineNum: newCombineNum,
-                        orderSortNum: 5 //orderSortNum update!
+                        //기존 orderSortNum을 가져가야 되는 이슈가 생겨
+                        //orderSortNum은 업데이트하지 않기로 하겠습니다.
+                        // orderSortNum: 5 //orderSortNum update!
                     }
                 });
 
@@ -1851,7 +1853,13 @@ export class ErpService {
             );
         }
     }
-   
+
+    /**
+    * s3 데이터 오브젝트 이름 저장(나중에 삭제하기 위해서) 
+    * @param url 
+    * @param objectName 
+    * @returns {success:boolean}
+    */
     async saveS3Data(url: string, objectName: string){
         try{
             await this.prisma.urlData.create({
