@@ -173,6 +173,7 @@ export class SendService {
                             message: true,
                             cachReceipt: true,
                             price: true,
+                            combineNum:true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
