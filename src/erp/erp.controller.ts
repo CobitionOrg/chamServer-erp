@@ -528,6 +528,7 @@ export class ErpController {
 
     //아직 안됨
     @ApiOperation({summary:'장부 출력'})
+    @Public()
     @Get('/accountBook/:id')
     async accountBook(@Param("id") id: number){
         this.logger.log('장부 출력');

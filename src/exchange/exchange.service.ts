@@ -40,7 +40,9 @@ export class ExchangeService {
                 typeCheck: exOrder.typeCheck,
                 consultingTime: exOrder.consultingTime,
                 payType: exOrder.payType,
+                tallWeight : exOrder.tallWeight,
                 essentialCheck: exOrder.essentialCheck,
+                isFirst:exOrder.isFirst,
                 outage: exOrder.outage,
                 patientId: exOrder.patientId,
                 price: exOrder.price,
@@ -60,7 +62,8 @@ export class ExchangeService {
             //오더 아이템 생성
             const newOrderItem = await this.exchangeRepository.insertOrderItems(tx,objOrderItems,newOrder.id);
             //오더 바디 타입 생성
-            const newOrderBodyType = await this.exchangeRepository.insertOrderBodyType(tx,objOrderBodyType,newOrder.id);
+            
+            const newOrderBodyType = await this.exchangeRepository.insertOrderBodyType(tx,objOrderBodyType,newOrder.id, objOrder.isFirst);
 
             // console.log(newOrder);
             // console.log(newOrderBodyType);
