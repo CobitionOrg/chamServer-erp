@@ -808,7 +808,15 @@ export class SendService {
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
+            let sepearteId = 0;
             list.forEach((e) => {
+                if(e.orderSortNum == 6){
+                    if(sepearteId == e.order.id){
+                        return;
+                    }else{
+                        sepearteId = e.order.id
+                    }
+                }
                 const { name, phoneNum } = e.patient;
                 console.log(e.tempOrderItems)
                 let items = '';
@@ -1061,6 +1069,15 @@ export class SendService {
         }
     }
 
+    /**
+     * 장부 출력
+     * @param id 
+     * @returns  Promise<{
+            success: boolean;
+            status: HttpStatus;
+            url: any;
+        }>
+     */
     async accountBook(id:number){
         try{
             const sendList = await this.prisma.sendList.findFirst({
@@ -1200,7 +1217,7 @@ export class SendService {
                         const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                         const cash = e.order.cash == 0 ? '' : e.order.cash;
                         const card = e.order.card == 0? '' : e.order.card;
-                        const message = e.order.remark ?? '' +'/' +  e.order.message;
+                        const message = e.order.remark ?? '' + '/' +  e.order.message;
                         const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
                    
                         const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
