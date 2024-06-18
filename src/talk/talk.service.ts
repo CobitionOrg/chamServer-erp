@@ -120,7 +120,7 @@ export class TalkService {
     async notConsulting(getListDto: GetListDto) {
         const res = await this.talkRepository.notConsulting(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
-        const url = this.getTalkExcel(res.list);
+        const url = await this.getTalkExcel(res.list);
              
         return {successs:true, status:HttpStatus.OK, url};
     }
@@ -146,7 +146,7 @@ export class TalkService {
     async notPay(getListDto: GetListDto) {
         const res = await this.talkRepository.notPay(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
-        const url = this.getTalkExcel(res.list);
+        const url = await this.getTalkExcel(res.list);
              
         return {successs:true, status:HttpStatus.OK, url};
     }
@@ -175,9 +175,36 @@ export class TalkService {
         const returnTalk = await this.talkRepository.completeSendTalkReturn(id);
         if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
 
-        const firstUrl = this.getTalkExcel(firstTalk);
-        const returnUrl = this.getTalkExcel(returnTalk);
+        const firstUrl = await this.completeSendExcel(firstTalk);
+        const returnUrl = await this.completeSendExcel(returnTalk);
 
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
     }
+
+    /**
+     * 발송 알림 톡 파일
+     * @param list 
+     * @returns url:string
+     */
+    async completeSendExcel(list) {
+        const wb = new Excel.Workbook();
+        const sheet = wb.addWorksheet('발송완료알림');
+
+        list.forEach(e => {
+            const name = e.patient.name;
+            const phoneNum = e.patient.phoneNum;
+            const orderItem = e.order.orderItems[0].item //수정 예정
+            const sendNum = e.sendNum;
+            const isFirst = e.isFirst ? '초진' : '';
+
+            const rowDatas = [name, phoneNum, name, orderItem, '로젠택배' ,sendNum, isFirst];
+            const appendRow = sheet.addRow(rowDatas);
+        });
+
+        const fileData = await wb.xlsx.writeBuffer();
+        const url = await this.erpService.uploadFile(fileData);
+
+        return url;
+    }
+    
 }
