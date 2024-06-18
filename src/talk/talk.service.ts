@@ -36,8 +36,12 @@ export class TalkService {
         const res = await this.talkRepository.orderInsertTalk(getListDto);
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        const url = this.getTalkExcel(res.list);
+             
+        return {successs:true, status:HttpStatus.OK, url};
+    }
 
-
+    async getTalkExcel(list){
         const wb = new Excel.Workbook();
         const sheet = wb.addWorksheet('발송알림톡');
 
@@ -49,7 +53,7 @@ export class TalkService {
             sheet.getColumn(colNum).width = headerWidths[colNum - 1];
         });
 
-        res.list.forEach((e) => {
+        list.forEach((e) => {
             const {name, phoneNum} = e.patient;
             const rowDatas = [name,phoneNum,name,'','','','','','','','',''];
 
@@ -58,14 +62,92 @@ export class TalkService {
 
         const fileData = await wb.xlsx.writeBuffer();
         const url = await this.erpService.uploadFile(fileData);
-      
-        return {successs:true, status:HttpStatus.OK, url};
+
+        return url;
     }
 
+
+    /**
+     * 접수 알림톡 발송 완료 처리
+     * @param orderInsertDto 
+     * @returns {success:boolean, status:HttpStatus}
+     */
     async orderTalkUpdate(orderInsertDto: OrderInsertTalk){
         const res = await this.talkRepository.completeInsertTalk(orderInsertDto.list);
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         else return {success:true,status:201}
+    }
+
+
+    /**
+     * 상담 연결 처리
+     * @param id 
+     * @returns  Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            msg?: undefined;
+        }>
+     */
+    async consultingFlag(id: number) {
+        const res = await this.talkRepository.consultingFlag(id);
+
+        if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        else return {success:true,status:res.status};
+    }
+
+    /**
+     * 상담 연결 안 된 사람들 엑셀 데이터
+     * @param getListDto 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+            successs?: undefined;
+            url?: undefined;
+        } | {
+            successs: boolean;
+            status: HttpStatus;
+            url: Promise<any>;
+            success?: undefined;
+            msg?: undefined;
+        }>
+     */
+    async notConsulting(getListDto: GetListDto) {
+        const res = await this.talkRepository.notConsulting(getListDto);
+        if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        const url = this.getTalkExcel(res.list);
+             
+        return {successs:true, status:HttpStatus.OK, url};
+    }
+
+
+    /**
+     * 미입금 된 인원 엑셀 데이터
+     * @param getListDto 
+     * @returns romise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+            successs?: undefined;
+            url?: undefined;
+        } | {
+            successs: boolean;
+            status: HttpStatus;
+            url: Promise<any>;
+            success?: undefined;
+            msg?: undefined;
+        }>
+     */
+    async notPay(getListDto: GetListDto) {
+        const res = await this.talkRepository.notPay(getListDto);
+        if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        const url = this.getTalkExcel(res.list);
+             
+        return {successs:true, status:HttpStatus.OK, url};
     }
 }

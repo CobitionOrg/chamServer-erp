@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Query, UseFilters,Headers, HttpException, Body, Post } from '@nestjs/common';
+import { Controller, Get, Logger, Query, UseFilters,Headers, HttpException, Body, Post, Patch, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { TalkService } from './talk.service';
@@ -52,5 +52,61 @@ export class TalkController {
 
         return {success:true,status:res.status};
 
+    }
+
+    @ApiOperation({summary:'상담 연결 처리'})
+    @Patch('/consultingFlag/:id')
+    async consultingFlag(@Param('id') id: number) {
+        this.logger.log('상담 연결 처리');
+        const res = await this.talkService.consultingFlag(id);
+
+        if (res.status != 201) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return {success:true,status:res.status};
+    }
+
+    @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
+    @Get('/notConsulting')
+    async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
+        this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
+        const res = await this.talkService.notConsulting(getListDto);
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return {success:true,status:res.status,url:res.url};
+
+    }
+
+    @ApiOperation({summary:'미입금 된 인원 엑셀 데이터'})
+    @Get('/notPay')
+    async notPay(@Query() getListDto: GetListDto, @Headers() header){
+        this.logger.log('미입금 된 인원 엑셀 데이터');
+        const res = await this.talkService.notConsulting(getListDto);
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return {success:true,status:res.status,url:res.url};
     }
 }

@@ -92,6 +92,7 @@ erDiagram
   Int cash "nullable"
   String note "nullable"
   Boolean talkFlag "nullable"
+  Boolean consultingFlag "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -288,6 +289,7 @@ erDiagram
   - `cash`: 해당 오더에 계좌 이체 된 금액
   - `note`: 
   - `talkFlag`: 접수 알림톡 발송 여부
+  - `consultingFlag`: 
 
 ### `tempOrder`
 
