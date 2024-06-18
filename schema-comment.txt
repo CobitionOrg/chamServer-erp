@@ -108,6 +108,9 @@ model order {
   price           Int?           @default(0) /// 오더에 주문된 제품 총 가격
   remark          String?        ///특이 사항
   isPickup        Boolean?       @default(false) ///방문 수령 여부 true: 방문 수령, false: 택배 배송
+  cash            Int            ///현금 결제액
+  card            Int            ///카드 결제액
+  note            String         ///outage용 비고
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
