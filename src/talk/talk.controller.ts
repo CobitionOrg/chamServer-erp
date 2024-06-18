@@ -109,4 +109,23 @@ export class TalkController {
 
         return {success:true,status:res.status,url:res.url};
     }
+
+    @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
+    @Get('/completeTalk/:id')
+    async completeTalk(@Param('id') id: number) {
+        this.logger.log('발송 알림 톡 엑셀 데이터');
+        const res = await this.talkService.completeSendTalk(id);
+
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return {success:true, status:res.status, firstUrl:res.firstUrl, returnUrl: res.returnUrl};
+    }
 }

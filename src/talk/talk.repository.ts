@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
 import { getKstDate } from "src/util/getKstDate";
+import { getSortedList } from "src/util/sortSendList";
 
 @Injectable()
 export class TalkRepositoy{
@@ -200,6 +201,154 @@ export class TalkRepositoy{
 
             return {success:true, list, status:HttpStatus.OK};
 
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+    /**
+     * 발송 알림 톡 초진(수정 예정)
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            list: any[];
+        }>
+     */
+    async completeSendTalkFirst(id: number){
+        try{
+            const list = await this.prisma.tempOrder.findMany({
+                where: {
+                    sendListId: id,
+                    isFirst: true
+                },
+                orderBy: {
+                    //id: 'asc',
+                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    sendNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            //addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+                            price: true,
+                            orderSortNum:true,
+                            isFirst:true,
+                            combineNum:true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            item: true
+                        }
+                    }
+                }
+            });
+
+            const sortedList = getSortedList(list);
+
+            return { success: true, list: sortedList };
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+    /**
+     * 발송 알림 톡 재진(수정 예정)
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            list: any[];
+        }>
+     */
+    async completeSendTalkReturn(id: number){
+        try{
+            const list = await this.prisma.tempOrder.findMany({
+                where: {
+                    sendListId: id,
+                    isFirst: false
+                },
+                orderBy: {
+                    //id: 'asc',
+                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    sendNum: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            //addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            cachReceipt: true,
+                            price: true,
+                            orderSortNum:true,
+                            isFirst:true,
+                            combineNum:true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            item: true
+                        }
+                    }
+                }
+            });
+
+            const sortedList = getSortedList(list);
+
+            return { success: true, list: sortedList };
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

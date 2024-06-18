@@ -150,4 +150,34 @@ export class TalkService {
              
         return {successs:true, status:HttpStatus.OK, url};
     }
+
+    /**
+     * 발송 알림 톡(수정 예정)
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+            firstUrl?: undefined;
+            returnUrl?: undefined;
+        } | {
+            success: boolean;
+            status: HttpStatus;
+            firstUrl: Promise<any>;
+            returnUrl: Promise<...>;
+            msg?: undefined;
+        }>
+     */
+    async completeSendTalk(id: number) {
+        const firstTalk = await this.talkRepository.completeSendTalkFirst(id);
+        if(!firstTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+
+        const returnTalk = await this.talkRepository.completeSendTalkReturn(id);
+        if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+
+        const firstUrl = this.getTalkExcel(firstTalk);
+        const returnUrl = this.getTalkExcel(returnTalk);
+
+        return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
+    }
 }
