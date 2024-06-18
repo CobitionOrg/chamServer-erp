@@ -20,6 +20,9 @@ import { HttpExceptionFilter } from './filter/httpExceptionFilter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksService } from './tasks/tasks.service';
 import { TasksModule } from './tasks/tasks.module';
+import { TalkController } from './talk/talk.controller';
+import { TalkService } from './talk/talk.service';
+import { TalkModule } from './talk/talk.module';
 @Module({
 
   imports: [
@@ -33,9 +36,10 @@ import { TasksModule } from './tasks/tasks.module';
     ErpModule,
     LogModule,
     ExchangeModule,
-    TasksModule
+    TasksModule,
+    TalkModule
   ],
-  controllers: [AppController],
+  controllers: [AppController ],
   providers: [
     AppService, 
     Logger, 
