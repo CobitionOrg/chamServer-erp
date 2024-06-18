@@ -189,7 +189,12 @@ model order {
   card            Int?           @default(0)
   /// 해당 오더에 계좌 이체 된 금액
   cash            Int?           @default(0)
+  /// 
   note            String?
+  /// 접수 알림톡 발송 여부
+  talkFlag        Boolean?       @default(false)
+  /// 상담 연결 여부
+  consultingFlag  Boolean?       @default(false)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]

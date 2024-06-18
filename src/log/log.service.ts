@@ -35,7 +35,7 @@ export class LogService {
     }
 
     /**
-     * 특정 일 고그 조회
+     * 특정 일 로그 조회
      * @param day 
      * @param month 
      * @param year 
