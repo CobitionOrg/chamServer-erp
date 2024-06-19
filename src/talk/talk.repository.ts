@@ -205,13 +205,21 @@ export class TalkRepositoy{
                 }
             };
 
-            const list = await this.prisma.order.findMany({
+            const data = await this.prisma.order.findMany({
                 where:{...orderConditions,orderSortNum:{gte:0},talkFlag:true,consultingFlag:true},
                 select: {
                     id:true,
-                    patient:{select:{name:true,phoneNum:true},}
+                    patient:{select:{name:true,phoneNum:true},},
+                    price:true,
+                    cash:true,
+                    card:true,
                 }
             });
+
+            //console.log(data);
+
+            const list = data.filter(i => i.price != (i.cash + i.card) );
+            console.log(list);
 
             return {success:true, list, status:HttpStatus.OK};
 
