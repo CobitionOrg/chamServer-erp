@@ -1,3 +1,8 @@
 export interface OrderInsertTalk {
-    list : Array<number>;
+    list : Array<orderTalk>;
+}
+
+interface orderTalk {
+    id: number;
+    name: string;
 }

@@ -44,7 +44,7 @@ export class TalkRepositoy{
                 }
             });
             
-            
+            console.log(list);
 
             return {success:true, list, status:HttpStatus.OK};
         }catch(err){
@@ -70,7 +70,7 @@ export class TalkRepositoy{
         try{    
             for(const e of list) {
                 await this.prisma.order.update({
-                    where:{id:e},
+                    where:{id:e.id},
                     data:{talkFlag:true},
                 });
             }

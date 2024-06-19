@@ -34,11 +34,12 @@ export class TalkService {
      */
     async orderInsertTalk(getListDto: GetListDto){
         const res = await this.talkRepository.orderInsertTalk(getListDto);
-
+        //console.log(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
-        const url = this.getTalkExcel(res.list);
-             
-        return {successs:true, status:HttpStatus.OK, url};
+        const url = await this.getTalkExcel(res.list);
+        const checkUrl = await this.getCheckTalkExcel(res.list);
+        //console.log(url);     
+        return {successs:true, status:HttpStatus.OK, url, checkUrl};
     }
 
     async getTalkExcel(list){
@@ -66,6 +67,32 @@ export class TalkService {
         return url;
     }
 
+
+    async getCheckTalkExcel(list){
+        const wb = new Excel.Workbook();
+        const sheet = wb.addWorksheet('발송알림톡 체크용');
+
+        const headers = ["name","id"];
+        const headerWidths = [10,10];
+
+        const headerRow = sheet.addRow(headers);
+        headerRow.eachCell((cell,colNum) => {
+            sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+        });
+
+        list.forEach((e) => {
+            const id = e.id;
+            const name = e.patient.name;
+
+            const rowData = [name, id];
+            const appendRow = sheet.addRow(rowData);
+        });
+
+        const fileData = await wb.xlsx.writeBuffer();
+        const url = await this.erpService.uploadFile(fileData);
+
+        return url;
+    }
 
     /**
      * 접수 알림톡 발송 완료 처리

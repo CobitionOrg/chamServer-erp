@@ -20,7 +20,8 @@ export class TalkController {
     async orderInsertTalk(@Query() getListDto: GetListDto, @Headers() header) {
         this.logger.log('접수 알림톡 엑셀 데이터 출력');
         const res = await this.talkService.orderInsertTalk(getListDto);
-
+        console.log('-------------------')
+        console.log(res);
         if (res.status != 200) {
             throw new HttpException({
                 success: false,
@@ -31,7 +32,7 @@ export class TalkController {
             );
         }
 
-        return {success:true,status:res.status,url:res.url};
+        return {success:true,status:res.status,url:res.url,checkUrl:res.checkUrl};
     }
 
     @ApiOperation({summary:'접수 알림톡 발송 완료 처리'})
