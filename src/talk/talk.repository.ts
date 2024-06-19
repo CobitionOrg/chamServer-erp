@@ -3,6 +3,7 @@ import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
 import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
+import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 
 @Injectable()
 export class TalkRepositoy{
@@ -66,12 +67,12 @@ export class TalkRepositoy{
             status: HttpStatus;
         }>
      */
-    async completeInsertTalk(list){
+    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>){
         try{    
-            for(const e of list) {
+            for(const e of orderInsertDto) {
                 await this.prisma.order.update({
                     where:{id:e.id},
-                    data:{talkFlag:true},
+                    data:{talkFlag:false},
                 });
             }
 

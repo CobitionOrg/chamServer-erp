@@ -37,7 +37,7 @@ export class TalkController {
 
     @ApiOperation({summary:'접수 알림톡 발송 완료 처리'})
     @Post('/orderInsertTalk')
-    async orderTalkUpdate(@Body() orderInsertDto: OrderInsertTalk) {
+    async orderTalkUpdate(@Body() orderInsertDto: Array<OrderInsertTalk>) {
         this.logger.log('접수 알림톡 발송 완료 처리');
         const res = await this.talkService.orderTalkUpdate(orderInsertDto);
         

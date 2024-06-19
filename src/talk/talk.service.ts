@@ -99,8 +99,8 @@ export class TalkService {
      * @param orderInsertDto 
      * @returns {success:boolean, status:HttpStatus}
      */
-    async orderTalkUpdate(orderInsertDto: OrderInsertTalk){
-        const res = await this.talkRepository.completeInsertTalk(orderInsertDto.list);
+    async orderTalkUpdate(orderInsertDto: Array<OrderInsertTalk>){
+        const res = await this.talkRepository.completeInsertTalk(orderInsertDto);
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         else return {success:true,status:201}
