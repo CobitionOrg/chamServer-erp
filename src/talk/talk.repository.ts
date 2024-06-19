@@ -3,6 +3,7 @@ import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
 import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
+import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 
 @Injectable()
 export class TalkRepositoy{
@@ -44,7 +45,7 @@ export class TalkRepositoy{
                 }
             });
             
-            
+            console.log(list);
 
             return {success:true, list, status:HttpStatus.OK};
         }catch(err){
@@ -66,15 +67,27 @@ export class TalkRepositoy{
             status: HttpStatus;
         }>
      */
-    async completeInsertTalk(list){
-        try{    
-            for(const e of list) {
-                await this.prisma.order.update({
-                    where:{id:e},
+    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>){
+        try{   
+            const qryArr = [];
+
+            for(const e of orderInsertDto) {
+                const qry = this.prisma.order.update({
+                    where:{id:e.id},
                     data:{talkFlag:true},
                 });
+
+                qryArr.push(qry);
             }
 
+            await Promise.all([...qryArr]).then((value) => {
+                //console.log(value);
+                return { success: true, status: HttpStatus.OK };
+            }).catch((err) => {
+                this.logger.error(err);
+                return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
+            });
+            
             return {success:true,status:HttpStatus.OK}
         }catch(err){
             this.logger.error(err);
@@ -97,6 +110,7 @@ export class TalkRepositoy{
      */
     async consultingFlag(id: number) {
         try{
+            console.log(id);
             await this.prisma.order.update({
                 where:{
                     id:id,talkFlag:true

@@ -244,6 +244,7 @@ export class ErpService {
                     consultingTime: true,
                     payType: true,
                     outage: true,
+                    consultingFlag:true,
                     consultingType: true,
                     phoneConsulting: true,
                     isFirst: true,
