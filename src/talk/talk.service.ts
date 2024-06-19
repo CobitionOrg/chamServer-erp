@@ -202,8 +202,8 @@ export class TalkService {
         const returnTalk = await this.talkRepository.completeSendTalkReturn(id);
         if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
 
-        const firstUrl = await this.completeSendExcel(firstTalk);
-        const returnUrl = await this.completeSendExcel(returnTalk);
+        const firstUrl = await this.completeSendExcel(firstTalk.list);
+        const returnUrl = await this.completeSendExcel(returnTalk.list);
 
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
     }

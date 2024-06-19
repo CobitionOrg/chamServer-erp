@@ -294,7 +294,7 @@ export class TalkRepositoy{
                 }
             });
 
-            const sortedList = getSortedList(list);
+            const sortedList = list;
 
             return { success: true, list: sortedList };
         }catch(err){
@@ -368,7 +368,7 @@ export class TalkRepositoy{
                 }
             });
 
-            const sortedList = getSortedList(list);
+            const sortedList = list;
 
             return { success: true, list: sortedList };
         }catch(err){
