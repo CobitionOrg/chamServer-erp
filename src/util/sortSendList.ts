@@ -102,5 +102,13 @@ const compareItems = (a: any, b: any) => {
 };
 
 export const getSortedList = (orders: Array<any>): Array<any> => {
-  return orders.sort(compareItems);
+  const sortedList = orders.sort(compareItems);
+  //console.log(sortedList);
+  const combineList = sortedList.filter(item => item.orderSortNum === 5).sort((a, b) => a.addr.localeCompare(b.addr));
+  const sortedOthers = sortedList.filter(item => item.orderSortNum !== 5);
+
+  const finalSortedList = [...sortedOthers, ...combineList];
+
+  //console.log(finalSortedList);
+  return finalSortedList
 };

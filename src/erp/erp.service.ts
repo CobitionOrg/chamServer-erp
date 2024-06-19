@@ -200,16 +200,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                // 그리니치 천문대 표준시
-                const gmtDate = new Date(getListDto.date);
-                // 한국 시간으로 바꾸기
-                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-
-                const startDate = new Date(kstDate.getTime());
-                startDate.setUTCHours(0, 0, 0, 0);
-                
-                const endDate = new Date(kstDate.getTime());
-                endDate.setUTCHours(23, 59, 59, 999);
+                const { startDate, endDate } = getKstDate(getListDto.date);
 
                 orderConditions = {
                     consultingType: false,
@@ -253,6 +244,7 @@ export class ErpService {
                     consultingTime: true,
                     payType: true,
                     outage: true,
+                    consultingFlag:true,
                     consultingType: true,
                     phoneConsulting: true,
                     isFirst: true,
@@ -1662,6 +1654,7 @@ export class ErpService {
      */
     async combineOrder(combineOrderDto: CombineOrderDto) {
         try {
+            console.log(combineOrderDto.orderIdArr);
             await this.prisma.$transaction(async (tx) => {
                 const maxCombineNum = await tx.order.aggregate({
                     _max: {
@@ -1675,15 +1668,29 @@ export class ErpService {
                 await tx.order.updateMany({
                     where: {
                         id: {
-                            in: combineOrderDto.orderIdArr
+                            in: [...combineOrderDto.orderIdArr]
                         },
                         isComplete: false
                     },
                     data: {
                         combineNum: newCombineNum,
-                        orderSortNum: 5 //orderSortNum update!
+                        //기존 orderSortNum을 가져가야 되는 이슈가 생겨
+                        //orderSortNum은 업데이트하지 않기로 하겠습니다.
+                        // orderSortNum: 5 //orderSortNum update!
                     }
                 });
+
+                await tx.tempOrder.updateMany({
+                    where: {
+                        orderId: {
+                            in: [...combineOrderDto.orderIdArr]
+                        },
+                        isComplete: false
+                    },
+                    data: {
+                        orderSortNum: 5 //orderSortNum update!
+                    }
+                })
 
                 //배송 주소 업데이트
                 const patients = await tx.order.findMany({
@@ -1842,7 +1849,13 @@ export class ErpService {
             );
         }
     }
-   
+
+    /**
+    * s3 데이터 오브젝트 이름 저장(나중에 삭제하기 위해서) 
+    * @param url 
+    * @param objectName 
+    * @returns {success:boolean}
+    */
     async saveS3Data(url: string, objectName: string){
         try{
             await this.prisma.urlData.create({
@@ -1861,6 +1874,102 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    async getOutageList(getOutageListDto: GetListDto) {
+        try{
+            let orderConditions = {};
+            if (getOutageListDto.date !== undefined) {
+                //날짜 조건 O
+                const { startDate, endDate } = getKstDate(getOutageListDto.date);
+
+                orderConditions = {
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if(getOutageListDto.searchKeyword !== "") {
+                //검색어 O
+                if (getOutageListDto.searchCategory === "all") {
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: { contains: getOutageListDto.searchKeyword } } },
+                            { patient: { phoneNum: { contains: getOutageListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getOutageListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: { contains: getOutageListDto.searchKeyword } }
+                    }
+                }
+                else if (getOutageListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { phoneNum: { contains: getOutageListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: {
+                    outage: {
+                        not: '',
+                    },
+                    ...orderConditions,
+                    ...patientConditions,
+                    consultingType: false,
+                    isComplete: false,
+                },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
+                    price: true,
+                    card: true,
+                    cash: true,
+                    note: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    }
+                }
+            });
+
+            const sortedList = sortItems(list);
+
+            return { success: true, list: sortedList };
+        } catch(err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+        )
         }
     }
 }

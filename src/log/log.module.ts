@@ -21,5 +21,6 @@ import { LogRepository } from './log.repository';
     providers:[PrismaService,LogService,LogRepository], 
     controllers: [LogController]
 })
+
 export class LogModule {}
  
