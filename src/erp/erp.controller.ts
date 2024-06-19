@@ -200,6 +200,14 @@ export class ErpController {
 
         return res;
     }
+
+    @ApiOperation({summary: 'outage 있는 환자 리스트 반환'})
+    @Get('/getOutageList')
+    @Public()
+    async getOutageList(@Query() getOutageListDto: GetListDto) {
+        this.logger.log('outage 환자 목록 조회');
+        return await this.erpService.getOutageList(getOutageListDto);
+    }
   
     //쓰는지 여부 확인
     @ApiOperation({summary: '지인 확인'})
