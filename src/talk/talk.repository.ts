@@ -97,6 +97,7 @@ export class TalkRepositoy{
      */
     async consultingFlag(id: number) {
         try{
+            console.log(id);
             await this.prisma.order.update({
                 where:{
                     id:id,talkFlag:true

@@ -97,7 +97,7 @@ export class TalkService {
         const res = await this.talkRepository.consultingFlag(id);
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
-        else return {success:true,status:res.status};
+        else return {success:true,status:201};
     }
 
     /**
