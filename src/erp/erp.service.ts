@@ -1152,6 +1152,8 @@ export class ErpService {
             //신환 :  이름 주소 주민번호 핸드폰번호 
             const {startDate,endDate} = getKstDate(date);
 
+            console.log(startDate);
+            console.log(endDate);
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
@@ -1177,6 +1179,8 @@ export class ErpService {
                     route: true,
                 }
             });
+
+            console.log(list);
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("신환 등록");
