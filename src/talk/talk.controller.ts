@@ -97,7 +97,7 @@ export class TalkController {
     @Get('/notPay')
     async notPay(@Query() getListDto: GetListDto, @Headers() header){
         this.logger.log('미입금 된 인원 엑셀 데이터');
-        const res = await this.talkService.notConsulting(getListDto);
+        const res = await this.talkService.notPay(getListDto);
         if (res.status != 200) {
             throw new HttpException({
                 success: false,
