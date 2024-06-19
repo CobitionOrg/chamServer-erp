@@ -68,14 +68,26 @@ export class TalkRepositoy{
         }>
      */
     async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>){
-        try{    
+        try{   
+            const qryArr = [];
+
             for(const e of orderInsertDto) {
-                await this.prisma.order.update({
+                const qry = this.prisma.order.update({
                     where:{id:e.id},
-                    data:{talkFlag:false},
+                    data:{talkFlag:true},
                 });
+
+                qryArr.push(qry);
             }
 
+            await Promise.all([...qryArr]).then((value) => {
+                //console.log(value);
+                return { success: true, status: HttpStatus.OK };
+            }).catch((err) => {
+                this.logger.error(err);
+                return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
+            });
+            
             return {success:true,status:HttpStatus.OK}
         }catch(err){
             this.logger.error(err);
