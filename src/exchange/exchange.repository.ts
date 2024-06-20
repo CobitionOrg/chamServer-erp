@@ -210,6 +210,7 @@ export class ExchangeRepository {
                     date: true,
                     orderSortNum: true,
                     remark: true,
+                    addr:true,
                     isPickup: true,
                     patient: {
                         select: {

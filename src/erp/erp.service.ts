@@ -33,7 +33,7 @@ export class ErpService {
         private prisma: PrismaService,
         private jwtService: JwtService,
         private adminService: AdminService,
-    ) {}
+    ) { }
 
     private readonly logger = new Logger(ErpService.name);
 
@@ -118,6 +118,7 @@ export class ErpService {
                         patientId: patient.id,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
+                        addr: objPatient.addr
                     }
                 });
 
@@ -234,7 +235,7 @@ export class ErpService {
                 }
             }
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, ...patientConditions,orderSortNum:{gte:0} },
+                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
                 select: {
                     id: true,
                     route: true,
@@ -244,7 +245,7 @@ export class ErpService {
                     consultingTime: true,
                     payType: true,
                     outage: true,
-                    consultingFlag:true,
+                    consultingFlag: true,
                     consultingType: true,
                     phoneConsulting: true,
                     isFirst: true,
@@ -255,6 +256,7 @@ export class ErpService {
                     price: true,
                     card: true,
                     cash: true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
@@ -344,18 +346,16 @@ export class ErpService {
             };
 
             await this.prisma.$transaction(async (tx) => {
-                //주소가 달라졌을 시
-                if (patient.patient.addr != objPatient.addr) {
-                    await tx.patient.update({
-                        where: {
-                            id: patient.patient.id,
-                        },
-                        data: {
-                            addr: objPatient.addr,
-                            phoneNum: objPatient.phoneNum,
-                        }
-                    });
-                }
+                await tx.patient.update({
+                    where: {
+                        id: patient.patient.id,
+                    },
+                    data: {
+                        addr: objPatient.addr,
+                        phoneNum: objPatient.phoneNum,
+                    }
+                });
+
 
                 const order = await tx.order.create({
                     data: {
@@ -372,6 +372,7 @@ export class ErpService {
                         price: price,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
+                        addr: objPatient.addr,
                     }
                 });
 
@@ -619,12 +620,14 @@ export class ErpService {
             } else {
                 //날짜 조건 O
                 // 그리니치 천문대 표준시
-                const gmtDate = new Date(getListDto.date);
-                // 한국 시간으로 바꾸기
-                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
+                // const gmtDate = new Date(getListDto.date);
+                // // 한국 시간으로 바꾸기
+                // const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
 
-                const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
-                const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
+                // const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
+                // const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
+
+                const {startDate,endDate} = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -674,6 +677,7 @@ export class ErpService {
                     remark: true,
                     isPickup: true,
                     price: true,
+                    addr:true,
                     patient: {
                         select: {
                             id: true,
@@ -791,7 +795,7 @@ export class ErpService {
     async completeConsulting(id: number) {
         try {
             const paymentAmountCheck = await this.checkPaymentAmount(id);
-            if(!paymentAmountCheck.success) {
+            if (!paymentAmountCheck.success) {
                 throw new HttpException(
                     {
                         status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -803,35 +807,35 @@ export class ErpService {
                 //트랜젝션 시작
                 await this.prisma.$transaction(async (tx) => {
 
-                //발송 목록으로 이동 처리
-                const sendOne = await tx.order.update({
-                    where: {
-                        id: id
-                    },
-                    data: {
-                        isComplete: true,
-                    }
-                });
+                    //발송 목록으로 이동 처리
+                    const sendOne = await tx.order.update({
+                        where: {
+                            id: id
+                        },
+                        data: {
+                            isComplete: true,
+                        }
+                    });
 
-                //해당 오더 발송 개수 가져오기
-                const orderItems = await tx.orderItem.findMany({
-                    where: {
-                        orderId: id,
-                        type: { in: ['common', 'yoyo'] }
-                    }
-                });
+                    //해당 오더 발송 개수 가져오기
+                    const orderItems = await tx.orderItem.findMany({
+                        where: {
+                            orderId: id,
+                            type: { in: ['common', 'yoyo'] }
+                        }
+                    });
 
-                console.log(`-----------${orderItems.length}-----------`);
-                console.log(orderItems);
+                    console.log(`-----------${orderItems.length}-----------`);
+                    console.log(orderItems);
 
-                //오더 개수
-                const orderAmount = orderItems.length;
+                    //오더 개수
+                    const orderAmount = orderItems.length;
 
-                const sendListId = await this.insertToSendList(tx, orderAmount);
+                    const sendListId = await this.insertToSendList(tx, orderAmount);
 
-                const res = await this.createTempOrder(sendOne, id, sendListId, tx);
+                    const res = await this.createTempOrder(sendOne, id, sendListId, tx);
 
-                if(!res.success) throw error();
+                    if (!res.success) throw error();
 
                 });
 
@@ -895,7 +899,7 @@ export class ErpService {
                             }
                         }); //제일 마지막 발송일자 가져오기
                         const lastTitle = sendList[sendList.length - 1].title;
-                        const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
+                        const date = new Date(lastTitle) > new Date() ? new Date(lastTitle) : new Date();
                         const title = getSendTitle(date);
                         console.log(title);
 
@@ -948,7 +952,7 @@ export class ErpService {
                     }
 
                     return sendList[0].id
-                   
+
                 }
             } else {
                 //새로 발송목록을 만들어야 할 때
@@ -966,7 +970,7 @@ export class ErpService {
                 console.log(sendList);
 
                 const lastTitle = sendList.length != 0 ? sendList[sendList.length - 1].title : new Date();
-                const date = new Date(lastTitle)>new Date() ? new Date(lastTitle):new Date();
+                const date = new Date(lastTitle) > new Date() ? new Date(lastTitle) : new Date();
                 console.log(date);
                 const title = getSendTitle(date);
                 //console.log(title);
@@ -980,7 +984,7 @@ export class ErpService {
                 });
 
                 return newSendList.id;
-                
+
             }
         } catch (err) {
             this.logger.error(err);
@@ -1005,28 +1009,28 @@ export class ErpService {
             status?: undefined;
         }
      */
-    async createTempOrder(sendOne, id, sendListId, tx, address?:string ) {
+    async createTempOrder(sendOne, id, sendListId, tx, address?: string) {
         try {
-            if(address==undefined){
-               //발송되는 주소 가져오기
-                const patient = await tx.patient.findUnique({
-                    where: {
-                        id: sendOne.patientId
-                    },
-                    select: {
-                        addr: true,
-                    }
-                }); 
+            // if (address == undefined) {
+            //     //발송되는 주소 가져오기
+            //     const patient = await tx.patient.findUnique({
+            //         where: {
+            //             id: sendOne.patientId
+            //         },
+            //         select: {
+            //             addr: true,
+            //         }
+            //     });
 
-                address = patient.addr
-            }
-            
+            //     address = patient.addr
+            // }
+            const addr = address == undefined ? sendOne.addr : address;
 
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
-            console.log(`========${address}==========`)
+
             const res = await tx.tempOrder.create({
                 data: {
                     route: sendOne.route,
@@ -1043,20 +1047,20 @@ export class ErpService {
                     isFirst: sendOne.isFirst,
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
-                    addr: address,
-                    order:{
-                        connect:{id:id}
+                    addr: addr,
+                    order: {
+                        connect: { id: id }
                     },
-                    patient:{
-                        connect:{id:sendOne.patientId}
+                    patient: {
+                        connect: { id: sendOne.patientId }
                     },
-                    sendList:{
-                        connect:{id:sendListId}
+                    sendList: {
+                        connect: { id: sendListId }
                     }
                 }
             });
 
-            return { success: true, id:res.id };
+            return { success: true, id: res.id };
 
         } catch (err) {
             this.logger.error(err);
@@ -1088,13 +1092,13 @@ export class ErpService {
                     data: { isComplete: true }
                 });
 
-                //발송 주소 가져오기
-                const patient = await tx.patient.findUnique({
-                    where: { id: sendOne.patientId },
-                    select: { addr: true }
-                });
+                // //발송 주소 가져오기
+                // const patient = await tx.patient.findUnique({
+                //     where: { id: sendOne.patientId },
+                //     select: { addr: true }
+                // });
 
-                const addr = patient.addr;
+                // const addr = patient.addr;
 
                 const orderItems = await tx.orderItem.findMany({
                     where: {
@@ -1139,10 +1143,10 @@ export class ErpService {
      * @param date
      * @returns {success:true,status:HttpStatus.OK,url};
      */
-    async newPatientExcel(date:string) {
+    async newPatientExcel(date: string) {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
-            const {startDate,endDate} = getKstDate(date);
+            const { startDate, endDate } = getKstDate(date);
 
             console.log(startDate);
             console.log(endDate);
@@ -1162,12 +1166,12 @@ export class ErpService {
                         select: {
                             id: true,
                             name: true,
-                            addr: true,
                             phoneNum: true,
                             socialNum: true,
                         }
                     },
                     id: true,
+                    addr: true,
                     route: true,
                 }
             });
@@ -1195,7 +1199,8 @@ export class ErpService {
             const hyphen = new GetHyphen('');
             //각 data cell에 데이터 삽입
             list.forEach((e) => {
-                const { name, addr, socialNum, phoneNum } = e.patient;
+                const { name, socialNum, phoneNum } = e.patient;
+                const addr = e.addr;
                 const rowDatas = [
                     addr,
                     hyphen.socialNumHyphen(socialNum),
@@ -1258,7 +1263,7 @@ export class ErpService {
 
     async s3Url() {
         const url = await generateUploadURL();
-        return { url:url.uploadURL };
+        return { url: url.uploadURL };
     }
 
     /**
@@ -1285,7 +1290,7 @@ export class ErpService {
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             },
-                HttpStatus.INTERNAL_SERVER_ERROR 
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -1347,7 +1352,7 @@ export class ErpService {
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
-            
+
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {
@@ -1411,7 +1416,7 @@ export class ErpService {
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             const price = getOrderPrice.getPrice();
-            const orderData = {...updateSurveyDto, price: price};
+            const orderData = { ...updateSurveyDto, price: price };
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
@@ -1467,8 +1472,8 @@ export class ErpService {
     async cashExcel(insertCashDto: InsertCashDto) {
         try {
             //console.log(insertCashDto);
-            const {startDate,endDate} = getKstDate(insertCashDto.date);
-            const cashList = await this.getCashTypeList(startDate,endDate);
+            const { startDate, endDate } = getKstDate(insertCashDto.date);
+            const cashList = await this.getCashTypeList(startDate, endDate);
             const itemList = await this.getItems();
             //console.log(cashList);
             //console.log(insertCashDto);
@@ -1525,15 +1530,15 @@ export class ErpService {
             success: boolean;
         }>
      */
-    async cashUpdate(id: number, price: number){
-        try{
+    async cashUpdate(id: number, price: number) {
+        try {
             await this.prisma.order.update({
-                where:{id:id},
-                data:{cash:price}
+                where: { id: id },
+                data: { cash: price }
             });
 
-            return {success:true};
-        }catch(err){
+            return { success: true };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1544,7 +1549,7 @@ export class ErpService {
         }
     }
 
-    async getCashTypeList(startDate,endDate) {
+    async getCashTypeList(startDate, endDate) {
         try {
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
@@ -1570,7 +1575,7 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
-                    price:true,
+                    price: true,
                     orderSortNum: true,
                     patient: {
                         select: {
@@ -1748,31 +1753,31 @@ export class ErpService {
                 const orderAmount = separateDto.separate.length;
 
                 //발송목록 id
-                const sendListId = await this.insertToSendList(tx,orderAmount);
+                const sendListId = await this.insertToSendList(tx, orderAmount);
 
                 //분리배송 용 tempOrder 생성
-                for (const e of separateDto.separate){
-                    if(e.sendTax){
+                for (const e of separateDto.separate) {
+                    if (e.sendTax) {
                         await tx.order.update({
-                            where:{id:separateDto.orderId},
-                            data:{price:orderOne.price+3500}
+                            where: { id: separateDto.orderId },
+                            data: { price: orderOne.price + 3500 }
                         });
                     }
-                    const res = await this.createTempOrder(orderOne,separateDto.orderId,sendListId,tx,e.addr);
+                    const res = await this.createTempOrder(orderOne, separateDto.orderId, sendListId, tx, e.addr);
 
-                    if(!res.success) throw Error();
-                    else{
+                    if (!res.success) throw Error();
+                    else {
                         await tx.tempOrderItem.create({
-                            data:{
-                                item:e.orderItem,
-                                tempOrderId:res.id
+                            data: {
+                                item: e.orderItem,
+                                tempOrderId: res.id
                             }
                         });
                     }
                 }
             });
 
-            return {success:true, status:HttpStatus.OK};
+            return { success: true, status: HttpStatus.OK };
 
         } catch (err) {
             this.logger.error(err);
@@ -1795,9 +1800,9 @@ export class ErpService {
             msg: string;
         }>
      */
-    async cancelOrder(cancelOrderDto: CancelOrderDto){
-        try{
-            if(cancelOrderDto.isFirst){
+    async cancelOrder(cancelOrderDto: CancelOrderDto) {
+        try {
+            if (cancelOrderDto.isFirst) {
                 //초진 일 시 환자 데이터까지 삭제
                 const orderId = cancelOrderDto.orderId;
                 const patientId = cancelOrderDto.patientId;
@@ -1805,41 +1810,41 @@ export class ErpService {
                 await this.prisma.$transaction(async (tx) => {
                     //orderBodyType 삭제
                     await tx.orderBodyType.delete({
-                        where:{orderId:orderId}
-                    }); 
+                        where: { orderId: orderId }
+                    });
 
                     //orderItem 삭제
                     await tx.orderItem.deleteMany({
-                        where:{orderId:orderId}
+                        where: { orderId: orderId }
                     });
 
                     //order 삭제
                     await tx.order.delete({
-                        where:{id:orderId}
+                        where: { id: orderId }
                     });
 
                     //patient 삭제
                     await tx.patient.delete({
-                        where:{id:patientId}
+                        where: { id: patientId }
                     });
 
                 });
 
-                return {success:true, status:HttpStatus.OK, msg:'초진 삭제'}
-            }else{
+                return { success: true, status: HttpStatus.OK, msg: '초진 삭제' }
+            } else {
                 //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
                 const orderId = cancelOrderDto.orderId;
 
                 //오더만 isComplete를 true로 변경
                 await this.prisma.order.update({
-                    where:{id:orderId},
-                    data:{isComplete:true}
+                    where: { id: orderId },
+                    data: { isComplete: true }
                 });
 
-                return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
+                return { success: true, status: HttpStatus.OK, msg: '재진 삭제' }
 
             }
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1856,17 +1861,17 @@ export class ErpService {
     * @param objectName 
     * @returns {success:boolean}
     */
-    async saveS3Data(url: string, objectName: string){
-        try{
+    async saveS3Data(url: string, objectName: string) {
+        try {
             await this.prisma.urlData.create({
-                data:{
-                    url:url,
-                    objectName:objectName
+                data: {
+                    url: url,
+                    objectName: objectName
                 }
             });
 
-            return {success:true};
-        }catch(err){
+            return { success: true };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1878,7 +1883,7 @@ export class ErpService {
     }
 
     async getOutageList(getOutageListDto: GetListDto) {
-        try{
+        try {
             let orderConditions = {};
             if (getOutageListDto.date !== undefined) {
                 //날짜 조건 O
@@ -1892,7 +1897,7 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if(getOutageListDto.searchKeyword !== "") {
+            if (getOutageListDto.searchKeyword !== "") {
                 //검색어 O
                 if (getOutageListDto.searchCategory === "all") {
                     patientConditions = {
@@ -1942,6 +1947,7 @@ export class ErpService {
                     card: true,
                     cash: true,
                     note: true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
@@ -1962,14 +1968,27 @@ export class ErpService {
             const sortedList = sortItems(list);
 
             return { success: true, list: sortedList };
-        } catch(err) {
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
-        )
+            )
+        }
+    }
+
+    async updateAddr() {
+        const res = await this.prisma.patient.findMany({
+            select: { id: true, addr: true }
+        });
+
+        for (let i = 0; i < res.length; i++) {
+            await this.prisma.order.updateMany({
+                where: { patientId: res[i].id },
+                data: { addr: res[i].addr }
+            });
         }
     }
 }

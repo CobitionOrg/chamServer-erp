@@ -93,6 +93,7 @@ erDiagram
   String note "nullable"
   Boolean talkFlag "nullable"
   Boolean consultingFlag "nullable"
+  String addr
 }
 "tempOrder" {
   Int id PK
@@ -290,6 +291,7 @@ erDiagram
   - `note`: 
   - `talkFlag`: 접수 알림톡 발송 여부
   - `consultingFlag`: 상담 연결 여부
+  - `addr`: 
 
 ### `tempOrder`
 
