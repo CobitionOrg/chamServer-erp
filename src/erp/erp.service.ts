@@ -620,12 +620,14 @@ export class ErpService {
             } else {
                 //날짜 조건 O
                 // 그리니치 천문대 표준시
-                const gmtDate = new Date(getListDto.date);
-                // 한국 시간으로 바꾸기
-                const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
+                // const gmtDate = new Date(getListDto.date);
+                // // 한국 시간으로 바꾸기
+                // const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
 
-                const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
-                const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
+                // const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
+                // const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
+
+                const {startDate,endDate} = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -675,6 +677,7 @@ export class ErpService {
                     remark: true,
                     isPickup: true,
                     price: true,
+                    addr:true,
                     patient: {
                         select: {
                             id: true,
@@ -1008,26 +1011,26 @@ export class ErpService {
      */
     async createTempOrder(sendOne, id, sendListId, tx, address?: string) {
         try {
-            if (address == undefined) {
-                //발송되는 주소 가져오기
-                const patient = await tx.patient.findUnique({
-                    where: {
-                        id: sendOne.patientId
-                    },
-                    select: {
-                        addr: true,
-                    }
-                });
+            // if (address == undefined) {
+            //     //발송되는 주소 가져오기
+            //     const patient = await tx.patient.findUnique({
+            //         where: {
+            //             id: sendOne.patientId
+            //         },
+            //         select: {
+            //             addr: true,
+            //         }
+            //     });
 
-                address = patient.addr
-            }
-
+            //     address = patient.addr
+            // }
+            const addr = address == undefined ? sendOne.addr : address;
 
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
-            console.log(`========${address}==========`)
+
             const res = await tx.tempOrder.create({
                 data: {
                     route: sendOne.route,
@@ -1044,7 +1047,7 @@ export class ErpService {
                     isFirst: sendOne.isFirst,
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
-                    addr: address,
+                    addr: addr,
                     order: {
                         connect: { id: id }
                     },
@@ -1089,13 +1092,13 @@ export class ErpService {
                     data: { isComplete: true }
                 });
 
-                //발송 주소 가져오기
-                const patient = await tx.patient.findUnique({
-                    where: { id: sendOne.patientId },
-                    select: { addr: true }
-                });
+                // //발송 주소 가져오기
+                // const patient = await tx.patient.findUnique({
+                //     where: { id: sendOne.patientId },
+                //     select: { addr: true }
+                // });
 
-                const addr = patient.addr;
+                // const addr = patient.addr;
 
                 const orderItems = await tx.orderItem.findMany({
                     where: {
@@ -1944,6 +1947,7 @@ export class ErpService {
                     card: true,
                     cash: true,
                     note: true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
