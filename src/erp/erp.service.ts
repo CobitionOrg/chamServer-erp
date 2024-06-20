@@ -256,6 +256,7 @@ export class ErpService {
                     price: true,
                     card: true,
                     cash: true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
@@ -1162,12 +1163,12 @@ export class ErpService {
                         select: {
                             id: true,
                             name: true,
-                            addr: true,
                             phoneNum: true,
                             socialNum: true,
                         }
                     },
                     id: true,
+                    addr: true,
                     route: true,
                 }
             });
@@ -1195,7 +1196,8 @@ export class ErpService {
             const hyphen = new GetHyphen('');
             //각 data cell에 데이터 삽입
             list.forEach((e) => {
-                const { name, addr, socialNum, phoneNum } = e.patient;
+                const { name, socialNum, phoneNum } = e.patient;
+                const addr = e.addr;
                 const rowDatas = [
                     addr,
                     hyphen.socialNumHyphen(socialNum),
