@@ -535,4 +535,10 @@ export class ErpController {
         const res = await this.sendService.accountBook(id);
         return res;
     }
+
+    @Public()
+    @Get('/ffff')
+    async ffff(){
+        await this.erpService.updateAddr();
+    }
 }
