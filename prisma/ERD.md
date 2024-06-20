@@ -287,9 +287,9 @@ erDiagram
   - `combineNum`: 합배송 번호
   - `card`: 해당 오더에 카드로 결제된 금액
   - `cash`: 해당 오더에 계좌 이체 된 금액
-  - `note`: 감량 킬로수 관련 비고
+  - `note`: 
   - `talkFlag`: 접수 알림톡 발송 여부
-  - `consultingFlag`: 
+  - `consultingFlag`: 상담 연결 여부
 
 ### `tempOrder`
 
