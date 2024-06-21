@@ -407,6 +407,7 @@ export class ErpService {
             console.log(patient);
             if (!patient.success) return {
                 success: false,
+                status: HttpStatus.NOT_FOUND,
                 msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'
             };
 
