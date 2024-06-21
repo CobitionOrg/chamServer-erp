@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as Excel from 'exceljs'
 import axios from 'axios';
-
 import { PrismaService } from 'src/prisma.service';
 import { error } from 'console';
 import { OrderObjDto } from './Dto/orderObj.dto';
@@ -14,7 +13,6 @@ import { generateUploadURL } from '../util/s3';
 import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { checkGSB } from '../util/checkGSB.util';
 import { GetListDto } from './Dto/getList.dto';
-import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
@@ -26,6 +24,8 @@ import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
 import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
+import { contains } from 'class-validator';
+const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
 export class ErpService {
@@ -82,6 +82,21 @@ export class ErpService {
                     throw error('400 error');
                 }
             });
+
+            //기존 환자가 있는지 체크
+            const existPatient = await this.existPatientCheck(objPatient.name,objPatient.socialNum);
+            console.log(existPatient+ ' 기존환자 체크');
+            if(!existPatient.success){
+                //있으면 재진으로 접수 처리
+                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수하신 이력이 있습니다. 재진접수를 이용해주세요'}
+            }
+
+            // //처리되는 주문이 있는지 확인
+            // const existOrder = await this.existOrderCheck(objPatient.name,objPatient.socialNum);
+
+            // if(!existOrder){
+            //     return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
+            // }
 
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
@@ -154,6 +169,46 @@ export class ErpService {
             return { success: true, status: HttpStatus.CREATED };
 
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 초진용 기존 환자 있는지 확인 여부
+     * @param name 
+     * @param socialNum 
+     * @returns {success:boolean}
+     */
+    async existPatientCheck(name: string, socialNum: string) {
+        try{
+            console.log(name);
+            console.log(socialNum);
+            const res = await this.prisma.patient.findMany({
+                where:{
+                    name: name,
+                    socialNum: {
+                        contains:`${socialNum}%`
+                        }
+                    }, //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
+                },
+               
+            );
+            console.log(res);
+
+            if(res.length != 0){ //환자데이터가 있으면
+                return {success:false};
+            }else { //환자데이터가 없으면
+                return {success:true};
+            }
+
+            
+        }catch(err){
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -295,6 +350,7 @@ export class ErpService {
      */
     async insertReturnOrder(surveyDto: SurveyDto) {
         try {
+            console.log('재진 접수');
             console.log(surveyDto);
             const insertOrder = surveyDto.answers;
             const date = new Date(surveyDto.date);
@@ -333,13 +389,22 @@ export class ErpService {
                 }
             });
 
+            //처리되는 주문이 있는지 확인
+            const existOrder = await this.existOrderCheck(objPatient.name,objPatient.socialNum);
+
+            if(!existOrder){
+                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
+            }
+
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
 
-            const patient = await this.checkPatient(objPatient)
+            const patient = await this.checkPatient(objPatient);
+
+            console.log(patient);
             if (!patient.success) return {
                 success: false,
                 msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'
@@ -418,6 +483,45 @@ export class ErpService {
 
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 진행되고 있는 주문이 있는지 여부 확인
+     * @param name 
+     * @param socialNum 
+     * @returns 
+     */
+    async existOrderCheck(name:string, socialNum:string){
+        try{
+            console.log(name);
+            console.log(socialNum);
+            const res = await this.prisma.$queryRaw(Prisma.sql`
+                SELECT 
+                    c.id,
+                    d.id,
+                    d.name,
+                    d.phoneNum
+                FROM sendList a
+                LEFT JOIN tempOrder b ON a.id = b.sendListId
+                LEFT JOIN \`order\` c ON b.orderId = c.id
+                LEFT JOIN patient d ON c.patientId = d.id
+                WHERE d.name = ${name}
+                AND d.socialNum = ${socialNum}
+                AND a.useFlag = true
+            `);
+
+            console.log(res);
+            if(!res) {return true}
+            else {return false};
+        }catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -553,7 +657,7 @@ export class ErpService {
                 }
             });
 
-
+            console.log(res);
 
             if (!res) return { success: false };
             else return { success: true, patient: res };
