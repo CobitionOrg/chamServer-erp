@@ -389,13 +389,7 @@ export class ErpService {
                 }
             });
 
-            //처리되는 주문이 있는지 확인
-            const existOrder = await this.existOrderCheck(objPatient.name,objPatient.socialNum);
-
-            if(!existOrder){
-                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
-            }
-
+         
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
@@ -407,8 +401,16 @@ export class ErpService {
             console.log(patient);
             if (!patient.success) return {
                 success: false,
+                status: HttpStatus.NOT_FOUND,
                 msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'
             };
+
+             //처리되는 주문이 있는지 확인
+             const existOrder = await this.existOrderCheck(objPatient.name,objPatient.socialNum);
+
+             if(!existOrder){
+                 return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
+             }
 
             await this.prisma.$transaction(async (tx) => {
                 await tx.patient.update({
@@ -497,7 +499,7 @@ export class ErpService {
      * 진행되고 있는 주문이 있는지 여부 확인
      * @param name 
      * @param socialNum 
-     * @returns 
+     * @returns boolean
      */
     async existOrderCheck(name:string, socialNum:string){
         try{
