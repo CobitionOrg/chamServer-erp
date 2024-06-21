@@ -46,7 +46,7 @@ export const tardy  = (dateTime:string) :boolean=> {
 
     if(startHour<9){
         return false;
-    }else{
+    }else if(startHour>9){
         let startMin = startTime.getMinutes();
         if(startMin == 0) return false;
         else return true;
