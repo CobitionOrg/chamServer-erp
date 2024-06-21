@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as Excel from 'exceljs'
 import axios from 'axios';
-
 import { PrismaService } from 'src/prisma.service';
 import { error } from 'console';
 import { OrderObjDto } from './Dto/orderObj.dto';
@@ -14,7 +13,6 @@ import { generateUploadURL } from '../util/s3';
 import { createExcelCash, styleHeaderCell } from 'src/util/excelUtil';
 import { checkGSB } from '../util/checkGSB.util';
 import { GetListDto } from './Dto/getList.dto';
-import { getItem } from 'src/util/getItem';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
@@ -82,6 +80,13 @@ export class ErpService {
                     throw error('400 error');
                 }
             });
+
+            //처리되는 주문이 있는지 확인
+            const existOrder = await this.existOrderCheck(objPatient.name,objPatient.phoneNum);
+
+            if(!existOrder){
+                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
+            }
 
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
@@ -333,6 +338,13 @@ export class ErpService {
                 }
             });
 
+            //처리되는 주문이 있는지 확인
+            const existOrder = await this.existOrderCheck(objPatient.name,objPatient.phoneNum);
+
+            if(!existOrder){
+                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
+            }
+
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
@@ -418,6 +430,39 @@ export class ErpService {
 
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async existOrderCheck(name:string, phoneNum:string){
+        try{
+            const res = await this.prisma.$queryRaw`
+                select 
+                    c.id,
+                    d.id,
+                    d.name,
+                    d.phoneNum
+                from cham.sendList a
+                left join cham.tempOrder b
+                on a.id = b.sendListId
+                left join cham.order c
+                on b.orderId = c.id
+                left join cham.patient d
+                on c.patientId = d.id
+                where d.name = '${name}'
+                and d.phoneNum = '${phoneNum}'
+                and useFlag = 'true'
+            `;
+
+            if(!res) {return true}
+            else {return false};
+        }catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
