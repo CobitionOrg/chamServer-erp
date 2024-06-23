@@ -46,7 +46,8 @@ export class ExchangeService {
                 outage: exOrder.outage,
                 patientId: exOrder.patientId,
                 price: exOrder.price,
-                remark: exOrder.remark
+                remark: exOrder.remark,
+                addr: exOrder.addr
             };
 
             const objOrderItems: Array<ExOrderItemObjDto> = exOrder.orderItems;
