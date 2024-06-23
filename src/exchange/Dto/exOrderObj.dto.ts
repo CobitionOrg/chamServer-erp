@@ -11,5 +11,6 @@ export interface ExOrderObjDto {
     patientId:number;
     isFirst:boolean;
     price:number;
+    addr:string;
     remark:string|null;
 }

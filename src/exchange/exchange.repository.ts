@@ -33,6 +33,7 @@ export class ExchangeRepository {
                     essentialCheck: true,
                     outage: true,
                     patientId: true,
+                    addr:true,
                     price: true,
                     remark: true,
                     orderItems: {
@@ -85,6 +86,7 @@ export class ExchangeRepository {
                     consultingTime: objOrder.consultingTime,
                     essentialCheck: objOrder.essentialCheck,
                     price: objOrder.price,
+                    addr: objOrder.addr,
                     date:new Date(),
                     orderSortNum: orderSortNum
                 }
