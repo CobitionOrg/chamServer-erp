@@ -171,6 +171,7 @@ export class SendService {
                         select: {
                             id: true,
                             message: true,
+                            remark: true,
                             cachReceipt: true,
                             price: true,
                             orderSortNum:true,
