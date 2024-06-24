@@ -41,7 +41,11 @@ export const getDateString = (todayDate:string) => {
  * @returns boolean
  */
 export const tardy  = (dateTime:string) :boolean=> {
-    let startTime = new Date(dateTime); //출근 시간
+    let date = new Date(dateTime); //출근 시간
+    let startTime = new Date(date.getTime()+ 9 * 60 * 60 * 1000); 
+
+    console.log('=======================');
+    console.log(startTime);
     let startHour = startTime.getHours();
 
     if(startHour<9){
