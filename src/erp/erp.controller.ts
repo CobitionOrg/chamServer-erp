@@ -203,7 +203,6 @@ export class ErpController {
 
     @ApiOperation({summary: 'outage 있는 환자 리스트 반환'})
     @Get('/getOutageList')
-    @Public()
     async getOutageList(@Query() getOutageListDto: GetListDto) {
         this.logger.log('outage 환자 목록 조회');
         return await this.erpService.getOutageList(getOutageListDto);
