@@ -154,6 +154,7 @@ export class UserService {
                 userId: attendanceDto.userId,
                 userPw: attendanceDto.userPw,
             };
+            //let startTime1 = tardy(attendanceDto.todayDate);
 
             const login = await this.signIn(loginDto);
 
@@ -168,7 +169,6 @@ export class UserService {
                 }
             });
             //console.log(alreadyAttendance);
-
             if (alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
 
             //console.log(attendanceDto.todayDate)
