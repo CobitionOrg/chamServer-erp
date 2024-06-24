@@ -901,11 +901,14 @@ export class SendService {
      */
     async getUpdateInfo(id: number){
         try{
+            console.log(id);
             const list = await this.prisma.updateInfo.findMany();
 
             const checked = await this.prisma.orderUpdateInfo.findMany({
                 where:{tempOrderId:id}
             });
+
+            console.log(checked);
 
             return {success:true, status:HttpStatus.OK, list, checked}
         }catch(err){
@@ -926,29 +929,38 @@ export class SendService {
      */
     async insertUpdateInfo(insertUpdateInfoDto: InsertUpdateInfoDto){
         try{
-            const qryArr = insertUpdateInfoDto.infoData.map(async e => {
-                console.log(e);
-                return this.prisma.orderUpdateInfo.create({
-                    data:{
-                        info:e.info,
-                        updateInfoId: e.id,
+            await this.prisma.$transaction(async (tx) => {
+                await tx.orderUpdateInfo.deleteMany({
+                    where:{
                         tempOrderId:insertUpdateInfoDto.tempOrderId
                     }
+                })
+                const qryArr = insertUpdateInfoDto.infoData.map(async e => {
+                    console.log('------------------');
+                    console.log(e);
+                    return tx.orderUpdateInfo.create({
+                        data:{
+                            info:e.info,
+                            updateInfoId: e.id,
+                            tempOrderId:insertUpdateInfoDto.tempOrderId
+                        }
+                    });
+    
                 });
-
-            });
-
-            await Promise.all([...qryArr]).then((value) => {
-                return {success:true, status:HttpStatus.CREATED};
-            }).catch((err) => {
-                this.logger.error(err);
-                throw new HttpException({
-                    success: false,
-                    status: HttpStatus.INTERNAL_SERVER_ERROR
-                },
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                );
-            });
+    
+                await Promise.all([...qryArr]).then((value) => {
+                    return {success:true, status:HttpStatus.CREATED};
+                }).catch((err) => {
+                    this.logger.error(err);
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.INTERNAL_SERVER_ERROR
+                    },
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                });
+            })
+           
            
             return {success:true, status:HttpStatus.CREATED};
 

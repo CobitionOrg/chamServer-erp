@@ -511,7 +511,7 @@ export class ErpController {
     @ApiOperation({summary:'발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기'})
     @Get('/getUpdateInfo/:id')
     async getUpdateInfo(@Param("id") id: number){
-        this.logger.error('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');
+        this.logger.log('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');
         const res = await this.sendService.getUpdateInfo(id);
 
         return res;
