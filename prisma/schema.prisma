@@ -119,7 +119,7 @@ model patient {
   /// 환자 핸드폰 번호
   phoneNum   String
   /// 환자 주소
-  addr       String
+  addr       String?     @db.Text
   /// 환자 주민번호
   socialNum  String
   orders     order[]
@@ -195,7 +195,7 @@ model order {
   talkFlag        Boolean?       @default(false)
   /// 상담 연결 여부
   consultingFlag  Boolean?       @default(false)
-  addr            String         @db.VarChar(120)
+  addr            String?        @db.Text
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
