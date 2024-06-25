@@ -15,4 +15,10 @@ export class TasksService {
         this.logger.debug('delete s3 data');
         await this.tasksRepository.deleteS3Data();
     }
+
+    @Cron('0 59 23 * * * ')
+    async deleteFile(){
+        this.logger.debug('delete save file');
+        await this.tasksRepository.deleteSaveFile();
+    } 
 }
