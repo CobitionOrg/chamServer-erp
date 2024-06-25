@@ -46,13 +46,16 @@ export const tardy  = (dateTime:string) :boolean=> {
 
     console.log('=======================');
     console.log(startTime);
-    let startHour = startTime.getHours();
-
+    let startHour = startTime.getUTCHours();
+    console.log('////////////////');
+    console.log(startHour);
     if(startHour<9){
         return false;
-    }else if(startHour>9){
-        let startMin = startTime.getMinutes();
-        if(startMin == 0) return false;
-        else return true;
+    }else if (startHour === 9) {
+        let startMin = startTime.getUTCMinutes();
+        console.log(startMin);
+        return startMin !== 0;
+    } else {
+        return true;
     }
 }
