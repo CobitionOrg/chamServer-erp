@@ -14,13 +14,15 @@ import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
 import { getFooter } from "src/util/accountBook";
+import { Crypto } from "src/util/crypto.util";
 
 //발송 목록 조회 기능
 @Injectable()
 export class SendService {
     constructor(
         private prisma: PrismaService,
-        private erpService: ErpService
+        private erpService: ErpService,
+        private crypto: Crypto
     ) { }
 
     private readonly logger = new Logger(SendService.name);
@@ -195,6 +197,14 @@ export class SendService {
             });
 
             const sortedList = getSortedList(list);
+
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     row.addr = decryptedAddr;
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            // }
 
             return { success: true, list: sortedList };
         } catch (err) {
