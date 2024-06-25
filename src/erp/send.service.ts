@@ -815,7 +815,7 @@ export class SendService {
 
             let sepearteId = 0;
             list.forEach((e) => {
-                if(e.orderSortNum == 6){
+                if(e.orderSortNum == 7){
                     if(sepearteId == e.order.id){
                         return;
                     }else{
@@ -1209,7 +1209,7 @@ export class SendService {
             let isSeparteId = 0;
 
             tempOrderList.forEach((e,i) => {
-                if(e.orderSortNum != 6) { //분리 배송이 아닐 때
+                if(e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
                     const name = e.patient.name;
@@ -1222,7 +1222,7 @@ export class SendService {
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
     
                     const appendRow = sheet.addRow(rowDatas);
-                }else if(e.orderSortNum == 6) { //분래 배송일 시
+                }else if(e.orderSortNum == 7) { //분래 배송일 시
                     if(isSeparteId == e.order.id){
                         console.log('already insert data');
                     }else {
