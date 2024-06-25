@@ -1473,7 +1473,10 @@ export class ErpService {
      */
     async updateOrderByStaff(updateSurveyDto, id) {
         try {
-            const patientData = updateSurveyDto.patient;
+            const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
+
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
@@ -1492,7 +1495,7 @@ export class ErpService {
             const price = getOrderPrice.getPrice();
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
-            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
+            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
@@ -1538,7 +1541,10 @@ export class ErpService {
      */
     async updateOrderByDoc(updateSurveyDto, id) {
         try {
-            const patientData = updateSurveyDto.patient;
+            const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
+
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
@@ -1557,7 +1563,7 @@ export class ErpService {
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             const price = getOrderPrice.getPrice();
-            const orderData = { ...updateSurveyDto, price: price };
+            const orderData = { ...updateSurveyDto, price: price, addr: encryptedAddr };
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
