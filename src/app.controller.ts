@@ -11,7 +11,7 @@ export class AppController {
   }
 
   @Get('/test')
-  test() {
-    return 'test';
+  async test() {
+    return await this.appService.test();
   }
 }
