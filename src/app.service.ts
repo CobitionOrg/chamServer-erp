@@ -146,11 +146,13 @@ export class AppService {
         const button = document.querySelector(selector) as HTMLElement | null;
         if (button) {
           (button as HTMLInputElement).click();
+          //window.confirm = () => true;
+
         } else {
           console.error(`Checkbox not found: ${selector}`);
         }
       }, sendButton);
-      //await page.click('a.msg_link10');
+      await page.click('a.msg_link10');
 
     } catch (err) {
       console.log(err);
