@@ -174,6 +174,8 @@ export class SendService {
                             remark: true,
                             cachReceipt: true,
                             price: true,
+                            cash: true,
+                            card: true,
                             orderSortNum:true,
                             combineNum:true,
                             orderItems: {
