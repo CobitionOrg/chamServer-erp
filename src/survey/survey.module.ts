@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { Crypto } from 'src/util/crypto.util';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { JwtModule } from '@nestjs/jwt';
 
     }),],
   controllers: [SurveyController],
-  providers: [SurveyService, PrismaService],
+  providers: [SurveyService, PrismaService, Crypto],
 })
 export class SurveyModule { }
