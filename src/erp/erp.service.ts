@@ -339,12 +339,13 @@ export class ErpService {
 
             const sortedList = sortItems(list);
 
-            for (let row of sortedList) {
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedAddr = this.crypto.decrypt(row.addr);
-                row.patient.phoneNum = decryptedPhoneNume;
-                row.addr = decryptedAddr;
-            }
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
 
             return { success: true, list: sortedList };
         } catch (err) {
@@ -842,12 +843,13 @@ export class ErpService {
 
             const sortedList = sortItems(list);
 
-            for (let row of sortedList) {
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedAddr = this.crypto.decrypt(row.addr);
-                row.patient.phoneNum = decryptedPhoneNume;
-                row.addr = decryptedAddr;
-            }
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
 
             return { success: true, list: sortedList };
         } catch (err) {
@@ -1476,7 +1478,7 @@ export class ErpService {
             const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
             const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
 
-            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum };
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
@@ -1544,7 +1546,7 @@ export class ErpService {
             const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
             const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
 
-            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum };
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
