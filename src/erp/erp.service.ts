@@ -2116,6 +2116,14 @@ export class ErpService {
 
             const sortedList = sortItems(list);
 
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
+
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
