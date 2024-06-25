@@ -1186,7 +1186,7 @@ export class SendService {
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet('감비환장부');
-            
+            styleHeaderCell(wb);
             //헤더 부분
             sheet.mergeCells('A1:K1');
             sheet.getCell('G1').value = '감비환 장부'
@@ -1285,5 +1285,19 @@ export class SendService {
         }
     }
 
-
+    private styleHeaderCell(cell) {
+        cell.font = { name: 'Arial', bold: true, size: 12 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFE599' },
+        };
+      }
 }

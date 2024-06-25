@@ -69,11 +69,6 @@ export class ErpController {
     async getReciptList(@Query() getListDto: GetListDto, @Headers() header){
        this.logger.log('오더 리스트 조회');
        const res = await this.erpService.getReciptList(getListDto); 
-
-       if(res.success){
-            await this.logService.createLog('오더 리스트 조회','입금상담목록',header);
-       }
-
        return res;
     }
 
@@ -99,14 +94,6 @@ export class ErpController {
     async getCallList(@Headers() header, @Query() getListDto: GetListDto){
         this.logger.log('유선 상담 목록 조회');
         const res = await this.erpService.getCallList(getToken(header), getListDto);
-
-        if(res.success){
-            await this.logService.createLog(
-                '유선 상담 목록 조회',
-                '유선 상담 목록',
-                header
-            );
-        }
 
         return res;
     }
@@ -253,19 +240,31 @@ export class ErpController {
 
     @ApiOperation({summary:'입금 상담 목록에서 주문 취소 처리'})
     @Delete('/cancel')
-    async cancelOrder(@Body() cacelOrderDto: CancelOrderDto){
+    async cancelOrder(@Body() cancelOrderDto: CancelOrderDto,@Headers() header){
         this.logger.log('입금 상담 목록에서 주문 취소 처리');
-        const res = await this.erpService.cancelOrder(cacelOrderDto);
-
+        const res = await this.erpService.cancelOrder(cancelOrderDto);
+        if(res.success){
+            await this.logService.createLog(
+                `${cancelOrderDto.orderId}번 오더를 입금 상담 목록에서 주문 취소 처리`,
+                '입금상담목록',
+                header
+            );
+        }
         return res;
     }
 
     @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
     @Delete('/cancelSend')
-    async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto){
+    async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto,@Headers() header){
         this.logger.log('발송 목록에서 주문 취소 처리');
         const res = await this.sendService.cancelSendOrder(cancelSendOrderDto);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${cancelSendOrderDto.patientId}번 환자의 ${cancelSendOrderDto.orderId}번 주문 취소`,
+                '발송목록',
+                header
+            )
+        }
         return res;
     }
 
@@ -471,12 +470,12 @@ export class ErpController {
     async combineOrder(@Body() combineOrderDto:CombineOrderDto, @Headers() header){
         this.logger.log('합배송 처리');
         const res = await this.erpService.combineOrder(combineOrderDto);
-
-        // if(res.success){
-        //     await this.logService.createLog(
-                
-        //     )
-        // }
+        const orderIds = combineOrderDto.orderIdArr.join(', ');
+        if(res.success){
+            await this.logService.createLog(
+                `${combineOrderDto.addr}에 ${orderIds}들 합배송`,'입금/상담 목록',header
+            )
+        }
         return res;
     }
 
@@ -485,7 +484,12 @@ export class ErpController {
     async separate(@Body() separateDto:SepareteDto, @Headers() header){
         this.logger.log("분리 배송 처리");
         const res = await this.erpService.separate(separateDto);
-
+        const orderIds = separateDto.separate.join(', ');
+        if(res.success){
+            await this.logService.createLog(
+                `${separateDto.separate}들에 ${orderIds}를 분리 배송`,'입금/상담 목록',header
+            )
+        }
         return res;
     }
 
@@ -497,13 +501,12 @@ export class ErpController {
 
         return res;
     }
-      
+      //이 이하 로그처리 필요한지
     @ApiOperation({summary:'추가 발송일자 변경'})
     @Post('/addSend')
-    async addSend(@Body() addSendDto: AddSendDto){
+    async addSend(@Body() addSendDto: AddSendDto,@Headers() header){
         this.logger.log('추가 발송일자 변경 - 장부에만 들어가는 발송일자 변경 인원들');
         const res = await this.sendService.addSend(addSendDto);
-
         return res;
     }
 
