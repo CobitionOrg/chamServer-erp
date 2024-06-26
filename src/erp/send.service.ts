@@ -421,6 +421,11 @@ export class SendService {
         }
     }
 
+    /**
+     * 재결제 요청 처리
+     * @param id orderId
+     * @returns {success:boolean, status:HttpStatus}
+     */
     async requestPay(id: number){
         try{
             await this.prisma.order.update({
