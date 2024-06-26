@@ -507,6 +507,11 @@ export class ErpController {
     async addSend(@Body() addSendDto: AddSendDto,@Headers() header){
         this.logger.log('추가 발송일자 변경 - 장부에만 들어가는 발송일자 변경 인원들');
         const res = await this.sendService.addSend(addSendDto);
+        // if(res.success){
+        //     await this.logService.createLog(
+        //         `${addSendDto.sendListId}를 ${addSendDto.tempOrderId}에 발송일자 변경`,'발송목록',header
+        //     )
+        // }
         return res;
     }
 
