@@ -281,6 +281,7 @@ export class ErpController {
     @Patch('/updateSendOrder')
     async updateSendOrder(@Body() surveyDto : UpdateSurveyDto, @Headers() header){
         this.logger.log('발송목록에서 오더 수정');
+        console.log(surveyDto)
         const res = await this.sendService.updateSendOrder(surveyDto);
 
         if(res.success){
@@ -466,7 +467,6 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'합배송 처리'})
-    @Public()
     @Post('/combine')
     async combineOrder(@Body() combineOrderDto:CombineOrderDto, @Headers() header){
         this.logger.log('합배송 처리');

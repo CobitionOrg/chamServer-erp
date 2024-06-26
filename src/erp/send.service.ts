@@ -227,6 +227,7 @@ export class SendService {
                     date: true,
                     isFirst: true,
                     orderSortNum: true,
+                    sendNum: true,
                     patient: {
                         select: {
                             id: true,
@@ -322,9 +323,19 @@ export class SendService {
                     },
                     data: {
                         cachReceipt: objOrder.cashReceipt,
-                        price: price
+                        price: price,
+                        sendNum: objOrder.sendNum,
+                        remark: objOrder.remark
                     }
                 });
+
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{ 
+                        cachReceipt: objOrder.cashReceipt,
+                        sendNum: objOrder.sendNum,
+                    }
+                })
 
                 console.log('----------------')
                 console.log(objOrderItem)
