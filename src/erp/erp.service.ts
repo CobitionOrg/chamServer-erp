@@ -921,7 +921,7 @@ export class ErpService {
 
                 console.log(order);
                 //분리 배송일 시 tempOrder는 생성하지 않는다.
-                if (order.tempOrders[0].orderSortNum == 7) {
+                if (order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7) {
                     await this.prisma.order.update({
                         where: {
                             id: id
@@ -1493,7 +1493,7 @@ export class ErpService {
             });
 
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            const price = order.tempOrders[0].orderSortNum == 7 ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
+            const price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
