@@ -92,15 +92,29 @@ const compareItems = (a: any, b: any) => {
   }
 };
 
+// 분리 배송도 그 안에서 오름차순으로 정렬렬
+const compareTempOrderItems = (a: any, b: any) => {
+  if (a.order.id !== b.order.id) {
+    return a.order.id - b.order.id;
+  }
+
+  const aMonths = extractMonths(a.tempOrderItems?.item || '');
+  const bMonths = extractMonths(b.tempOrderItems?.item || '');
+
+  return aMonths - bMonths;
+};
+
 export const getSortedList = (orders: Array<any>): Array<any> => {
   const sortedList = orders.sort(compareItems);
   const combineList = sortedList
     .filter((item) => item.orderSortNum === 6)
     .sort((a, b) => a.addr.localeCompare(b.addr));
   const sortedBefore6 = sortedList.filter((item) => item.orderSortNum < 6);
-  const sortedAfter6 = sortedList.filter((item) => item.orderSortNum > 6);
+  const sorted7 = sortedList
+    .filter((item) => item.orderSortNum === 7)
+    .sort(compareTempOrderItems);
 
-  const finalSortedList = [...sortedBefore6, ...combineList, ...sortedAfter6];
+  const finalSortedList = [...sortedBefore6, ...combineList, ...sorted7];
 
   return finalSortedList;
 };
