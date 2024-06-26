@@ -195,7 +195,10 @@ model order {
   talkFlag        Boolean?       @default(false)
   /// 상담 연결 여부
   consultingFlag  Boolean?       @default(false)
+  /// 주문 주소
   addr            String?        @db.Text
+  /// 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
+  payFlag         Int?           @default(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]

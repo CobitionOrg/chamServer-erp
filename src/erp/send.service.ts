@@ -176,8 +176,11 @@ export class SendService {
                             remark: true,
                             cachReceipt: true,
                             price: true,
+                            cash: true,
+                            card: true,
                             orderSortNum:true,
                             combineNum:true,
+                            payFlag: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -235,6 +238,7 @@ export class SendService {
                     date: true,
                     isFirst: true,
                     orderSortNum: true,
+                    sendNum: true,
                     patient: {
                         select: {
                             id: true,
@@ -273,6 +277,9 @@ export class SendService {
             );
         }
     }
+
+
+    //async cardPay(id: number)
 
     /**
      * 발송목록에서 오더 수정
@@ -330,9 +337,19 @@ export class SendService {
                     },
                     data: {
                         cachReceipt: objOrder.cashReceipt,
-                        price: price
+                        price: price,
+                        sendNum: objOrder.sendNum,
+                        remark: objOrder.remark
                     }
                 });
+
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{ 
+                        cachReceipt: objOrder.cashReceipt,
+                        sendNum: objOrder.sendNum,
+                    }
+                })
 
                 console.log('----------------')
                 console.log(objOrderItem)
@@ -386,6 +403,56 @@ export class SendService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
 
+        }
+    }
+
+    /**
+     * 미결제 처리
+     * @param id orderId
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async notPay(id: number) {
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:0}
+            });
+
+            return { success: true, status: 201 };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 재결제 요청 처리
+     * @param id orderId
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async requestPay(id: number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:2}
+            });
+
+            return { success: true, status: 201 };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -823,7 +890,7 @@ export class SendService {
 
             let sepearteId = 0;
             list.forEach((e) => {
-                if(e.orderSortNum == 6){
+                if(e.orderSortNum == 7){
                     if(sepearteId == e.order.id){
                         return;
                     }else{
@@ -1217,7 +1284,7 @@ export class SendService {
             let isSeparteId = 0;
 
             tempOrderList.forEach((e,i) => {
-                if(e.orderSortNum != 6) { //분리 배송이 아닐 때
+                if(e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
                     const name = e.patient.name;
@@ -1230,7 +1297,7 @@ export class SendService {
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
     
                     const appendRow = sheet.addRow(rowDatas);
-                }else if(e.orderSortNum == 6) { //분래 배송일 시
+                }else if(e.orderSortNum == 7) { //분래 배송일 시
                     if(isSeparteId == e.order.id){
                         console.log('already insert data');
                     }else {

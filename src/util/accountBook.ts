@@ -40,11 +40,11 @@ export const getFooter = (list:Array<any>,addSend) => {
         if(e.orderSortNum>-1){
             orderCount++;        
         }
-        if(e.orderSortNum == 5){
+        if(e.orderSortNum == 6){
             combine++;
         }
 
-        if(e.orderSortNum == 6) {
+        if(e.orderSortNum == 7) {
             if(isSeparteId == e.order.id){
                 separate++;
             }else{
