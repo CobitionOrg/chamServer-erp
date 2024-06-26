@@ -132,7 +132,7 @@ export class ErpService {
                         price: price,
                         patientId: patient.id,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
                         addr: objPatient.addr
                     }
                 });
@@ -290,7 +290,7 @@ export class ErpService {
                 }
             }
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
+                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: -1 } },
                 select: {
                     id: true,
                     route: true,
@@ -438,7 +438,7 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 4 : 0,
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
                         addr: objPatient.addr,
                     }
                 });
@@ -1456,7 +1456,7 @@ export class ErpService {
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             const price = getOrderPrice.getPrice();
             let orderSortNum = updateSurveyDto.isPickup ? -1
-                : updateSurveyDto.orderSortNum === -1 ? 0 : updateSurveyDto.orderSortNum;
+                : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
 
             const res = await this.prisma.$transaction(async (tx) => {
@@ -1799,7 +1799,7 @@ export class ErpService {
                         isComplete: false
                     },
                     data: {
-                        orderSortNum: 5 //orderSortNum update!
+                        orderSortNum: 6 //orderSortNum update!
                     }
                 })
 
@@ -1854,7 +1854,7 @@ export class ErpService {
                 });
 
                 //orderSortNum 변경
-                orderOne.orderSortNum = 6;
+                orderOne.orderSortNum = 7;
 
                 const orderAmount = separateDto.separate.length;
 
