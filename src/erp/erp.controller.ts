@@ -527,7 +527,6 @@ export class ErpController {
 
     //아직 안됨
     @ApiOperation({summary:'장부 출력'})
-    @Public()
     @Get('/accountBook/:id')
     async accountBook(@Param("id") id: number){
         this.logger.log('장부 출력');
@@ -535,7 +534,23 @@ export class ErpController {
         return res;
     }
 
-    @Public()
+    @ApiOperation({summary:'주문 미결제 처리'})
+    @Patch('/notPay/:id')
+    async notPay(@Param("id") id: number) {
+        this.logger.log('주문 미입금 처리');
+        const res = await this.sendService.notPay(id);
+        return res;
+    }
+
+    @ApiOperation({summary:'주문 재결제 요청 처리'})
+    @Patch('/requestPay/:id')
+    async requestPay(@Param("id") id: number) {
+        this.logger.log('주문 미입금 처리');
+        const res = await this.sendService.requestPay(id);
+        return res;
+    }
+
+
     @Get('/ffff')
     async ffff(){
         await this.erpService.updateAddr();

@@ -900,78 +900,88 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
-            const paymentAmountCheck = await this.checkPaymentAmount(id);
-            if (!paymentAmountCheck.success) {
-                throw new HttpException(
-                    {
-                        status: HttpStatus.UNPROCESSABLE_ENTITY,
-                        error: "금액과 결제액 불일치"
+            // const paymentAmountCheck = await this.checkPaymentAmount(id);
+            // if (!paymentAmountCheck.success) {
+            //     throw new HttpException(
+            //         {
+            //             status: HttpStatus.UNPROCESSABLE_ENTITY,
+            //             error: "금액과 결제액 불일치"
+            //         },
+            //         HttpStatus.UNPROCESSABLE_ENTITY
+            //     )
+            // } else {
+                
+            // }
+
+            const order = await this.prisma.order.findUnique({
+                where: { id: id },
+                select: {
+                    tempOrders: {
+                        select: { orderSortNum: true }
                     },
-                    HttpStatus.UNPROCESSABLE_ENTITY
-                )
-            } else {
-                const order = await this.prisma.order.findUnique({
-                    where: { id: id },
-                    select: {
-                        tempOrders: {
-                            select: { orderSortNum: true }
-                        }
+                    payType: true,
+                    price: true,
+                }
+            });
+
+            console.log(order);
+            //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
+            if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
+                await this.prisma.order.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        isComplete: true,
+                        card: order.payType =='카드결제' ? order.price : 0,
+                        cash: order.payType =='계좌이체' ? order.price : 0,
+                        payFlag: 1
                     }
                 });
 
-                console.log(order);
-                //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
-                if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
-                    await this.prisma.order.update({
+                return { success: true, status: HttpStatus.OK };
+            } else {
+                //트랜젝션 시작
+                await this.prisma.$transaction(async (tx) => {
+
+                    //발송 목록으로 이동 처리
+                    const sendOne = await tx.order.update({
                         where: {
                             id: id
                         },
                         data: {
                             isComplete: true,
+                            card: order.payType =='카드결제' ? order.price : 0,
+                            cash: order.payType =='계좌이체' ? order.price : 0,
+                            payFlag: 1
                         }
                     });
 
-                    return { success: true, status: HttpStatus.OK };
-                } else {
-                    //트랜젝션 시작
-                    await this.prisma.$transaction(async (tx) => {
-
-                        //발송 목록으로 이동 처리
-                        const sendOne = await tx.order.update({
-                            where: {
-                                id: id
-                            },
-                            data: {
-                                isComplete: true,
-                            }
-                        });
-
-                        //해당 오더 발송 개수 가져오기
-                        const orderItems = await tx.orderItem.findMany({
-                            where: {
-                                orderId: id,
-                                type: { in: ['common', 'yoyo'] }
-                            }
-                        });
-
-                        console.log(`-----------${orderItems.length}-----------`);
-                        console.log(orderItems);
-
-                        //오더 개수
-                        const orderAmount = orderItems.length;
-
-                        const sendListId = await this.insertToSendList(tx, orderAmount);
-
-                        const res = await this.createTempOrder(sendOne, id, sendListId, tx);
-
-                        if (!res.success) throw error();
-
+                    //해당 오더 발송 개수 가져오기
+                    const orderItems = await tx.orderItem.findMany({
+                        where: {
+                            orderId: id,
+                            type: { in: ['common', 'yoyo'] }
+                        }
                     });
 
-                }
+                    console.log(`-----------${orderItems.length}-----------`);
+                    console.log(orderItems);
 
-                return { success: true, status: HttpStatus.OK };
+                    //오더 개수
+                    const orderAmount = orderItems.length;
+
+                    const sendListId = await this.insertToSendList(tx, orderAmount);
+
+                    const res = await this.createTempOrder(sendOne, id, sendListId, tx);
+
+                    if (!res.success) throw error();
+
+                });
+
             }
+
+            return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -1679,7 +1689,10 @@ export class ErpService {
         try {
             await this.prisma.order.update({
                 where: { id: id },
-                data: { cash: price }
+                data: { 
+                    cash: price,
+                    payFlag : 1, 
+                }
             });
 
             return { success: true };

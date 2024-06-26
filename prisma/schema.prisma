@@ -119,7 +119,7 @@ model patient {
   /// 환자 핸드폰 번호
   phoneNum   String
   /// 환자 주소
-  addr       String
+  addr       String?     @db.Text
   /// 환자 주민번호
   socialNum  String
   orders     order[]
@@ -195,7 +195,10 @@ model order {
   talkFlag        Boolean?       @default(false)
   /// 상담 연결 여부
   consultingFlag  Boolean?       @default(false)
-  addr            String         @db.VarChar(120)
+  /// 주문 주소
+  addr            String?        @db.Text
+  /// 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
+  payFlag         Int?           @default(0)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -243,7 +246,7 @@ model tempOrder {
   sendNum          String?           @db.VarChar(100)
   /// 발송목록 key
   sendListId       Int
-  addr             String?           @db.VarChar(100)
+  addr             String?           @db.Text
   addSend          addSend?
   orderUpdateInfos orderUpdateInfo[]
   order            order             @relation(fields: [orderId], references: [id])

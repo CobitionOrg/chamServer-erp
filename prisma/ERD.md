@@ -54,7 +54,7 @@ erDiagram
   Int id PK
   String name
   String phoneNum
-  String addr
+  String addr "nullable"
   String socialNum
 }
 "item" {
@@ -93,7 +93,8 @@ erDiagram
   String note "nullable"
   Boolean talkFlag "nullable"
   Boolean consultingFlag "nullable"
-  String addr
+  String addr "nullable"
+  Int payFlag "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -291,7 +292,8 @@ erDiagram
   - `note`: 
   - `talkFlag`: 접수 알림톡 발송 여부
   - `consultingFlag`: 상담 연결 여부
-  - `addr`: 
+  - `addr`: 주문 주소
+  - `payFlag`: 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
 
 ### `tempOrder`
 
