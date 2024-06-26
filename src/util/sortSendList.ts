@@ -1,6 +1,5 @@
 interface PriorityInfo {
   priority: number;
-  counts: { gam: number; cen: number; yo: number };
   totalMonths: number;
 }
 
@@ -57,7 +56,6 @@ const getPriorityInfo = (orderItems: any[]): PriorityInfo => {
 
   return {
     priority,
-    counts: { gam: gamCount, cen: cenCount, yo: yoCount },
     totalMonths: gamMonths + cenMonths + yoMonths,
   };
 };
@@ -75,31 +73,21 @@ const compareItems = (a: any, b: any) => {
     // 우선도에 따라 정렬
     return aPriorityInfo.priority - bPriorityInfo.priority;
   } else {
-    // 우선도가 같으면
-    if (aPriorityInfo.counts.gam !== bPriorityInfo.counts.gam) {
-      // 개수 오름차순 정렬
-      return aPriorityInfo.counts.gam - bPriorityInfo.counts.gam;
-    } else if (aPriorityInfo.counts.cen !== bPriorityInfo.counts.cen) {
-      return aPriorityInfo.counts.cen - bPriorityInfo.counts.cen;
-    } else if (aPriorityInfo.counts.yo !== bPriorityInfo.counts.yo) {
-      return aPriorityInfo.counts.yo - bPriorityInfo.counts.yo;
+    // 우선도가 같으면 개월수 오름차순 정렬
+    if (aPriorityInfo.totalMonths !== bPriorityInfo.totalMonths) {
+      return aPriorityInfo.totalMonths - bPriorityInfo.totalMonths;
     } else {
-      // 개수 같으면 개월수 오름차순 정렬
-      if (aPriorityInfo.totalMonths !== bPriorityInfo.totalMonths) {
-        return aPriorityInfo.totalMonths - bPriorityInfo.totalMonths;
-      } else {
-        // payType 순서에 따라 정렬
-        const payTypeOrder = {
-          계좌이체: 1,
-          혼용: 2,
-          카드결제: 3,
-        };
+      // payType 순서에 따라 정렬
+      const payTypeOrder = {
+        계좌이체: 1,
+        혼용: 2,
+        카드결제: 3,
+      };
 
-        const aPayTypeOrder = payTypeOrder[a.payType] || 4;
-        const bPayTypeOrder = payTypeOrder[b.payType] || 4;
+      const aPayTypeOrder = payTypeOrder[a.payType] || 4;
+      const bPayTypeOrder = payTypeOrder[b.payType] || 4;
 
-        return aPayTypeOrder - bPayTypeOrder;
-      }
+      return aPayTypeOrder - bPayTypeOrder;
     }
   }
 };
