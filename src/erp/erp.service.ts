@@ -84,11 +84,11 @@ export class ErpService {
             });
 
             //기존 환자가 있는지 체크
-            const existPatient = await this.existPatientCheck(objPatient.name,objPatient.socialNum);
-            console.log(existPatient+ ' 기존환자 체크');
-            if(!existPatient.success){
+            const existPatient = await this.existPatientCheck(objPatient.name, objPatient.socialNum);
+            console.log(existPatient + ' 기존환자 체크');
+            if (!existPatient.success) {
                 //있으면 재진으로 접수 처리
-                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수하신 이력이 있습니다. 재진접수를 이용해주세요'}
+                return { success: false, status: HttpStatus.CONFLICT, msg: '이미 접수하신 이력이 있습니다. 재진접수를 이용해주세요' }
             }
 
             // //처리되는 주문이 있는지 확인
@@ -186,29 +186,29 @@ export class ErpService {
      * @returns {success:boolean}
      */
     async existPatientCheck(name: string, socialNum: string) {
-        try{
+        try {
             console.log(name);
             console.log(socialNum);
             const res = await this.prisma.patient.findMany({
-                where:{
+                where: {
                     name: name,
                     socialNum: {
-                        contains:`${socialNum}%`
-                        }
-                    }, //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
-                },
-               
+                        contains: `${socialNum}%`
+                    }
+                }, //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
+            },
+
             );
             console.log(res);
 
-            if(res.length != 0){ //환자데이터가 있으면
-                return {success:false};
-            }else { //환자데이터가 없으면
-                return {success:true};
+            if (res.length != 0) { //환자데이터가 있으면
+                return { success: false };
+            } else { //환자데이터가 없으면
+                return { success: true };
             }
 
-            
-        }catch(err){
+
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -389,7 +389,7 @@ export class ErpService {
                 }
             });
 
-         
+
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
             const price = getOrderPrice.getPrice();
@@ -405,12 +405,12 @@ export class ErpService {
                 msg: '환자 정보가 없습니다. 입력 내역을 확인하거나 처음 접수시라면 초진 접수로 이동해주세요'
             };
 
-             //처리되는 주문이 있는지 확인
-             const existOrder = await this.existOrderCheck(objPatient.name,objPatient.socialNum);
+            //처리되는 주문이 있는지 확인
+            const existOrder = await this.existOrderCheck(objPatient.name, objPatient.socialNum);
 
-             if(!existOrder){
-                 return {success:false, status:HttpStatus.CONFLICT, msg:'이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요'};
-             }
+            if (!existOrder) {
+                return { success: false, status: HttpStatus.CONFLICT, msg: '이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요' };
+            }
 
             await this.prisma.$transaction(async (tx) => {
                 await tx.patient.update({
@@ -501,8 +501,8 @@ export class ErpService {
      * @param socialNum 
      * @returns boolean
      */
-    async existOrderCheck(name:string, socialNum:string){
-        try{
+    async existOrderCheck(name: string, socialNum: string) {
+        try {
             console.log(name);
             console.log(socialNum);
             const res = await this.prisma.$queryRaw(Prisma.sql`
@@ -521,9 +521,9 @@ export class ErpService {
             `);
 
             console.log(res);
-            if(!res) {return true}
-            else {return false};
-        }catch (err) {
+            if (!res) { return true }
+            else { return false };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -733,7 +733,7 @@ export class ErpService {
                 // const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
                 // const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
 
-                const {startDate,endDate} = getKstDate(getListDto.date);
+                const { startDate, endDate } = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -783,7 +783,7 @@ export class ErpService {
                     remark: true,
                     isPickup: true,
                     price: true,
-                    addr:true,
+                    addr: true,
                     patient: {
                         select: {
                             id: true,
@@ -910,11 +910,19 @@ export class ErpService {
                     HttpStatus.UNPROCESSABLE_ENTITY
                 )
             } else {
-                //트랜젝션 시작
-                await this.prisma.$transaction(async (tx) => {
+                const order = await this.prisma.order.findUnique({
+                    where: { id: id },
+                    select: {
+                        tempOrders: {
+                            select: { orderSortNum: true }
+                        }
+                    }
+                });
 
-                    //발송 목록으로 이동 처리
-                    const sendOne = await tx.order.update({
+                console.log(order);
+                //분리 배송일 시 tempOrder는 생성하지 않는다.
+                if (order.tempOrders[0].orderSortNum == 7) {
+                    await this.prisma.order.update({
                         where: {
                             id: id
                         },
@@ -923,27 +931,44 @@ export class ErpService {
                         }
                     });
 
-                    //해당 오더 발송 개수 가져오기
-                    const orderItems = await tx.orderItem.findMany({
-                        where: {
-                            orderId: id,
-                            type: { in: ['common', 'yoyo'] }
-                        }
+                    return { success: true, status: HttpStatus.OK };
+                } else {
+                    //트랜젝션 시작
+                    await this.prisma.$transaction(async (tx) => {
+
+                        //발송 목록으로 이동 처리
+                        const sendOne = await tx.order.update({
+                            where: {
+                                id: id
+                            },
+                            data: {
+                                isComplete: true,
+                            }
+                        });
+
+                        //해당 오더 발송 개수 가져오기
+                        const orderItems = await tx.orderItem.findMany({
+                            where: {
+                                orderId: id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+
+                        console.log(`-----------${orderItems.length}-----------`);
+                        console.log(orderItems);
+
+                        //오더 개수
+                        const orderAmount = orderItems.length;
+
+                        const sendListId = await this.insertToSendList(tx, orderAmount);
+
+                        const res = await this.createTempOrder(sendOne, id, sendListId, tx);
+
+                        if (!res.success) throw error();
+
                     });
 
-                    console.log(`-----------${orderItems.length}-----------`);
-                    console.log(orderItems);
-
-                    //오더 개수
-                    const orderAmount = orderItems.length;
-
-                    const sendListId = await this.insertToSendList(tx, orderAmount);
-
-                    const res = await this.createTempOrder(sendOne, id, sendListId, tx);
-
-                    if (!res.success) throw error();
-
-                });
+                }
 
                 return { success: true, status: HttpStatus.OK };
             }
@@ -1453,8 +1478,22 @@ export class ErpService {
             }));
             console.log(items);
             const itemList = await this.getItems();
+
+            const order = await this.prisma.order.findUnique({
+                where: { id: id },
+                select: {
+                    orderSortNum: true,
+                    price: true,
+                    tempOrders: {
+                        select: {
+                            orderSortNum: true
+                        }
+                    }
+                }
+            });
+
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            const price = getOrderPrice.getPrice();
+            const price = order.tempOrders[0].orderSortNum == 7 ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
@@ -1861,12 +1900,15 @@ export class ErpService {
                 //발송목록 id
                 const sendListId = await this.insertToSendList(tx, orderAmount);
 
+                let price = orderOne.price;
                 //분리배송 용 tempOrder 생성
                 for (const e of separateDto.separate) {
+                    console.log(e);
                     if (e.sendTax) {
+                        price += 3500;
                         await tx.order.update({
                             where: { id: separateDto.orderId },
-                            data: { price: orderOne.price + 3500 }
+                            data: { price: price }
                         });
                     }
                     const res = await this.createTempOrder(orderOne, separateDto.orderId, sendListId, tx, e.addr);
