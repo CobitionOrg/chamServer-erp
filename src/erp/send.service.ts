@@ -178,6 +178,7 @@ export class SendService {
                             card: true,
                             orderSortNum:true,
                             combineNum:true,
+                            payFlag: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -227,6 +228,7 @@ export class SendService {
                     date: true,
                     isFirst: true,
                     orderSortNum: true,
+                    sendNum: true,
                     patient: {
                         select: {
                             id: true,
@@ -265,6 +267,9 @@ export class SendService {
             );
         }
     }
+
+
+    //async cardPay(id: number)
 
     /**
      * 발송목록에서 오더 수정
@@ -322,9 +327,19 @@ export class SendService {
                     },
                     data: {
                         cachReceipt: objOrder.cashReceipt,
-                        price: price
+                        price: price,
+                        sendNum: objOrder.sendNum,
+                        remark: objOrder.remark
                     }
                 });
+
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{ 
+                        cachReceipt: objOrder.cashReceipt,
+                        sendNum: objOrder.sendNum,
+                    }
+                })
 
                 console.log('----------------')
                 console.log(objOrderItem)
@@ -378,6 +393,56 @@ export class SendService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
 
+        }
+    }
+
+    /**
+     * 미결제 처리
+     * @param id orderId
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async notPay(id: number) {
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:0}
+            });
+
+            return { success: true, status: 201 };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 재결제 요청 처리
+     * @param id orderId
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async requestPay(id: number){
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:2}
+            });
+
+            return { success: true, status: 201 };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 

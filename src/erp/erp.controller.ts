@@ -281,6 +281,7 @@ export class ErpController {
     @Patch('/updateSendOrder')
     async updateSendOrder(@Body() surveyDto : UpdateSurveyDto, @Headers() header){
         this.logger.log('발송목록에서 오더 수정');
+        console.log(surveyDto)
         const res = await this.sendService.updateSendOrder(surveyDto);
 
         if(res.success){
@@ -466,7 +467,6 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'합배송 처리'})
-    @Public()
     @Post('/combine')
     async combineOrder(@Body() combineOrderDto:CombineOrderDto, @Headers() header){
         this.logger.log('합배송 처리');
@@ -527,7 +527,6 @@ export class ErpController {
 
     //아직 안됨
     @ApiOperation({summary:'장부 출력'})
-    @Public()
     @Get('/accountBook/:id')
     async accountBook(@Param("id") id: number){
         this.logger.log('장부 출력');
@@ -535,7 +534,23 @@ export class ErpController {
         return res;
     }
 
-    @Public()
+    @ApiOperation({summary:'주문 미결제 처리'})
+    @Patch('/notPay/:id')
+    async notPay(@Param("id") id: number) {
+        this.logger.log('주문 미입금 처리');
+        const res = await this.sendService.notPay(id);
+        return res;
+    }
+
+    @ApiOperation({summary:'주문 재결제 요청 처리'})
+    @Patch('/requestPay/:id')
+    async requestPay(@Param("id") id: number) {
+        this.logger.log('주문 미입금 처리');
+        const res = await this.sendService.requestPay(id);
+        return res;
+    }
+
+
     @Get('/ffff')
     async ffff(){
         await this.erpService.updateAddr();

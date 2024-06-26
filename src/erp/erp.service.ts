@@ -900,78 +900,88 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
-            const paymentAmountCheck = await this.checkPaymentAmount(id);
-            if (!paymentAmountCheck.success) {
-                throw new HttpException(
-                    {
-                        status: HttpStatus.UNPROCESSABLE_ENTITY,
-                        error: "금액과 결제액 불일치"
+            // const paymentAmountCheck = await this.checkPaymentAmount(id);
+            // if (!paymentAmountCheck.success) {
+            //     throw new HttpException(
+            //         {
+            //             status: HttpStatus.UNPROCESSABLE_ENTITY,
+            //             error: "금액과 결제액 불일치"
+            //         },
+            //         HttpStatus.UNPROCESSABLE_ENTITY
+            //     )
+            // } else {
+                
+            // }
+
+            const order = await this.prisma.order.findUnique({
+                where: { id: id },
+                select: {
+                    tempOrders: {
+                        select: { orderSortNum: true }
                     },
-                    HttpStatus.UNPROCESSABLE_ENTITY
-                )
-            } else {
-                const order = await this.prisma.order.findUnique({
-                    where: { id: id },
-                    select: {
-                        tempOrders: {
-                            select: { orderSortNum: true }
-                        }
+                    payType: true,
+                    price: true,
+                }
+            });
+
+            console.log(order);
+            //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
+            if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
+                await this.prisma.order.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        isComplete: true,
+                        card: order.payType =='카드결제' ? order.price : 0,
+                        cash: order.payType =='계좌이체' ? order.price : 0,
+                        payFlag: 1
                     }
                 });
 
-                console.log(order);
-                //분리 배송일 시 tempOrder는 생성하지 않는다.
-                if (order.tempOrders[0].orderSortNum == 7) {
-                    await this.prisma.order.update({
+                return { success: true, status: HttpStatus.OK };
+            } else {
+                //트랜젝션 시작
+                await this.prisma.$transaction(async (tx) => {
+
+                    //발송 목록으로 이동 처리
+                    const sendOne = await tx.order.update({
                         where: {
                             id: id
                         },
                         data: {
                             isComplete: true,
+                            card: order.payType =='카드결제' ? order.price : 0,
+                            cash: order.payType =='계좌이체' ? order.price : 0,
+                            payFlag: 1
                         }
                     });
 
-                    return { success: true, status: HttpStatus.OK };
-                } else {
-                    //트랜젝션 시작
-                    await this.prisma.$transaction(async (tx) => {
-
-                        //발송 목록으로 이동 처리
-                        const sendOne = await tx.order.update({
-                            where: {
-                                id: id
-                            },
-                            data: {
-                                isComplete: true,
-                            }
-                        });
-
-                        //해당 오더 발송 개수 가져오기
-                        const orderItems = await tx.orderItem.findMany({
-                            where: {
-                                orderId: id,
-                                type: { in: ['common', 'yoyo'] }
-                            }
-                        });
-
-                        console.log(`-----------${orderItems.length}-----------`);
-                        console.log(orderItems);
-
-                        //오더 개수
-                        const orderAmount = orderItems.length;
-
-                        const sendListId = await this.insertToSendList(tx, orderAmount);
-
-                        const res = await this.createTempOrder(sendOne, id, sendListId, tx);
-
-                        if (!res.success) throw error();
-
+                    //해당 오더 발송 개수 가져오기
+                    const orderItems = await tx.orderItem.findMany({
+                        where: {
+                            orderId: id,
+                            type: { in: ['common', 'yoyo'] }
+                        }
                     });
 
-                }
+                    console.log(`-----------${orderItems.length}-----------`);
+                    console.log(orderItems);
 
-                return { success: true, status: HttpStatus.OK };
+                    //오더 개수
+                    const orderAmount = orderItems.length;
+
+                    const sendListId = await this.insertToSendList(tx, orderAmount);
+
+                    const res = await this.createTempOrder(sendOne, id, sendListId, tx);
+
+                    if (!res.success) throw error();
+
+                });
+
             }
+
+            return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -1493,7 +1503,7 @@ export class ErpService {
             });
 
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            const price = order.tempOrders[0].orderSortNum == 7 ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
+            const price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
@@ -1679,7 +1689,10 @@ export class ErpService {
         try {
             await this.prisma.order.update({
                 where: { id: id },
-                data: { cash: price }
+                data: { 
+                    cash: price,
+                    payFlag : 1, 
+                }
             });
 
             return { success: true };
@@ -1830,17 +1843,75 @@ export class ErpService {
                     }
                 });
 
-                await tx.tempOrder.updateMany({
-                    where: {
-                        orderId: {
+                const orders = await tx.order.findMany({
+                    where:{
+                        id: {
                             in: [...combineOrderDto.orderIdArr]
-                        },
-                        isComplete: false
-                    },
-                    data: {
-                        orderSortNum: 6 //orderSortNum update!
+                        }
                     }
-                })
+                });
+
+                console.log('오와아아앙 열받는다');
+                console.log(orders);
+
+                let orderItems = 0;
+
+                for(let i = 0; i<orders.length; i++){
+                    const orderItem = await tx.orderItem.findMany({
+                        where: {
+                            orderId:orders[i].id,
+                            type: { in: ['common', 'yoyo'] }
+                        }
+                    });
+
+                    orderItems+=(orderItem.length);
+                }
+
+                const sendListId = await this.insertToSendList(tx, orderItems);
+
+
+                for(let i = 0; i<orders.length; i++){
+                    const res = await tx.tempOrder.create({
+                        data: {
+                            route: orders[i].route,
+                            message: orders[i].message,
+                            cachReceipt: orders[i].cachReceipt,
+                            typeCheck: orders[i].typeCheck,
+                            consultingTime: orders[i].consultingTime,
+                            payType: orders[i].payType,
+                            essentialCheck: orders[i].essentialCheck,
+                            outage: orders[i].outage,
+                            consultingType: orders[i].consultingType,
+                            phoneConsulting: orders[i].phoneConsulting,
+                            isComplete: orders[i].isComplete,
+                            isFirst: orders[i].isFirst,
+                            date: orders[i].date,
+                            orderSortNum: 6,
+                            addr: combineOrderDto.addr,
+                            order: {
+                                connect: { id: orders[i].id }
+                            },
+                            patient: {
+                                connect: { id: orders[i].patientId }
+                            },
+                            sendList: {
+                                connect: { id: sendListId }
+                            }
+                        }
+                    });
+
+                }
+                // await tx.tempOrder.updateMany({
+                //     where: {
+                //         orderId: {
+                //             in: [...combineOrderDto.orderIdArr]
+                //         },
+                //         isComplete: false
+                //     },
+                //     data: {
+                //         orderSortNum: 6 //orderSortNum update!
+                //     }
+                // })
 
                 //배송 주소 업데이트
                 const patients = await tx.order.findMany({
