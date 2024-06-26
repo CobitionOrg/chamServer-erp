@@ -88,14 +88,17 @@ const compareItems = (a: any, b: any) => {
       if (aPriorityInfo.totalMonths !== bPriorityInfo.totalMonths) {
         return aPriorityInfo.totalMonths - bPriorityInfo.totalMonths;
       } else {
-        // 마지막으로 payType "계좌이체", "카드결제" 순으로 정렬
-        if (a.payType === b.payType) {
-          return 0;
-        } else if (a.payType === '계좌이체') {
-          return -1;
-        } else {
-          return 1;
-        }
+        // payType 순서에 따라 정렬
+        const payTypeOrder = {
+          계좌이체: 1,
+          혼용: 2,
+          카드결제: 3,
+        };
+
+        const aPayTypeOrder = payTypeOrder[a.payType] || 4;
+        const bPayTypeOrder = payTypeOrder[b.payType] || 4;
+
+        return aPayTypeOrder - bPayTypeOrder;
       }
     }
   }
@@ -103,12 +106,13 @@ const compareItems = (a: any, b: any) => {
 
 export const getSortedList = (orders: Array<any>): Array<any> => {
   const sortedList = orders.sort(compareItems);
-  //console.log(sortedList);
-  const combineList = sortedList.filter(item => item.orderSortNum === 6).sort((a, b) => a.addr.localeCompare(b.addr));
-  const sortedOthers = sortedList.filter(item => item.orderSortNum !== 6);
+  const combineList = sortedList
+    .filter((item) => item.orderSortNum === 6)
+    .sort((a, b) => a.addr.localeCompare(b.addr));
+  const sortedBefore6 = sortedList.filter((item) => item.orderSortNum < 6);
+  const sortedAfter6 = sortedList.filter((item) => item.orderSortNum > 6);
 
-  const finalSortedList = [...sortedOthers, ...combineList];
+  const finalSortedList = [...sortedBefore6, ...combineList, ...sortedAfter6];
 
-  //console.log(finalSortedList);
-  return finalSortedList
+  return finalSortedList;
 };
