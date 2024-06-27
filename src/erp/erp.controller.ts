@@ -317,7 +317,7 @@ export class ErpController {
     async getSendList(@Headers() header){
         this.logger.log('발송목록 리스트 가져오기');
         const res = await this.sendService.getSendList();
-
+        console.log(res);
         if(res.success){
             await this.logService.createLog(
                 '발송목록 리스트 가져오기',
