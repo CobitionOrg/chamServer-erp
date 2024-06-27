@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import puppeteer from 'puppeteer';
 const path = require('path');
@@ -138,7 +138,7 @@ export class AppService {
 ** 모든 응대는 채널로만 진행되니 문의있으실 경우, 카카오톡 채널로 연락 부탁드립니다. 
 `;
 
-      await page.type('textarea#failed_content',text);
+      await page.type('textarea#failed_content', text);
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const sendButton = '.msg_link10';
@@ -159,4 +159,6 @@ export class AppService {
     }
 
   }
+
+  
 }

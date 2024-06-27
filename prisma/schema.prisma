@@ -266,6 +266,8 @@ model tempOrderItem {
   item        String
   /// 해당 temp order key
   tempOrderId Int       @unique
+  /// 택배비 유무
+  sendTax     Boolean?  @default(false)
   tempOrder   tempOrder @relation(fields: [tempOrderId], references: [id])
 }
 
