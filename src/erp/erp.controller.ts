@@ -550,6 +550,14 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary:'결제 요청 처리'})
+    @Patch('/completePay/:id')
+    async completePay(@Param("id") id: number) {
+        this.logger.log('주문 미입금 처리');
+        const res = await this.sendService.completePay(id);
+        return res;
+    }
+
 
     @Get('/ffff')
     async ffff(){

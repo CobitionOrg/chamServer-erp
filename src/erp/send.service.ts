@@ -329,7 +329,8 @@ export class SendService {
                         cachReceipt: objOrder.cashReceipt,
                         price: price,
                         sendNum: objOrder.sendNum,
-                        remark: objOrder.remark
+                        remark: objOrder.remark,
+                        addr: objPatient.addr
                     }
                 });
 
@@ -338,6 +339,7 @@ export class SendService {
                     data:{ 
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
+                        addr: objPatient.addr
                     }
                 })
 
@@ -435,6 +437,30 @@ export class SendService {
 
             return { success: true, status: 201 };
 
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 결제 요청 처리
+     * @param id 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async completePay(id: number) {
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:1}
+            });
+
+            return { success: true, status: 201 };
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
