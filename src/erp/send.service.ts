@@ -203,9 +203,9 @@ export class SendService {
 
             for (let row of sortedList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 row.addr = decryptedAddr;
-                row.patient.phoneNum = decryptedPhoneNume;
+                row.patient.phoneNum = decryptedPhoneNum;
             }
 
             return { success: true, list: sortedList };
@@ -265,9 +265,9 @@ export class SendService {
                 }
             });
 
-            const decryptedPhoneNume = this.crypto.decrypt(list.patient.phoneNum);
+            const decryptedPhoneNum = this.crypto.decrypt(list.patient.phoneNum);
             const decryptePatientdAddr = this.crypto.decrypt(list.patient.addr);
-            list.patient.phoneNum = decryptedPhoneNume;
+            list.patient.phoneNum = decryptedPhoneNum;
             list.patient.addr = decryptePatientdAddr;
 
             return { success: true, list };
