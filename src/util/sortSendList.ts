@@ -113,14 +113,45 @@ const compareTempOrderItems = (a: any, b: any) => {
   return aMonths - bMonths;
 };
 
+const groupBy = (list: any[], keyGetter: (item: any) => string) => {
+  const map = new Map<string, any[]>();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+    }
+  });
+  return map;
+};
+
+const getTotalMonths = (items: any[]) => {
+  return items.reduce((total, item) => {
+    return (
+      total +
+      item.order.orderItems.reduce(
+        (sum: number, orderItem: any) => sum + extractMonths(orderItem.item),
+        0,
+      )
+    );
+  }, 0);
+};
+
 export const getSortedList = (orders: Array<any>): Array<any> => {
   const sortedList = orders
     .filter((item) => item.orderSortNum < 6)
     .sort(compareItems);
 
-  const combineList = orders
-    .filter((item) => item.orderSortNum === 6)
-    .sort((a, b) => a.addr.localeCompare(b.addr));
+  const combineListMap = groupBy(
+    orders.filter((item) => item.orderSortNum === 6),
+    (item) => item.addr,
+  );
+
+  const combineList = Array.from(combineListMap.values())
+    .sort((a, b) => getTotalMonths(a) - getTotalMonths(b))
+    .flat();
 
   const sorted7 = orders
     .filter((item) => item.orderSortNum === 7)
