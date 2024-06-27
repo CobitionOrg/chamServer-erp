@@ -9,6 +9,7 @@ import { SendService } from './send.service';
 import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
 import { IpGuard } from './gaurds/ip.guard';
+import { Crypto } from 'src/util/crypto.util';
 
 @Module({
     controllers:[ErpController],
@@ -20,7 +21,8 @@ import { IpGuard } from './gaurds/ip.guard';
         SendService,
         LogService,
         LogRepository,
-        IpGuard
+        IpGuard,
+        Crypto
     ]
 })
 

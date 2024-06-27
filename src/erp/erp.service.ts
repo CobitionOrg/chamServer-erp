@@ -25,6 +25,7 @@ import { sortItems } from 'src/util/sortItems';
 import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { contains } from 'class-validator';
+import { Crypto } from 'src/util/crypto.util';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -33,6 +34,7 @@ export class ErpService {
         private prisma: PrismaService,
         private jwtService: JwtService,
         private adminService: AdminService,
+        private crypto: Crypto,
     ) { }
 
     private readonly logger = new Logger(ErpService.name);
@@ -109,13 +111,17 @@ export class ErpService {
             console.log(objOrderBodyType);
             console.log(objOrderItem);
 
+            const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+            const encryptedSocialNum = this.crypto.encrypt(objPatient.socialNum);
+
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.create({
                     data: {
                         name: objPatient.name,
-                        phoneNum: objPatient.phoneNum, //암호화 예정
-                        addr: objPatient.addr, //암호화 예정
-                        socialNum: objPatient.socialNum  //암호화 예정
+                        phoneNum: encryptedPhoneNum,
+                        addr: encryptedAddr,
+                        socialNum: encryptedSocialNum
                     }
                 });
                 const order = await tx.order.create({
@@ -133,7 +139,7 @@ export class ErpService {
                         patientId: patient.id,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
-                        addr: objPatient.addr
+                        addr: encryptedAddr
                     }
                 });
 
@@ -190,25 +196,27 @@ export class ErpService {
             console.log(name);
             console.log(socialNum);
             const res = await this.prisma.patient.findMany({
-                where: {
-                    name: name,
-                    socialNum: {
-                        contains: `${socialNum}%`
-                    }
-                }, //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
-            },
-
+                where: { name } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
+                },
+               
             );
             console.log(res);
 
-            if (res.length != 0) { //환자데이터가 있으면
-                return { success: false };
-            } else { //환자데이터가 없으면
-                return { success: true };
+            let check = true;
+
+            for(const e of res) {
+                const checkSocialNum = this.crypto.decrypt(e.socialNum);
+                if(checkSocialNum === socialNum) {
+                    check = false;
+                    break;
+                }
             }
 
+            console.log("check", check);
+            return { success: check };
 
-        } catch (err) {
+            
+        }catch(err){
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -331,6 +339,14 @@ export class ErpService {
 
             const sortedList = sortItems(list);
 
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
+
             return { success: true, list: sortedList };
         } catch (err) {
             this.logger.error(err);
@@ -398,6 +414,7 @@ export class ErpService {
 
             const patient = await this.checkPatient(objPatient);
 
+            console.log("this is patientttttttttttttttttttttttt");
             console.log(patient);
             if (!patient.success) return {
                 success: false,
@@ -412,14 +429,17 @@ export class ErpService {
                 return { success: false, status: HttpStatus.CONFLICT, msg: '이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요' };
             }
 
+             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+             const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
+
             await this.prisma.$transaction(async (tx) => {
                 await tx.patient.update({
                     where: {
                         id: patient.patient.id,
                     },
                     data: {
-                        addr: objPatient.addr,
-                        phoneNum: objPatient.phoneNum,
+                        addr: encryptedAddr,
+                        phoneNum: encryptedPhoneNum,
                     }
                 });
 
@@ -439,7 +459,7 @@ export class ErpService {
                         price: price,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
-                        addr: objPatient.addr,
+                        addr: encryptedAddr,
                     }
                 });
 
@@ -505,24 +525,32 @@ export class ErpService {
         try {
             console.log(name);
             console.log(socialNum);
-            const res = await this.prisma.$queryRaw(Prisma.sql`
-                SELECT 
-                    c.id,
-                    d.id,
-                    d.name,
-                    d.phoneNum
-                FROM sendList a
-                LEFT JOIN tempOrder b ON a.id = b.sendListId
-                LEFT JOIN \`order\` c ON b.orderId = c.id
-                LEFT JOIN patient d ON c.patientId = d.id
-                WHERE d.name = ${name}
-                AND d.socialNum = ${socialNum}
-                AND a.useFlag = true
-            `);
+            const res = await this.prisma.order.findMany({
+                where: {
+                    patient: {
+                        name: name,
+                    },
+                    isComplete: false,
+                },
+                include: {
+                    patient: true,
+                }
+            });
 
             console.log(res);
-            if (!res) { return true }
-            else { return false };
+
+            let check = true;
+
+            for(const e of res) {
+                const checkSocialNum = this.crypto.decrypt(e.patient.socialNum);
+                if(checkSocialNum.includes(socialNum)){
+                    check = false;
+                    break;
+                }
+            }
+
+            return check;
+        }catch (err) {
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -587,13 +615,15 @@ export class ErpService {
                 }
             });
 
+            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
                     where: {
                         id: token.patientId
                     },
                     data: {
-                        addr: objPatient.addr
+                        addr: encryptedAddr
                     }
                 });
 
@@ -646,23 +676,32 @@ export class ErpService {
      */
     async checkPatient(objPatient: PatientDto) {
         try {
-            const res = await this.prisma.patient.findFirst({
+            const res = await this.prisma.patient.findMany({
                 where: {
                     name: objPatient.name,
-                    socialNum: {
-                        contains: objPatient.socialNum
-                    }
                 },
                 select: {
                     id: true,
                     addr: true,
+                    socialNum: true,
                 }
             });
 
             console.log(res);
 
-            if (!res) return { success: false };
-            else return { success: true, patient: res };
+            let check = false;
+            let matched: any = {};
+
+            for(const e of res) {
+                const checkSocialNum = this.crypto.decrypt(e.socialNum);
+                if(checkSocialNum.includes(objPatient.socialNum)) {
+                    matched = { ...e };
+                    check = true;
+                }
+            }
+
+            if (res.length === 0) return { success: check };
+            else return { success: check, patient: matched };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -724,15 +763,6 @@ export class ErpService {
                     isComplete: false,
                 }
             } else {
-                //날짜 조건 O
-                // 그리니치 천문대 표준시
-                // const gmtDate = new Date(getListDto.date);
-                // // 한국 시간으로 바꾸기
-                // const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-
-                // const startDate = new Date(kstDate.setHours(0, 0, 0, 0));
-                // const endDate = new Date(kstDate.setHours(23, 59, 59, 999));
-
                 const { startDate, endDate } = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
@@ -813,6 +843,14 @@ export class ErpService {
             });
 
             const sortedList = sortItems(list);
+
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
 
             return { success: true, list: sortedList };
         } catch (err) {
@@ -1474,7 +1512,10 @@ export class ErpService {
      */
     async updateOrderByStaff(updateSurveyDto, id) {
         try {
-            const patientData = updateSurveyDto.patient;
+            const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
+
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
@@ -1507,7 +1548,7 @@ export class ErpService {
             const price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
-            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum };
+            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
@@ -1553,7 +1594,10 @@ export class ErpService {
      */
     async updateOrderByDoc(updateSurveyDto, id) {
         try {
-            const patientData = updateSurveyDto.patient;
+            const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
+
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
@@ -1572,7 +1616,7 @@ export class ErpService {
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             const price = getOrderPrice.getPrice();
-            const orderData = { ...updateSurveyDto, price: price };
+            const orderData = { ...updateSurveyDto, price: price, addr: encryptedAddr };
 
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
@@ -2225,6 +2269,14 @@ export class ErpService {
             });
 
             const sortedList = sortItems(list);
+
+            // 나중에 DB 데이터 암호화되면 여기 활성화
+            // for (let row of sortedList) {
+            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+            //     const decryptedAddr = this.crypto.decrypt(row.addr);
+            //     row.patient.phoneNum = decryptedPhoneNume;
+            //     row.addr = decryptedAddr;
+            // }
 
             return { success: true, list: sortedList };
         } catch (err) {
