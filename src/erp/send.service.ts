@@ -320,6 +320,7 @@ export class SendService {
                         select:{
                             price:true,
                             orderItems:true,
+                            payFlag: true
                         }
                     }
                 }
@@ -392,7 +393,7 @@ export class SendService {
                         addr: objPatient.addr,
                         message : objOrder.message,
                         payType: objOrder.payType,
-                        //payFlag: 0, //주문이 수정 되었으므로 결제 미완료 처리
+                        payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
 
