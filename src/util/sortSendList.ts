@@ -61,9 +61,18 @@ const getPriorityInfo = (orderItems: any[]): PriorityInfo => {
 };
 
 const compareItems = (a: any, b: any) => {
-  if (a.orderSortNum !== b.orderSortNum) {
-    // orderSortNum 오름차순 정렬
-    return a.orderSortNum - b.orderSortNum;
+  const aTotalMonths = a.order.orderItems.reduce(
+    (sum: number, item: any) => sum + extractMonths(item.item),
+    0,
+  );
+  const bTotalMonths = b.order.orderItems.reduce(
+    (sum: number, item: any) => sum + extractMonths(item.item),
+    0,
+  );
+
+  if (aTotalMonths !== bTotalMonths) {
+    // 개월수 오름차순 정렬
+    return aTotalMonths - bTotalMonths;
   }
 
   const aPriorityInfo = getPriorityInfo(a.order.orderItems);
@@ -72,27 +81,27 @@ const compareItems = (a: any, b: any) => {
   if (aPriorityInfo.priority !== bPriorityInfo.priority) {
     // 우선도에 따라 정렬
     return aPriorityInfo.priority - bPriorityInfo.priority;
-  } else {
-    // 우선도가 같으면 개월수 오름차순 정렬
-    if (aPriorityInfo.totalMonths !== bPriorityInfo.totalMonths) {
-      return aPriorityInfo.totalMonths - bPriorityInfo.totalMonths;
-    } else {
-      // payType 순서에 따라 정렬
-      const payTypeOrder = {
-        계좌이체: 1,
-        혼용: 2,
-        카드결제: 3,
-      };
-
-      const aPayTypeOrder = payTypeOrder[a.payType] || 4;
-      const bPayTypeOrder = payTypeOrder[b.payType] || 4;
-
-      return aPayTypeOrder - bPayTypeOrder;
-    }
   }
+
+  if (a.orderSortNum !== b.orderSortNum) {
+    // orderSortNum 오름차순 정렬
+    return a.orderSortNum - b.orderSortNum;
+  }
+
+  // payType 순서에 따라 정렬
+  const payTypeOrder = {
+    계좌이체: 1,
+    혼용: 2,
+    카드결제: 3,
+  };
+
+  const aPayTypeOrder = payTypeOrder[a.payType] || 4;
+  const bPayTypeOrder = payTypeOrder[b.payType] || 4;
+
+  return aPayTypeOrder - bPayTypeOrder;
 };
 
-// 분리 배송도 그 안에서 오름차순으로 정렬렬
+// 분리 배송도 그 안에서 오름차순으로 정렬
 const compareTempOrderItems = (a: any, b: any) => {
   if (a.order.id !== b.order.id) {
     return a.order.id - b.order.id;
@@ -105,16 +114,19 @@ const compareTempOrderItems = (a: any, b: any) => {
 };
 
 export const getSortedList = (orders: Array<any>): Array<any> => {
-  const sortedList = orders.sort(compareItems);
-  const combineList = sortedList
+  const sortedList = orders
+    .filter((item) => item.orderSortNum < 6)
+    .sort(compareItems);
+
+  const combineList = orders
     .filter((item) => item.orderSortNum === 6)
     .sort((a, b) => a.addr.localeCompare(b.addr));
-  const sortedBefore6 = sortedList.filter((item) => item.orderSortNum < 6);
-  const sorted7 = sortedList
+
+  const sorted7 = orders
     .filter((item) => item.orderSortNum === 7)
     .sort(compareTempOrderItems);
 
-  const finalSortedList = [...sortedBefore6, ...combineList, ...sorted7];
+  const finalSortedList = [...sortedList, ...combineList, ...sorted7];
 
   return finalSortedList;
 };
