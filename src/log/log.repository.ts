@@ -79,6 +79,10 @@ export class LogRepository{
                     user:{
                         select:{userId:true,grade:true,name:true}
                     }
+                },
+                orderBy:
+                {
+                    DateTime:'desc'
                 }
             });
 

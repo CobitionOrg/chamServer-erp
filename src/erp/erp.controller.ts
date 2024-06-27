@@ -162,7 +162,7 @@ export class ErpController {
 
         if(res.success){
             await this.logService.createLog(
-                `${updateSurveyDto.patientId}번 환자의 ${id}번 주문 정보 업데이트`,
+                `${id}번 주문 정보 업데이트`,
                 '입금상담목록',
                 header
             )
@@ -179,8 +179,8 @@ export class ErpController {
 
         if(res.success){
             await this.logService.createLog(
-                `${updateSurveyDto.patientId}번 환자의 ${id}번 주문 정보 업데이트`,
-                '유선상담목록',
+                `${id}번 주문 정보 업데이트`,
+                '입금상담목록',
                 header
             )
         }
@@ -208,7 +208,6 @@ export class ErpController {
     async getSendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 목록 리스트');
         const res = await this.sendService.getOrderTempList(id);
-
         return res;
     }
 
@@ -347,7 +346,7 @@ export class ErpController {
 
         if(res.success){
             await this.logService.createLog(
-                `${id}번 발송목록 완료 처리`,
+                `${id}번 송장 리스트 완료 처리`,
                 '발송목록',
                 header
             );

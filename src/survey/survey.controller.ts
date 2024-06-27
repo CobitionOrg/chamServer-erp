@@ -44,7 +44,7 @@ export class SurveyController {
         this.myCache.set('/new-patient',response);
         return response;
       }
-    else throw new HttpException('', response.status);
+    else throw new HttpException('초진 설문 오류', response.status);
   }
 
   @ApiOperation({ summary: '재진 설문' })
@@ -60,7 +60,7 @@ export class SurveyController {
         this.myCache.set('/returning-patient',response);
         return response;
       }
-    else throw new HttpException('', response.status);
+    else throw new HttpException('재진 설문 오류', response.status);
   }
 
   @ApiOperation({summary:'주문 항목 전부 가져오기'})
@@ -68,15 +68,9 @@ export class SurveyController {
   @Get('/getAllItems')
   async getAllItem() {
     this.logger.log('주문 항목 전부 가져오기');
-    const res = this.myCache.get('/getAllItems');
+    const res = await this.surveyService.getAllItem();
     if(res)return res;
-    const response=await this.surveyService.getAllItem();
-    if (response.success)
-      {
-        this.myCache.set('/getAllItems',response);
-        return response;
-      }
-    else throw new HttpException('', response.status);
+    throw new HttpException('주문 항목 전부 가져오기 오류', res.status);
   }
 
   @ApiOperation({ summary: '주소 검색 오픈 API' })
@@ -123,13 +117,12 @@ export class SurveyController {
   async getItems() {
     this.logger.log('아이템들만 조회하기');
     const res =this.myCache.get('/getItem');
-    if(res) return res;
     const response= await this.surveyService.getItems();
     if (response.success)
       {
         this.myCache.set('/getItem',response);
         return response;
       }
-      throw new HttpException('', 500);
+      throw new HttpException('아이템 조회 오류', 500);
   }
 }
