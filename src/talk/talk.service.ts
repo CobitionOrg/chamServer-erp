@@ -5,6 +5,7 @@ import * as Excel from 'exceljs'
 import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
+import { Crypto } from 'src/util/crypto.util';
 const fs = require('fs');
 
 @Injectable()
@@ -12,6 +13,7 @@ export class TalkService {
     constructor(
         private readonly talkRepository: TalkRepositoy,
         private readonly erpService: ErpService,
+        private crypto: Crypto,
     ){}
 
     private readonly logger = new Logger(TalkService.name);
@@ -213,6 +215,16 @@ export class TalkService {
 
         const returnTalk = await this.talkRepository.completeSendTalkReturn(id);
         if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+
+        for (let row of firstTalk.list) {
+            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+            row.patient.phoneNum = decryptedPhoneNum;
+        }
+
+        for (let row of returnTalk.list) {
+            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+            row.patient.phoneNum = decryptedPhoneNum;
+        }
 
         const firstUrl = await this.completeSendExcel(firstTalk.list);
         const returnUrl = await this.completeSendExcel(returnTalk.list);
