@@ -550,7 +550,6 @@ export class ErpService {
             }
 
             return check;
-        }catch (err) {
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
