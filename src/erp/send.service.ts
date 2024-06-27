@@ -340,7 +340,6 @@ export class SendService {
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
                         addr: objPatient.addr
-
                     }
                 })
 
