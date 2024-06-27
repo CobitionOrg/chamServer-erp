@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { TasksRepository } from './tasks.repository';
 import { LogService } from 'src/log/log.service';
 
@@ -22,4 +22,18 @@ export class TasksService {
         );
         await this.tasksRepository.deleteS3Data();
     }
+
+    @Cron('0 59 23 * * * ')
+    async deleteFile(){
+        this.logger.debug('delete save file');
+        await this.tasksRepository.deleteSaveFile();
+    }
+    
+    //매주 토요일 오전 9시 후기 안내 알람톡 발송
+    @Cron('0 9 * * 6')
+    async requestReview(){
+
+    }
+
+    //자동 퇴근 처리 기능
 }

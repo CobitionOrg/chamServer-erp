@@ -5,6 +5,7 @@ import * as Excel from 'exceljs'
 import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
+const fs = require('fs');
 
 @Injectable()
 export class TalkService {
@@ -62,6 +63,17 @@ export class TalkService {
         });
 
         const fileData = await wb.xlsx.writeBuffer();
+
+        const filePath= './src/files/test.xlsx';
+
+        fs.writeFile(filePath, fileData, (err) =>{
+            if (err) {
+                console.error('파일 저장 중 에러 발생:', err);
+            } else {
+                console.log('엑셀 파일이 성공적으로 저장되었습니다.');
+            }
+        })
+
         const url = await this.erpService.uploadFile(fileData);
 
         return url;

@@ -389,4 +389,46 @@ export class UserService {
             );
         }
     }
+
+    async requestReview() {
+        try {
+            const today = new Date();
+    
+            // 이번 주 월요일부터 금요일까지의 날짜를 계산
+            const monday = new Date(today);
+            const tuesday = new Date(today);
+            const thursday = new Date(today);
+            const friday = new Date(today);
+        
+            monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+            tuesday.setDate(monday.getDate() + 1);
+            thursday.setDate(monday.getDate() + 3);
+            friday.setDate(monday.getDate() + 4);
+
+            console.log(monday);
+            console.log(tuesday);
+            console.log(thursday);
+            console.log(friday);
+        
+            // 데이터 조회
+            const data = await this.prisma.order.findMany({
+              where: {
+                date: {
+                  in: [monday, tuesday, thursday, friday],
+                }
+              }
+            });
+
+            console.log(data);
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
