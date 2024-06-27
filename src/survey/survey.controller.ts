@@ -34,15 +34,14 @@ export class SurveyController {
   @Get('/new-patient')
   async getFirstVisitQuestion() {
     this.logger.log('초진 설문');
-    const res =this.myCache.get("getFirstVisitQuestion");
+    const res =this.myCache.get('/new-patient');
     if(res)
-      {this.logger.log('초진 cache hit');
-      return res;}
+      {return res;}
     const response=await this.surveyService.getFirstVisitQuestion();
     
     if (response.success)
       {
-        this.myCache.set("getFirstVisitQuestion",response);
+        this.myCache.set('/new-patient',response);
         return response;
       }
     else throw new HttpException('', response.status);
@@ -53,12 +52,12 @@ export class SurveyController {
   @Get('/returning-patient')
   async getReturningQuestion() {
     this.logger.log('재진 설문');
-    const res = this.myCache.get("getReturningQuestion");
+    const res = this.myCache.get('/returning-patient');
     if(res)return res;
     const response=await this.surveyService.getReturningQuestion();
     if (response.success)
       {
-        this.myCache.set("getReturningQuestion",response);
+        this.myCache.set('/returning-patient',response);
         return response;
       }
     else throw new HttpException('', response.status);
@@ -69,12 +68,12 @@ export class SurveyController {
   @Get('/getAllItems')
   async getAllItem() {
     this.logger.log('주문 항목 전부 가져오기');
-    const res = this.myCache.get("getAllItem");
+    const res = this.myCache.get('/getAllItems');
     if(res)return res;
     const response=await this.surveyService.getAllItem();
     if (response.success)
       {
-        this.myCache.set("getAllItem",response);
+        this.myCache.set('/getAllItems',response);
         return response;
       }
     else throw new HttpException('', response.status);
@@ -106,12 +105,12 @@ export class SurveyController {
   @Get('/updateSurvey')
   async updateSurvey(){
     this.logger.log('오더 업데이트 용 질문 가져오기');
-    const res =this.myCache.get("updateSurvey");
+    const res =this.myCache.get('/updateSurvey');
     if(res) return res;
     const response= await this.surveyService.updateSurvey();
     if (response.success)
       {
-        this.myCache.set("updateSurvey",response);
+        this.myCache.set('/updateSurvey',response);
         return response;
       }
     else throw new HttpException('', response.status);
@@ -123,12 +122,12 @@ export class SurveyController {
   @Get('/getItem')
   async getItems() {
     this.logger.log('아이템들만 조회하기');
-    const res =this.myCache.get("getItems");
+    const res =this.myCache.get('/getItem');
     if(res) return res;
     const response= await this.surveyService.getItems();
     if (response.success)
       {
-        this.myCache.set("getItems",response);
+        this.myCache.set('/getItem',response);
         return response;
       }
       throw new HttpException('', 500);
