@@ -8,7 +8,7 @@ import { ErpService } from "./erp.service";
 import { getItem, getItemAtAccount } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
-import { GetOrderSendPrice } from "src/util/getOrderPrice";
+import { GetOrderSendPrice, checkSend } from "src/util/getOrderPrice";
 import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
@@ -242,7 +242,7 @@ export class SendService {
                             id: true,
                             message: true,
                             cachReceipt: true,
-
+                            payType: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -306,10 +306,69 @@ export class SendService {
                 }
             });
 
-            const itemList = await this.erpService.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
-            const price = getOrderPrice.getPrice();
+            const exTempOrder = await this.prisma.tempOrder.findMany({
+                where:{orderId:orderId},
+                select:{
+                    orderSortNum:true,
+                    tempOrderItems:{
+                        select:{
+                            id:true,
+                            sendTax:true
+                        }
+                    },
+                    order:{
+                        select:{
+                            price:true,
+                            orderItems:true,
+                        }
+                    }
+                }
+            });
 
+            let price = 0;
+            const itemList = await this.erpService.getItems();
+            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
+
+            if(exTempOrder[0].orderSortNum<6){ 
+                //합배송, 분리 배송이 아닐 시
+                price = getOrderPrice.getPrice();
+            }else if(exTempOrder[0].orderSortNum == 6) {
+                console.log('합배송일 시')
+                price = getOrderPrice.getOnlyPrice(); // 제품 가격만 합산 
+                console.log(price)
+                const exOrder = await this.prisma.order.findUnique({
+                    where:{id:orderId},
+                    select:{
+                        price:true,
+                        orderItems:true,
+                    }
+                });
+
+                const exOrderPrice = new GetOrderSendPrice(exOrder.orderItems, itemList);
+
+                if(exOrderPrice.getOnlyPrice() !== exOrder.price){
+                    //합배송 중 택배비가 부과된 주문일 경우
+                    if(checkSend(objOrderItem)){
+                        //수정 한 주문이 택배비를 부과해야 되는 경우
+                        price+= 3500;
+                    }else {
+                    
+                    }
+                }
+            }else if(exTempOrder[0].orderSortNum == 7){
+                //분리배송 일시
+                price = getOrderPrice.getOnlyPrice();// 제품 가격만 합산
+                exTempOrder.forEach((e) => {
+                    console.log(e);
+                    if(e.tempOrderItems.sendTax){
+                        //각 분리 배송 데이터가 택배비를 받아야 할 때
+                        price+=3500; //제품 가격에 택배비 합산
+                    }
+                });
+            }
+
+            console.log('---------------'+price+'-----------------')
+           
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
                     where: {
@@ -329,7 +388,11 @@ export class SendService {
                         cachReceipt: objOrder.cashReceipt,
                         price: price,
                         sendNum: objOrder.sendNum,
-                        remark: objOrder.remark
+                        remark: objOrder.remark,
+                        addr: objPatient.addr,
+                        message : objOrder.message,
+                        payType: objOrder.payType,
+                        payFlag: 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
 
@@ -338,6 +401,8 @@ export class SendService {
                     data:{ 
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
+                        addr: objPatient.addr,
+                        payType: objOrder.payType
                     }
                 })
 
@@ -435,6 +500,30 @@ export class SendService {
 
             return { success: true, status: 201 };
 
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 결제 요청 처리
+     * @param id 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async completePay(id: number) {
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{payFlag:1}
+            });
+
+            return { success: true, status: 201 };
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

@@ -122,6 +122,7 @@ erDiagram
   Int id PK
   String item
   Int tempOrderId FK
+  Boolean sendTax "nullable"
 }
 "sendList" {
   Int id PK
@@ -325,6 +326,7 @@ erDiagram
   - `id`: index key
   - `item`: 주문한 아이템
   - `tempOrderId`: 해당 temp order key
+  - `sendTax`: 택배비 유무
 
 ### `sendList`
 

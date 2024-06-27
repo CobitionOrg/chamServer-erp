@@ -75,4 +75,9 @@ export class UserController {
         this.logger.log('유저 권한 허용하기');
         return await this.userService.userFlagUpd(getToken(header),id);
     }
+
+    @Get('/test')
+    async test(){
+        return await this.userService.requestReview();
+    }
 }
