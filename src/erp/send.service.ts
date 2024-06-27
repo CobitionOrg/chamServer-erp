@@ -201,13 +201,12 @@ export class SendService {
 
             const sortedList = getSortedList(list);
 
-            // 나중에 DB 데이터 암호화되면 여기 활성화
-            // for (let row of sortedList) {
-            //     const decryptedAddr = this.crypto.decrypt(row.addr);
-            //     const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
-            //     row.addr = decryptedAddr;
-            //     row.patient.phoneNum = decryptedPhoneNume;
-            // }
+            for (let row of sortedList) {
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+                row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNume;
+            }
 
             return { success: true, list: sortedList };
         } catch (err) {
@@ -265,6 +264,11 @@ export class SendService {
                     }
                 }
             });
+
+            const decryptedPhoneNume = this.crypto.decrypt(list.patient.phoneNum);
+            const decryptePatientdAddr = this.crypto.decrypt(list.patient.addr);
+            list.patient.phoneNum = decryptedPhoneNume;
+            list.patient.addr = decryptePatientdAddr;
 
             return { success: true, list };
         } catch (err) {
@@ -379,6 +383,9 @@ export class SendService {
             }
 
             console.log('---------------'+price+'-----------------')
+
+            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+            const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
            
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
@@ -386,8 +393,8 @@ export class SendService {
                         id: patientId
                     },
                     data: {
-                        addr: objPatient.addr,
-                        phoneNum: objPatient.phoneNum
+                        addr: encryptedAddr,
+                        phoneNum: encryptedPhoneNum
                     }
                 });
 
@@ -400,7 +407,7 @@ export class SendService {
                         price: price,
                         sendNum: objOrder.sendNum,
                         remark: objOrder.remark,
-                        addr: objPatient.addr,
+                        addr: encryptedAddr,
                         message : objOrder.message,
                         payType: objOrder.payType,
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
@@ -412,7 +419,7 @@ export class SendService {
                     data:{ 
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
-                        addr: objPatient.addr,
+                        addr: encryptedAddr,
                         payType: objOrder.payType
                     }
                 })

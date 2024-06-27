@@ -342,8 +342,10 @@ export class ErpService {
             for (let row of sortedList) {
                 const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
                 row.patient.phoneNum = decryptedPhoneNume;
                 row.addr = decryptedAddr;
+                row.patient.addr = decryptedPatientAddr;
             }
 
             return { success: true, list: sortedList };
@@ -845,8 +847,10 @@ export class ErpService {
             for (let row of sortedList) {
                 const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
                 row.patient.phoneNum = decryptedPhoneNume;
                 row.addr = decryptedAddr;
+                row.patient.addr = decryptedPatientAddr;
             }
 
             return { success: true, list: sortedList };
@@ -1203,6 +1207,8 @@ export class ErpService {
             // }
             const addr = address == undefined ? sendOne.addr : address;
 
+            const encryptedAddr = this.crypto.encrypt(addr);
+
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
@@ -1224,7 +1230,7 @@ export class ErpService {
                     isFirst: sendOne.isFirst,
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
-                    addr: addr,
+                    addr: encryptedAddr,
                     order: {
                         connect: { id: id }
                     },
@@ -1949,6 +1955,7 @@ export class ErpService {
 
                 const sendListId = await this.insertToSendList(tx, orderItems);
 
+                const encryptedAddr = this.crypto.encrypt(combineOrderDto.addr);
 
                 for(let i = 0; i<orders.length; i++){
                     const res = await tx.tempOrder.create({
@@ -1967,7 +1974,7 @@ export class ErpService {
                             isFirst: orders[i].isFirst,
                             date: orders[i].date,
                             orderSortNum: 6,
-                            addr: combineOrderDto.addr,
+                            addr: encryptedAddr,
                             order: {
                                 connect: { id: orders[i].id }
                             },
@@ -2010,7 +2017,7 @@ export class ErpService {
                 for (const e of patients) {
                     await tx.patient.update({
                         where: { id: e.patientId },
-                        data: { addr: combineOrderDto.addr }
+                        data: { addr: encryptedAddr }
                     });
                 };
             });
