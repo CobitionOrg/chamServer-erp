@@ -107,7 +107,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${callConsultingDto.orderId}번 설문 유선 상담 완료 처리`,
-                '유선 상담 목록',
+                '유선상담목록',
                 header
             );
         }
@@ -124,7 +124,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 발송 목록으로 이동 처리`,
-                '입금 상담 목록',
+                '입금상담목록',
                 header
             );
         }
@@ -209,14 +209,6 @@ export class ErpController {
         this.logger.log('발송 목록 리스트');
         const res = await this.sendService.getOrderTempList(id);
 
-        if(res.success){
-            await this.logService.createLog(
-                `${id}번 발송목록 조회`,
-                '발송 목록',
-                header
-            );
-        }
-
         return res;
     }
 
@@ -225,15 +217,6 @@ export class ErpController {
     async sendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 단일 데이터 조회');
         const res = await this.sendService.getOrderTempOne(id);
-
-        if(res.success){
-            await this.logService.createLog(
-                `${id}번 발송 데이터 조회`,
-                '발송 목록',
-                header
-            );
-        }
-
         return res;
     }
 
@@ -436,15 +419,6 @@ export class ErpController {
     async getAllSendList(@Headers() header){
         this.logger.log('발송목록 완료 안 된 전체 리스트 가져오기');
         const res = await this.sendService.getAllSendList();
-
-        if(res.success){
-            await this.logService.createLog(
-                '발송목록 미완료 리스트 전체 조회',
-                '발송목록',
-                header
-            );
-        }
-
         return res;
     }
 
@@ -473,7 +447,7 @@ export class ErpController {
         const orderIds = combineOrderDto.orderIdArr.join(', ');
         if(res.success){
             await this.logService.createLog(
-                `${combineOrderDto.addr}에 ${orderIds}들 합배송`,'입금/상담 목록',header
+                `${combineOrderDto.addr}에 ${orderIds}들 합배송`,'입금상담목록',header
             )
         }
         return res;
@@ -487,7 +461,7 @@ export class ErpController {
         const orderIds = separateDto.separate.join(', ');
         if(res.success){
             await this.logService.createLog(
-                `${separateDto.separate}들에 ${orderIds}를 분리 배송`,'입금/상담 목록',header
+                `${separateDto.separate}들에 ${orderIds}를 분리 배송`,'입금상담목록',header
             )
         }
         return res;
@@ -507,11 +481,11 @@ export class ErpController {
     async addSend(@Body() addSendDto: AddSendDto,@Headers() header){
         this.logger.log('추가 발송일자 변경 - 장부에만 들어가는 발송일자 변경 인원들');
         const res = await this.sendService.addSend(addSendDto);
-        // if(res.success){
-        //     await this.logService.createLog(
-        //         `${addSendDto.sendListId}를 ${addSendDto.tempOrderId}에 발송일자 변경`,'발송목록',header
-        //     )
-        // }
+        if(res.success){
+            await this.logService.createLog(
+                `${addSendDto.sendListId}를 ${addSendDto.tempOrderId}에 발송일자 변경`,'발송목록',header
+            )
+        }
         return res;
     }
 
@@ -526,10 +500,14 @@ export class ErpController {
 
     @ApiOperation({summary:'체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기'})
     @Post('/insertUpdateInfo')
-    async insertUpdateInfo(@Body() insertUpdateInfoDto: InsertUpdateInfoDto){
+    async insertUpdateInfo(@Body() insertUpdateInfoDto: InsertUpdateInfoDto,@Headers() header){
         this.logger.log('체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기');
         const res = await this.sendService.insertUpdateInfo(insertUpdateInfoDto);
-        
+        if(res.success){
+            await this.logService.createLog(
+                `${insertUpdateInfoDto.tempOrderId}번 데이터 수정`,'발송목록',header
+            )
+        }
         return res;
     }
 
@@ -544,7 +522,7 @@ export class ErpController {
 
     @ApiOperation({summary:'주문 미결제 처리'})
     @Patch('/notPay/:id')
-    async notPay(@Param("id") id: number) {
+    async notPay(@Param("id") id: number,@Headers() header) {
         this.logger.log('주문 미입금 처리');
         const res = await this.sendService.notPay(id);
         return res;

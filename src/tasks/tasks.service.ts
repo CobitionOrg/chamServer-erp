@@ -26,6 +26,11 @@ export class TasksService {
     @Cron('0 59 23 * * * ')
     async deleteFile(){
         this.logger.debug('delete save file');
+        await this.logService.createLog(
+            `delete save file`,
+            'delete save file',
+            null
+        );
         await this.tasksRepository.deleteSaveFile();
     }
     
