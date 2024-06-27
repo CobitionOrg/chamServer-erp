@@ -1007,7 +1007,8 @@ export class ErpService {
             const sendList = await tx.sendList.findMany({
                 where: {
                     full: false,
-                    fixFlag: false //픽스 여부 체크
+                    fixFlag: false, //픽스 여부 체크
+                    useFlag: true
                 },
                 orderBy: {
                     id: 'asc'
