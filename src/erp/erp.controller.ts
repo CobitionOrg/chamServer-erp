@@ -510,33 +510,53 @@ export class ErpController {
     //아직 안됨
     @ApiOperation({summary:'장부 출력'})
     @Get('/accountBook/:id')
-    async accountBook(@Param("id") id: number){
+    async accountBook(@Param("id") id: number,@Headers() header){
         this.logger.log('장부 출력');
         const res = await this.sendService.accountBook(id);
+        if(res.success){
+            await this.logService.createLog(
+                `장부 출력`,'완료된발송목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'주문 미결제 처리'})
     @Patch('/notPay/:id')
     async notPay(@Param("id") id: number,@Headers() header) {
-        this.logger.log('주문 미입금 처리');
+        this.logger.log('주문 미결제 처리');
         const res = await this.sendService.notPay(id);
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 결제 미완료 처리`,'발송목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'주문 재결제 요청 처리'})
     @Patch('/requestPay/:id')
-    async requestPay(@Param("id") id: number) {
-        this.logger.log('주문 미입금 처리');
+    async requestPay(@Param("id") id: number,@Headers() header) {
+        this.logger.log('주문 재결제 요청 처리');
         const res = await this.sendService.requestPay(id);
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 결제 재요청`,'발송목록',header
+            )
+        }
         return res;
     }
 
-    @ApiOperation({summary:'결제 요청 처리'})
+    @ApiOperation({summary:'결제 완료 처리'})
     @Patch('/completePay/:id')
-    async completePay(@Param("id") id: number) {
-        this.logger.log('주문 미입금 처리');
+    async completePay(@Param("id") id: number,@Headers() header) {
+        this.logger.log('결재 완료 처리');
         const res = await this.sendService.completePay(id);
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 결제 완료 처리`,'발송목록',header
+            )
+        }
         return res;
     }
 
