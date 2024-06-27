@@ -5,6 +5,7 @@ import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
 import { PrismaService } from 'src/prisma.service';
 import { ExchangeRepository } from './exchange.repository';
+import { Crypto } from 'src/util/crypto.util';
 
 @Module({
   controllers:[ExchangeController],
@@ -13,7 +14,8 @@ import { ExchangeRepository } from './exchange.repository';
     LogService,
     LogRepository,
     PrismaService,
-    ExchangeRepository
+    ExchangeRepository,
+    Crypto,
   ]
 })
 export class ExchangeModule {}

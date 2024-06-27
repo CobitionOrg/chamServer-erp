@@ -7,13 +7,14 @@ import { ExOrderItemObjDto } from './Dto/exOrderItemObj.dto';
 import { ExOrderBodyTypeDto } from './Dto/exOrderBodyType.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { CompleteRefundDto } from './Dto/completeRefund.dto';
+import { Crypto } from 'src/util/crypto.util';
 
 @Injectable()
 export class ExchangeService {
     constructor(
         private readonly exchangeRepository : ExchangeRepository,
-        private prisma: PrismaService
-
+        private prisma: PrismaService,
+        private crypto: Crypto,
     ){}
 
     private readonly logger = new Logger(ExchangeService.name);
@@ -136,6 +137,15 @@ export class ExchangeService {
 
 
         const res = await this.exchangeRepository.getExchangeList(orderConditions,patientConditions);
+
+        for (let row of res.list) {
+            const encryptedAddr = this.crypto.decrypt(row.addr);
+            const encryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+            const encryptedPaitientAddr = this.crypto.decrypt(row.patient.addr);
+            row.addr = encryptedAddr;
+            row.patient.phoneNum = encryptedPhoneNum;
+            row.patient.addr = encryptedPaitientAddr;
+        }
 
         if(!res.success){
             return {success:false,status:res.status,msg:''};

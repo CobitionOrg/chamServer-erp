@@ -340,10 +340,10 @@ export class ErpService {
             const sortedList = sortItems(list);
 
             for (let row of sortedList) {
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
-                row.patient.phoneNum = decryptedPhoneNume;
+                row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
             }
@@ -845,10 +845,10 @@ export class ErpService {
             const sortedList = sortItems(list);
 
             for (let row of sortedList) {
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
-                row.patient.phoneNum = decryptedPhoneNume;
+                row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
             }
@@ -1360,6 +1360,15 @@ export class ErpService {
             });
 
             console.log(list);
+
+            for (let row of list) {
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedSocialNum = this.crypto.decrypt(row.patient.socialNum);
+                row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNum;
+                row.patient.socialNum = decryptedSocialNum;
+            }
 
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("신환 등록");
@@ -2275,9 +2284,9 @@ export class ErpService {
             const sortedList = sortItems(list);
 
             for (let row of sortedList) {
-                const decryptedPhoneNume = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
-                row.patient.phoneNum = decryptedPhoneNume;
+                row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
             }
 
