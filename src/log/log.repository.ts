@@ -82,7 +82,7 @@ export class LogRepository{
                 },
                 orderBy:
                 {
-                    DateTime:'desc'
+                    id:'desc'
                 }
             });
 

@@ -317,15 +317,6 @@ export class ErpController {
     async getSendList(@Headers() header){
         this.logger.log('발송목록 리스트 가져오기');
         const res = await this.sendService.getSendList();
-        console.log(res);
-        if(res.success){
-            await this.logService.createLog(
-                '발송목록 리스트 가져오기',
-                '발송목록',
-                header
-            );
-        }
-
         return res;
     }
 
@@ -383,9 +374,16 @@ export class ErpController {
     //로직 보강 처리
     @ApiOperation({summary:'입금 파일 데이터 업로드'})
     @Post('/cashExcel')
-    async cashExcel(@Body() insertCashDto : InsertCashDto){
+    async cashExcel(@Body() insertCashDto : InsertCashDto,@Headers() header){
         this.logger.log('입금 파일 데이터 업로드');
-        return await this.erpService.cashExcel(insertCashDto);
+        const res= await this.erpService.cashExcel(insertCashDto);
+        if(res.success){
+            await this.logService.createLog(
+                `입금 파일 데이터 업로드`,
+                '입금상담목록',
+                header
+            );
+        }
     }
 
     @ApiOperation({summary:'발송목록 타이틀 수정'})
@@ -397,7 +395,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${updateTitleDto.id}번 발송목록 이름을 ${updateTitleDto.title}로 변경`,
-                '발송목록', 
+                '발송목록',
                 header
             );
         }
@@ -430,7 +428,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${completeSetSendDto.orderId}번 오더를 ${completeSetSendDto.sendListId}번 발송리스트에 삽입`,
-                '입금상담목록',
+                '발송목록',
                 header
             );
         }
@@ -474,7 +472,6 @@ export class ErpController {
 
         return res;
     }
-      //이 이하 로그처리 필요한지
     @ApiOperation({summary:'추가 발송일자 변경'})
     @Post('/addSend')
     async addSend(@Body() addSendDto: AddSendDto,@Headers() header){
@@ -491,7 +488,7 @@ export class ErpController {
     @ApiOperation({summary:'발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기'})
     @Get('/getUpdateInfo/:id')
     async getUpdateInfo(@Param("id") id: number){
-        this.logger.log('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');
+        this.logger.log('발송목록에서 수정하는 데이터 수정 체크 리스트 불러오기');//에러발생
         const res = await this.sendService.getUpdateInfo(id);
 
         return res;
