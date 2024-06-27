@@ -242,7 +242,7 @@ export class SendService {
                             id: true,
                             message: true,
                             cachReceipt: true,
-
+                            payType: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -351,6 +351,8 @@ export class SendService {
                     if(checkSend(objOrderItem)){
                         //수정 한 주문이 택배비를 부과해야 되는 경우
                         price+= 3500;
+                    }else {
+                    
                     }
                 }
             }else if(exTempOrder[0].orderSortNum == 7){
@@ -389,6 +391,7 @@ export class SendService {
                         remark: objOrder.remark,
                         addr: objPatient.addr,
                         message : objOrder.message,
+                        payType: objOrder.payType,
                         payFlag: 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
@@ -398,7 +401,8 @@ export class SendService {
                     data:{ 
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
-                        addr: objPatient.addr
+                        addr: objPatient.addr,
+                        payType: objOrder.payType
                     }
                 })
 
