@@ -16,7 +16,7 @@ import { GetListDto } from './Dto/getList.dto';
 import { InsertCashDto } from './Dto/insertCash.dto';
 import { CashExcel } from 'src/util/cashExcel';
 import { getSendTitle } from 'src/util/getSendTitle';
-import { GetOrderSendPrice } from 'src/util/getOrderPrice';
+import { GetOrderSendPrice, checkSend } from 'src/util/getOrderPrice';
 import { CompleteSetSendDto } from './Dto/completeSetSend.dto';
 import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
@@ -1867,6 +1867,44 @@ export class ErpService {
                     orderItems+=(orderItem.length);
                 }
 
+                if(orderItems == 1) {
+                    //합배송 주문 처리 되는 모든 주문을 합쳤을 때 택배비를 받아야하는 금액 처리
+                    for(let i = 0; i<orders.length; i++){
+                        const orderItem = await tx.orderItem.findMany({
+                            where: {
+                                orderId:orders[i].id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+    
+                        //이럴 경우 별도 주문을 한 사람에게 택배비가 부과됩니다.
+                        //따라서 별도 주문을 하지 않은 사람은 택배비를 빼줘야 합니다.
+                        if(orderItem.length != 0) { 
+                            await tx.order.update({
+                                where:{id: orders[i].id},
+                                data: {price: orders[i].price-3500}
+                            });
+                        }
+                    }
+                }else{
+                    //합배송 시 택배비를 면제해주는 금액처리
+                    for(let i = 0; i<orders.length; i++){
+                        const orderItem = await tx.orderItem.findMany({
+                            where: {
+                                orderId:orders[i].id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+
+                        if(checkSend(orderItem)){
+                            await tx.order.update({
+                                where:{id: orders[i].id},
+                                data: {price: orders[i].price-3500}
+                            });
+                        }
+                    }
+                }
+
                 const sendListId = await this.insertToSendList(tx, orderItems);
 
 
@@ -1989,7 +2027,8 @@ export class ErpService {
                         await tx.tempOrderItem.create({
                             data: {
                                 item: e.orderItem,
-                                tempOrderId: res.id
+                                tempOrderId: res.id,
+                                sendTax: e.sendTax
                             }
                         });
                     }

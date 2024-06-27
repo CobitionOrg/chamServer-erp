@@ -306,10 +306,39 @@ export class SendService {
                 }
             });
 
+            const exTempOrder = await this.prisma.tempOrder.findMany({
+                where:{orderId:orderId},
+                select:{
+                    orderSortNum:true,
+                    tempOrderItems:{
+                        select:{
+                            id:true,
+                            sendTax:true
+                        }
+                    }
+                }
+            });
+
+            let price = 0;
             const itemList = await this.erpService.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
-            const price = getOrderPrice.getPrice();
 
+            if(exTempOrder[0].orderSortNum<6){ 
+                //합배송, 분리 배송이 아닐 시
+                price = getOrderPrice.getPrice();
+            }else if(exTempOrder[0].orderSortNum == 6){
+                //분리배송 일시
+                price = getOrderPrice.getOnlyPrice();
+                exTempOrder.forEach((e) => {
+                    if(e.tempOrderItems.sendTax){
+                        price+=3500;
+                    }
+                });
+            }else if(exTempOrder[0].orderSortNum == 7) {
+                //합배송일 시
+            }
+
+           
             await this.prisma.$transaction(async (tx) => {
                 const patient = await tx.patient.update({
                     where: {
@@ -330,7 +359,9 @@ export class SendService {
                         price: price,
                         sendNum: objOrder.sendNum,
                         remark: objOrder.remark,
-                        addr: objPatient.addr
+                        addr: objPatient.addr,
+                        message : objOrder.message
+
                     }
                 });
 
