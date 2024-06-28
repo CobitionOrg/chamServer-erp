@@ -8,7 +8,7 @@ import { ErpService } from "./erp.service";
 import { getItem, getItemAtAccount } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
-import { GetOrderSendPrice, checkSend } from "src/util/getOrderPrice";
+import { GetOrderSendPrice, checkSend, getOnlyPrice } from "src/util/getOrderPrice";
 import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
@@ -335,7 +335,8 @@ export class SendService {
                         select:{
                             price:true,
                             orderItems:true,
-                            payFlag: true
+                            payFlag: true,
+                            combineNum: true,
                         }
                     }
                 }
@@ -350,27 +351,55 @@ export class SendService {
                 price = getOrderPrice.getPrice();
             }else if(exTempOrder[0].orderSortNum == 6) {
                 console.log('합배송일 시')
-                price = getOrderPrice.getOnlyPrice(); // 제품 가격만 합산 
-                console.log(price)
-                const exOrder = await this.prisma.order.findUnique({
-                    where:{id:orderId},
+
+                const combineOrders = await this.prisma.order.findMany({
+                    where:{
+                        combineNum : exTempOrder[0].order.combineNum
+                    },
                     select:{
-                        price:true,
                         orderItems:true,
+                        price: true,
+                        id: true
                     }
-                });
+                }); //기존 합배송 데이터 
 
-                const exOrderPrice = new GetOrderSendPrice(exOrder.orderItems, itemList);
+                const anotherOrder = combineOrders.filter(i => i.id !== orderId);
 
-                if(exOrderPrice.getOnlyPrice() !== exOrder.price){
-                    //합배송 중 택배비가 부과된 주문일 경우
-                    if(checkSend(objOrderItem)){
-                        //수정 한 주문이 택배비를 부과해야 되는 경우
-                        price+= 3500;
-                    }else {
+                const tempObjOrder = [];
+                objOrderItem.forEach(e => tempObjOrder.push(e))
+                anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
+
+                let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
+                console.log('sendTaxFlag : '+sendTaxFlag);
+                if(sendTaxFlag){
+                    //택배비 부과 주문일 시
+                    price = getOnlyPrice(objOrderItem,itemList);
+                    let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+
+                    price > anotherPrice ? anotherPrice+=3500 : price+=3500; //일단 가격이 적은 쪽으로 택배비 책정
                     
-                    }
+                    console.log('-------------'+anotherPrice);
+                    console.log('///////////////'+price);
+                    await this.prisma.order.update({
+                        where:{id:anotherOrder[0].id},
+                        data:{price:anotherPrice}
+                    });
+
+                }else{
+                    //택배비 부과 주문이 아닐 시
+                    price = getOnlyPrice(objOrderItem,itemList); //수정된 주문의 가격만 책정
+
+                     //택배비 부과 주문이 아니기 때문에 같이 묶인 합배송도 해당 가격만 책정해서 업데이트
+                    let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+                   
+                    await this.prisma.order.update({
+                        where:{id:anotherOrder[0].id},
+                        data:{price:anotherPrice}
+                    })
                 }
+
+             
+               
             }else if(exTempOrder[0].orderSortNum == 7){
                 //분리배송 일시
                 price = getOrderPrice.getOnlyPrice();// 제품 가격만 합산
@@ -430,6 +459,7 @@ export class SendService {
                 console.log(objOrderItem)
                 const items = [];
                 objOrderItem.forEach((e) => {
+                    console.log(e);
                     if (e.type == 'assistant') {
                         //assistant는 string
                         const obj = {
