@@ -100,7 +100,7 @@ export class GetOrderSendPrice{
             }else{
                 if(Array.isArray(e.item)){  //재진 설문 시 배열로 넘어올 때
                     e.item.forEach(item => {
-                        for(let i = 0; this.itemList.length; i++){
+                        for(let i = 0; i<this.itemList.length; i++){
                             if(item!="" && this.itemList[i].item.includes(item)){
                                 priceSum+=this.itemList[i].price;
                                 break;
@@ -108,7 +108,7 @@ export class GetOrderSendPrice{
                         }
                     })
                 }else{ //초진 설문일 때
-                    for(let i = 0; this.itemList.length; i++){
+                    for(let i = 0; i<this.itemList.length; i++){
                         if(e.item!="" && this.itemList[i].item.includes(e.item)){
                             priceSum+=this.itemList[i].price;
                             break;
@@ -207,7 +207,7 @@ export function checkSend(orderItems){
        
     });
 
-    //console.log(check);
+    console.log(check);
 
     //별도 주문 제외하고 주문 내역이 하나인데 그 하나가 택배비 받는 오더일 때
     if(check.length ===1 && sendTax.includes(check[0].item)){
@@ -220,4 +220,59 @@ export function checkSend(orderItems){
     }
 
     return checkFlag;
+}
+
+
+export function getOnlyPrice(orderItems,itemList){
+    //console.log(itemList);
+    let priceSum = 0;
+
+    orderItems.forEach(e => {
+        
+        if(e.type =='assistant'){
+            let assistantArr = e.item.split(',');
+            console.log(assistantArr);
+            assistantArr.forEach(e => {
+                let order = e.replace("'",'');
+                let check = order.split(' ');
+
+                if(check.length>1){
+                    let item = check[0];
+                    let amount = check[1].slice(0, -1);
+                    // console.log('----------------');
+                    // console.log(item);
+                    // console.log(amount);
+                    for(let i = 0; i<itemList.length; i++){
+                        if(itemList[i].item==item){
+                            priceSum+=(itemList[i].price*amount);
+                            break;
+                        } 
+                    }
+                }
+            })
+        }else{
+            if(Array.isArray(e.item)){  //재진 설문 시 배열로 넘어올 때
+                e.item.forEach(item => {
+                    for(let i = 0; i<itemList.length; i++){
+                        if(item!="" && itemList[i].item.includes(item)){
+                            priceSum+=itemList[i].price;
+                            break;
+                        }
+                    }
+                })
+            }else{ //초진 설문일 때
+                for(let i = 0; i<itemList.length; i++){
+                    console.log(itemList[i])
+                    if(e.item!="" && itemList[i].item.includes(e.item)){
+                        priceSum+=itemList[i].price;
+                        break;
+                    }
+                }
+            }
+           
+        }
+        
+    });
+
+    return priceSum;
 }
