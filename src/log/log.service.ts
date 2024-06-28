@@ -30,17 +30,17 @@ export class LogService {
         }
         else
         {
-            const id = await this.prisma.user.findFirst({
-                where: {
-                    grade: "admin"
-                },
-                select:
-                {
-                    id:true
-                }
-            });
-            res= await this.logRepository.createLog(log,date,stage,id.id);
-           // res= await this.logRepository.createLog(log,date,stage,5);
+            // const id = await this.prisma.user.findFirst({
+            //     where: {
+            //         grade: "admin"
+            //     },
+            //     select:
+            //     {
+            //         id:true
+            //     }
+            // });
+            // res= await this.logRepository.createLog(log,date,stage,id.id);
+            res= await this.logRepository.createLog(log,date,stage,5);
 
         }
         if(res.success){

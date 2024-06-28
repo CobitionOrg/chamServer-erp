@@ -1388,7 +1388,7 @@ export class SendService {
                     const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
                     const card = e.order.card == 0? '' : e.order.card;
-                    const message = e.order.remark+'/' ?? ''+  e.order.message;
+                    const message =(e.order.remark ? e.order.remark + '/' : '')+  e.order.message;
                     const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
                
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
@@ -1459,19 +1459,5 @@ export class SendService {
         }
     }
 
-    private styleHeaderCell(cell) {
-        cell.font = { name: 'Arial', bold: true, size: 12 };
-        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' },
-        };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFFFE599' },
-        };
-      }
+
 }

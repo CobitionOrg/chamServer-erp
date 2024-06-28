@@ -1,7 +1,6 @@
 import * as Excel from 'exceljs'
 import { generateUploadURL } from './s3';
 import axios from 'axios';
-
 export const styleHeaderCell = (cell) => {
   cell.fill = {
     type: 'pattern',
