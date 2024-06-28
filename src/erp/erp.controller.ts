@@ -135,17 +135,33 @@ export class ErpController {
     @ApiOperation({summary:'신환 용 엑셀 다운로드'})
     @UseGuards(IpGuard)
     @Get('/newPatientExcel/:date')
-    async newPatientExcel(@Param('date') date:string){
+    async newPatientExcel(@Param('date') date:string,@Headers() header){
         this.logger.log('신환 용 엑셀 파일 다운로드');
-        return await this.erpService.newPatientExcel(date);
+        const res=await this.erpService.newPatientExcel(date);
+        if(res.success){
+            await this.logService.createLog(
+                `${date} 신환 용 엑셀 파일 다운로드`,
+                '입금상담목록',
+                header
+            );
+        }
+        return res;
     }
 
     @ApiOperation({summary:'차팅 용 엑셀 다운로드'})
     @UseGuards(IpGuard)
     @Get('/chatingExcel/:id')
-    async chatingExcel(@Param("id") id:number){
+    async chatingExcel(@Param("id") id:number,@Headers() header){
         this.logger.log('차팅 용 엑셀 파일 다운로드');
-        return await this.sendService.chatingExcel(id);
+        const res=await this.sendService.chatingExcel(id);
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 차팅 용 엑셀 파일 다운로드`,
+                '발송목록',
+                header
+            );
+        }
+        return res;
     }
 
     @Public()
@@ -174,12 +190,12 @@ export class ErpController {
     @ApiOperation({summary: '원장님이 환자 정보 업데이트'})
     @Post('/doctor-order-update/:id')
     async updateOrderByDoc(@Body() updateSurveyDto : UpdateSurveyDto, @Param('id') id : number, @Headers() header) {
-        this.logger.log('직원이 환자 정보 업데이트');
+        this.logger.log('원장님이 환자 정보 업데이트');
         const res = await this.erpService.updateOrderByDoc(updateSurveyDto, id);
 
         if(res.success){
             await this.logService.createLog(
-                `${id}번 주문 정보 업데이트`,
+                `${id}번 환자 정보 업데이트`,
                 '입금상담목록',
                 header
             )

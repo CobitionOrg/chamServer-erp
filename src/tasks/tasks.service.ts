@@ -16,8 +16,8 @@ export class TasksService {
     async handleCron(){
         this.logger.debug('delete s3 data');
         await this.logService.createLog(
-            `delete s3 data`,
-            'delete s3 data',
+            `데이터 삭제`,
+            '데이터 삭제',
             null
         );
         await this.tasksRepository.deleteS3Data();
@@ -26,9 +26,9 @@ export class TasksService {
     @Cron('0 59 23 * * * ')
     async deleteFile(){
         this.logger.debug('delete save file');
-        await this.logService.createLog(
-            `delete save file`,
-            'delete save file',
+        await this.logService.createLog(제
+            `세이브 파일 삭제`,
+            '세이브 파일 삭제',
             null
         );
         await this.tasksRepository.deleteSaveFile();

@@ -29,7 +29,7 @@ export class LogService {
         }
         else
         {
-            res= await this.logRepository.createLog(log,date,stage,0);
+            res= await this.logRepository.createLog(log,date,stage,5);
         }
         if(res.success){
             return {success:true,status:res.status}
