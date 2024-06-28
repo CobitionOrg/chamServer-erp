@@ -4,13 +4,9 @@ import axios from 'axios';
 
 export const styleHeaderCell = (cell) => {
   cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "ffebebeb" },
-  };
-  cell.border = {
-    bottom: { style: "thin", color: { argb: "-100000f" } },
-    right: { style: "thin", color: { argb: "-100000f" } },
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFFFE599' },
   };
   cell.font = {
     name: "Arial",
@@ -23,6 +19,13 @@ export const styleHeaderCell = (cell) => {
     horizontal: "center",
     wrapText: true,
   };
+    cell.border = {
+      top: { style: 'thin', color: { argb: "-100000f" } },
+      left: { style: 'thin', color: { argb: "-100000f" } },
+      bottom: { style: 'thin', color: { argb: "-100000f" } },
+      right: { style: 'thin', color: { argb: "-100000f" } },
+    };
+
 }
 
 //현금 입금처리할 때 중복, 노매치 데이터 엑셀 처리

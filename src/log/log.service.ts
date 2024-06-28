@@ -22,11 +22,15 @@ export class LogService {
      */
     async createLog(log:string,stage:string,header){
         const date = new Date();
+        let res;
+        if(header!=null){
         const token = await this.jwtService.decode(getToken(header));
-
-
-        const res = await this.logRepository.createLog(log,date,stage,token.sub);
-
+        res = await this.logRepository.createLog(log,date,stage,token.sub);
+        }
+        else
+        {
+            res= await this.logRepository.createLog(log,date,stage,5);
+        }
         if(res.success){
             return {success:true,status:res.status}
         }else{

@@ -18,6 +18,8 @@ import { GetOrderDto } from './Dto/getOrder.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderUpd } from 'src/auth/decorators/order.decorator';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import * as NodeCache from 'node-cache';
+
 
 @Controller('survey')
 @UseFilters(new HttpExceptionFilter())
@@ -25,15 +27,24 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 export class SurveyController {
   constructor(private readonly surveyService: SurveyService) {}
   private readonly logger = new Logger(SurveyController.name);
+  private myCache = new NodeCache({ stdTTL: 0 });
 
   @ApiOperation({ summary: '초진 설문' })
   @HttpCode(HttpStatus.OK)
   @Get('/new-patient')
   async getFirstVisitQuestion() {
     this.logger.log('초진 설문');
-    const res = await this.surveyService.getFirstVisitQuestion();
-    if (res.success) return res;
-    else throw new HttpException('', res.status);
+    const res =this.myCache.get('/new-patient');
+    if(res)
+      {return res;}
+    const response=await this.surveyService.getFirstVisitQuestion();
+    
+    if (response.success)
+      {
+        this.myCache.set('/new-patient',response);
+        return response;
+      }
+    else throw new HttpException('초진 설문 오류', response.status);
   }
 
   @ApiOperation({ summary: '재진 설문' })
@@ -41,9 +52,15 @@ export class SurveyController {
   @Get('/returning-patient')
   async getReturningQuestion() {
     this.logger.log('재진 설문');
-    const res = await this.surveyService.getReturningQuestion();
-    if (res.success) return res;
-    else throw new HttpException('', res.status);
+    const res = this.myCache.get('/returning-patient');
+    if(res)return res;
+    const response=await this.surveyService.getReturningQuestion();
+    if (response.success)
+      {
+        this.myCache.set('/returning-patient',response);
+        return response;
+      }
+    else throw new HttpException('재진 설문 오류', response.status);
   }
 
   @ApiOperation({summary:'주문 항목 전부 가져오기'})
@@ -52,7 +69,8 @@ export class SurveyController {
   async getAllItem() {
     this.logger.log('주문 항목 전부 가져오기');
     const res = await this.surveyService.getAllItem();
-    return res;
+    if(res)return res;
+    throw new HttpException('주문 항목 전부 가져오기 오류', res.status);
   }
 
   @ApiOperation({ summary: '주소 검색 오픈 API' })
@@ -81,7 +99,16 @@ export class SurveyController {
   @Get('/updateSurvey')
   async updateSurvey(){
     this.logger.log('오더 업데이트 용 질문 가져오기');
-    return await this.surveyService.updateSurvey();
+    const res =this.myCache.get('/updateSurvey');
+    if(res) return res;
+    const response= await this.surveyService.updateSurvey();
+    if (response.success)
+      {
+        this.myCache.set('/updateSurvey',response);
+        return response;
+      }
+    else throw new HttpException('', response.status);
+    
   }
 
   @ApiOperation({summary:'아이템들만 조회하기'})
@@ -89,6 +116,13 @@ export class SurveyController {
   @Get('/getItem')
   async getItems() {
     this.logger.log('아이템들만 조회하기');
-    return await this.surveyService.getItems();
+    const res =this.myCache.get('/getItem');
+    const response= await this.surveyService.getItems();
+    if (response.success)
+      {
+        this.myCache.set('/getItem',response);
+        return response;
+      }
+      throw new HttpException('아이템 조회 오류', 500);
   }
 }
