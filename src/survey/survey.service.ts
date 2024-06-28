@@ -8,6 +8,7 @@ import { AddrSearchDto } from './Dto/addrSearch.dto';
 import { GetOrderDto } from './Dto/getOrder.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { sortAllItems, sortItems } from 'src/util/sortItems';
+import { Crypto } from 'src/util/crypto.util';
 
 @Injectable()
 export class SurveyService {
@@ -15,6 +16,7 @@ export class SurveyService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private readonly httpService: HttpService,
+    private crypto: Crypto,
   ) { }
 
   private readonly logger = new Logger(SurveyService.name);
@@ -265,13 +267,15 @@ export class SurveyService {
    */
   async getMyOrder(getOrderDto: GetOrderDto) {
     try {
-      const userId = await this.getUserId(getOrderDto);
+      const res = await this.getUserId(getOrderDto);
 
-      console.log(userId);
+      if(!res.success) {
+        return { success: false, msg: '주문하신 내역이 없습니다' };
+      }
 
       const order = await this.prisma.order.findFirst({
         where: {
-          patientId: userId.id,
+          patientId: res.id,
           isComplete: false
         },
         select: {
@@ -331,17 +335,29 @@ export class SurveyService {
    */
   async getUserId(getOrderDto: GetOrderDto) {
     try {
-      const userId = await this.prisma.patient.findFirst({
+      const res = await this.prisma.patient.findMany({
         where: {
           name: getOrderDto.name,
-          phoneNum: getOrderDto.phoneNum
         },
         select: {
-          id: true
+          id: true,
+          phoneNum: true,
         }
       });
 
-      return { success: true, id: userId.id }
+      let check = false;
+      let matched: any = {};
+
+      for(const e of res) {
+        const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+        if(checkPhoneNum === getOrderDto.phoneNum) {
+          matched = { ...e };
+          check = true;
+          break;
+        }
+      }
+
+      return { success: check, id: matched.id }
     } catch (err) {
       this.logger.error(err);
       throw new HttpException({

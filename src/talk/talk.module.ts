@@ -7,9 +7,10 @@ import { TalkController } from './talk.controller';
 import { ErpService } from 'src/erp/erp.service';
 import { AdminService } from 'src/admin/admin.service';
 import { UserService } from 'src/user/user.service';
+import { Crypto } from 'src/util/crypto.util';
 
 @Module({
-    providers:[PrismaService,TalkService,TalkRepositoy,ErpService,AdminService,UserService],
+    providers:[PrismaService,TalkService,TalkRepositoy,ErpService,AdminService,UserService,Crypto],
     controllers: [TalkController]
 }) 
 export class TalkModule {}
