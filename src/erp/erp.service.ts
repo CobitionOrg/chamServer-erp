@@ -261,6 +261,7 @@ export class ErpService {
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
+                    useFlag: true,
                 }
             } else {
                 //날짜 조건 O
@@ -269,6 +270,7 @@ export class ErpService {
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
+                    useFlag: true,
                     date: {
                         gte: startDate,
                         lt: endDate,
@@ -761,12 +763,14 @@ export class ErpService {
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
+                    useFlag: true,
                 }
             } else {
                 const { startDate, endDate } = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
+                    useFlag: true,
                     date: {
                         gte: startDate,
                         lt: endDate,
