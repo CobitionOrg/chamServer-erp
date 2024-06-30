@@ -251,6 +251,31 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({ summary: '취소된 주문 조회' })
+    @Get('/canceledOrderList')
+    async getCanceledOrderList(@Query() getListDto: GetListDto) {
+        this.logger.log('취소된 주문 조회');
+        const res = await this.erpService.getCanceledOrderList(getListDto);
+        return res;
+    }
+
+    @ApiOperation({ summary: '취소된 주문 복구' })
+    @Patch('/restoreCanceledOrder')
+    async restoreCanceledOrder(@Body() cancelOrderDto: CancelOrderDto, @Headers() header) {
+        this.logger.log('취소된 주문 복구');
+        const res = await this.erpService.restoreCanceledOrder(cancelOrderDto);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `취소된 ${cancelOrderDto.orderId}번 주문 복구`,
+                `취소된 상담 목록`,
+                header
+            );
+        }
+
+        return res;
+    }
+
     @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
     @Delete('/cancelSend')
     async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto,@Headers() header){

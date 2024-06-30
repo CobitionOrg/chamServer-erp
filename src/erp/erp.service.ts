@@ -2131,35 +2131,26 @@ export class ErpService {
                     //orderBodyType soft delete
                     await tx.orderBodyType.update({
                         where: { orderId: orderId },
-                        data: {
-                            useFlag: false,
-                        }
+                        data: { useFlag: false }
                     });
 
                     //orderItem soft delete
                     await tx.orderItem.updateMany({
                         where: { orderId: orderId },
-                        data: {
-                            useFlag: false,
-                        }
+                        data: { useFlag: false }
                     });
 
                     //order soft delete
                     await tx.order.update({
                         where: { id: orderId },
-                        data: {
-                            useFlag: false,
-                        }
+                        data: { useFlag: false }
                     });
 
                     //patient soft delete
                     await tx.patient.update({
                         where: { id: patientId },
-                        data: {
-                            useFlag: false,
-                        }
+                        data: { useFlag: false }
                     });
-
                 });
 
                 return { success: true, status: HttpStatus.OK, msg: '초진 삭제' }
@@ -2315,6 +2306,155 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             )
+        }
+    }
+
+    async getCanceledOrderList(getListDto: GetListDto) {
+        try {
+            let orderConditions = {};
+            if (getListDto.date === undefined) {
+                //날짜 조건 X
+                orderConditions = {
+                    useFlag: false,
+                    isComplete: false,
+                }
+            } else {
+                //날짜 조건 O
+                const { startDate, endDate } = getKstDate(getListDto.date);
+
+                orderConditions = {
+                    useFlag: false,
+                    isComplete: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if (getListDto.searchKeyword !== "") {
+                //검색어 O
+                if (getListDto.searchCategory === "all") {
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: { contains: getListDto.searchKeyword } } },
+                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: { contains: getListDto.searchKeyword } }
+                    }
+                }
+                else if (getListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingFlag: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
+                    price: true,
+                    card: true,
+                    cash: true,
+                    addr: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    },
+                }
+            });
+
+            const sortedList = sortItems(list);
+
+            for (let row of sortedList) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+                row.patient.phoneNum = decryptedPhoneNum;
+                row.addr = decryptedAddr;
+                row.patient.addr = decryptedPatientAddr;
+            }
+
+            return { success: true, list: sortedList };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async restoreCanceledOrder(restoreOrderDto: CancelOrderDto) {
+        if (restoreOrderDto.isFirst) {
+            //초진일 시 다른 데이터까지 복구
+            const orderId = restoreOrderDto.orderId;
+            const patientId = restoreOrderDto.patientId;
+
+            await this.prisma.$transaction(async (tx) => {
+                await tx.orderBodyType.update({
+                    where: { orderId: orderId },
+                    data: { useFlag: true }
+                });
+
+                await tx.orderItem.updateMany({
+                    where: { orderId: orderId },
+                    data: { useFlag: true }
+                });
+
+                await tx.order.update({
+                    where: { id: orderId },
+                    data: { useFlag: true }
+                });
+
+                await tx.patient.update({
+                    where: { id: patientId },
+                    data: { useFlag: true }
+                });
+            });
+
+            return { success: true, status: HttpStatus.OK, msg: '초진 복구'}
+        } else {
+            //재진일 시 오더 정보만 복구
+            const orderId = restoreOrderDto.orderId;
+
+            await this.prisma.order.update({
+                where: { id: orderId },
+                data: { useFlag: true }
+            });
+
+            return { success: true, status: HttpStatus.OK, msg: '재진 복구'}
         }
     }
 
