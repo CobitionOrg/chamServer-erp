@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
 import * as Excel from 'exceljs'
-import { styleHeaderCell } from "src/util/excelUtil";
+import { styleHeaderCell ,styleCell,setColor} from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
 import { getItem, getItemAtAccount } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
@@ -1395,8 +1395,13 @@ export class SendService {
             styleHeaderCell(wb);
             //헤더 부분
             sheet.mergeCells('A1:K1');
-            sheet.getCell('G1').value = '감비환 장부'
-
+            sheet.getCell('G1').value = sendList.title+' 감비환 장부'
+            sheet.getCell('A1').font={size:24,bold:true};
+            sheet.getCell('A1').alignment={
+                vertical: "middle",
+                horizontal: "center",
+                wrapText: true,
+              };
             //주문 내역 부분
             const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
             const headerWidths = [5,16,9,16,15,10,16,16,12,25,18];
@@ -1420,12 +1425,19 @@ export class SendService {
                     const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
                     const card = e.order.card == 0? '' : e.order.card;
-                    const message = e.order.remark+'/' ?? ''+  e.order.message;
+                    const message =(e.order.remark ? e.order.remark + '/' : '')+  e.order.message;
                     const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
                
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
     
                     const appendRow = sheet.addRow(rowDatas);
+                    appendRow.eachCell((cell, colNum) => {
+                        styleCell(cell);
+                    });
+                    if(e.orderSortNum>1 && e.orderSortNum<6)
+                        {
+                            setColor(appendRow,e.orderSortNum);
+                        }
                 }else if(e.orderSortNum == 7) { //분래 배송일 시
                     if(isSeparteId == e.order.id){
                         console.log('already insert data');
@@ -1444,6 +1456,9 @@ export class SendService {
                         const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
         
                         const appendRow = sheet.addRow(rowDatas);
+                        appendRow.eachCell((cell, colNum) => {
+                            styleCell(cell);
+                        });
                     }
 
                 }
@@ -1491,19 +1506,5 @@ export class SendService {
         }
     }
 
-    private styleHeaderCell(cell) {
-        cell.font = { name: 'Arial', bold: true, size: 12 };
-        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' },
-        };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFFFE599' },
-        };
-      }
+
 }

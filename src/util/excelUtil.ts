@@ -1,7 +1,6 @@
 import * as Excel from 'exceljs'
 import { generateUploadURL } from './s3';
 import axios from 'axios';
-
 export const styleHeaderCell = (cell) => {
   cell.fill = {
     type: 'pattern',
@@ -9,7 +8,7 @@ export const styleHeaderCell = (cell) => {
     fgColor: { argb: 'FFFFE599' },
   };
   cell.font = {
-    name: "Arial",
+    name: "Noto Sans CJK KR",
     size: 12,
     bold: true,
     color: { argb: "ff252525" },
@@ -26,6 +25,57 @@ export const styleHeaderCell = (cell) => {
       right: { style: 'thin', color: { argb: "-100000f" } },
     };
 
+}
+export const styleCell = (cell) => {
+  cell.font = {
+    name: "Noto Sans CJK KR",
+    size: 12,
+    color: { argb: "ff252525" },
+  };
+  cell.alignment = {
+    vertical: "middle",
+    horizontal: "center",
+    wrapText: true,
+  };
+    cell.border = {
+      top: { style: 'thin', color: { argb: "-100000f" } },
+      left: { style: 'thin', color: { argb: "-100000f" } },
+      bottom: { style: 'thin', color: { argb: "-100000f" } },
+      right: { style: 'thin', color: { argb: "-100000f" } },
+    };
+
+}
+export const setColor=(rows,color)=>
+{
+  let co;
+  switch(color)
+  {
+      case 2://특이,보라
+      co='FFD6D6FA';
+      //389
+      break;
+      case 3://챌린지,초록
+      co='FF90EE90';
+      break;
+      case 4://노랑,지인
+      co='FFFFFFE0';
+      break;
+      case 5://구수방
+      co='FFFFB6C1';
+      break;
+  }
+  rows.getCell(3).fill= {type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: co },
+  };
+  rows.getCell(8).fill= {type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: co },
+  };
+  rows.getCell(9).fill= {type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: co },
+  };
 }
 
 //현금 입금처리할 때 중복, 노매치 데이터 엑셀 처리
