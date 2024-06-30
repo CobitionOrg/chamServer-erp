@@ -2417,6 +2417,11 @@ export class ErpService {
     }
 
     async restoreCanceledOrder(restoreOrderDto: CancelOrderDto) {
+        console.log(restoreOrderDto);
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        console.log(kstDate);
+
         if (restoreOrderDto.isFirst) {
             //초진일 시 다른 데이터까지 복구
             const orderId = restoreOrderDto.orderId;
@@ -2435,7 +2440,10 @@ export class ErpService {
 
                 await tx.order.update({
                     where: { id: orderId },
-                    data: { useFlag: true }
+                    data: {
+                        useFlag: true,
+                        date: kstDate,
+                    }
                 });
 
                 await tx.patient.update({
@@ -2451,7 +2459,10 @@ export class ErpService {
 
             await this.prisma.order.update({
                 where: { id: orderId },
-                data: { useFlag: true }
+                data: {
+                    useFlag: true,
+                    date: kstDate,
+                }
             });
 
             return { success: true, status: HttpStatus.OK, msg: '재진 복구'}
