@@ -3,12 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { LogRepository } from './log.repository';
 import { getToken } from 'src/util/token';
-
 @Injectable()
 export class LogService {
     constructor(
         private jwtService: JwtService,
-        private readonly logRepository : LogRepository
+        private readonly logRepository : LogRepository,
+        private prisma: PrismaService,
+
     ){}
 
     private readonly logger = new Logger(LogService.name);
@@ -29,7 +30,18 @@ export class LogService {
         }
         else
         {
+            // const id = await this.prisma.user.findFirst({
+            //     where: {
+            //         grade: "admin"
+            //     },
+            //     select:
+            //     {
+            //         id:true
+            //     }
+            // });
+            // res= await this.logRepository.createLog(log,date,stage,id.id);
             res= await this.logRepository.createLog(log,date,stage,5);
+
         }
         if(res.success){
             return {success:true,status:res.status}
