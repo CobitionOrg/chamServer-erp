@@ -28,7 +28,10 @@ export class VisitController {
     @ApiOperation({summary:'방문수령 조회'})
     @Get('/visitList')
     async visitList(@Query() getListDto: GetListDto, @Headers() header){
+        this.logger.log('방문수령 조회');
+        const res = await this.visitService.visitList(getListDto);
         
+        return res;
     }
 
 }
