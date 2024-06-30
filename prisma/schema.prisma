@@ -122,6 +122,7 @@ model patient {
   addr       String?     @db.Text
   /// 환자 주민번호
   socialNum  String
+  useFlag    Boolean?    @default(true)
   orders     order[]
   tempOrders tempOrder[]
 }
@@ -199,6 +200,7 @@ model order {
   addr            String?        @db.Text
   /// 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
   payFlag         Int?           @default(0)
+  useFlag         Boolean?       @default(true)
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -307,7 +309,7 @@ model addSend {
 
 model orderBodyType {
   /// index key
-  id           Int    @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   /// 키 몸무게
   tallWeight   String
   /// 소화 상태
@@ -323,8 +325,9 @@ model orderBodyType {
   /// 과거에 수술하신 경우
   pastSurgery  String
   /// 해당 주문 오더 key
-  orderId      Int    @unique
-  order        order  @relation(fields: [orderId], references: [id])
+  orderId      Int      @unique
+  useFlag      Boolean? @default(true)
+  order        order    @relation(fields: [orderId], references: [id])
 }
 
 model orderItem {
@@ -336,6 +339,7 @@ model orderItem {
   type    ItemType
   /// 해당 주문 오더 key
   orderId Int
+  useFlag Boolean? @default(true)
   order   order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "orderItem_orderId_fkey")
