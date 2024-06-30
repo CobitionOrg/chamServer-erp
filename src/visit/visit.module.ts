@@ -5,7 +5,7 @@ import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
 import { PrismaService } from 'src/prisma.service';
 import { VisitRepository } from './visit.repository';
-
+import {Crypto} from '../util/crypto.util';
 @Module({
     controllers:[VisitController],
     providers: [
