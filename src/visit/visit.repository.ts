@@ -9,6 +9,11 @@ export class VisitRepository {
 
     private readonly logger = new Logger(VisitRepository.name);
 
+    /**
+     * 방문수령 처리
+     * @param id 
+     * @returns 
+     */
     async visitOrder(id: number) {
         try{
             await this.prisma.order.update({
@@ -27,6 +32,12 @@ export class VisitRepository {
         }
     }
 
+    /**
+     * 방문 수령 리스트 불러오기
+     * @param orderConditions 
+     * @param patientConditions 
+     * @returns 
+     */
     async visitList(orderConditions, patientConditions){
         try{
             const list = await this.prisma.order.findMany({

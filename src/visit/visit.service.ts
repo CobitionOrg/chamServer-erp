@@ -13,10 +13,23 @@ export class VisitService {
 
     private readonly logger = new Logger(VisitService.name);
 
+    /**
+     * 방문수령으로 설정
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+        }>
+     */
     async visitOrder(id: number) {
         return await this.visitRepository.visitOrder(id);
     }
 
+    /**
+     * 방문수령 리스트 불러오기
+     * @param getListDto 
+     * @returns 
+     */
     async visitList(getListDto: GetListDto) {
         let orderConditions = {};
 
