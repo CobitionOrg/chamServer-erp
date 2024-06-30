@@ -138,6 +138,11 @@ export class ExchangeService {
 
         const res = await this.exchangeRepository.getExchangeList(orderConditions,patientConditions);
 
+        if(!res.success){
+            return {success:false,status:res.status,msg:''};
+        }
+
+        
         for (let row of res.list) {
             const encryptedAddr = this.crypto.decrypt(row.addr);
             const encryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
@@ -147,9 +152,6 @@ export class ExchangeService {
             row.patient.addr = encryptedPaitientAddr;
         }
 
-        if(!res.success){
-            return {success:false,status:res.status,msg:''};
-        }
 
         return res;
     }

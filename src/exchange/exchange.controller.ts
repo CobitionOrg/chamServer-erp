@@ -14,7 +14,7 @@ import { LogService } from 'src/log/log.service';
 export class ExchangeController {
     constructor(
         private readonly exchangeService: ExchangeService,
-        private readonly logService : LogService,
+        private readonly logService: LogService,
     ) { }
 
     private readonly logger = new Logger(ExchangeController.name);
@@ -26,8 +26,8 @@ export class ExchangeController {
 
     @ApiOperation({ summary: '교환,환불,누락 건으로 새 오더 생성' })
     @Post('/createExchange')
-    async createExchange(@Body() createExchangeDto: CreateExchangeDto,@Headers() Header) {
-        const res:any = await this.exchangeService.createExchange(createExchangeDto);
+    async createExchange(@Body() createExchangeDto: CreateExchangeDto, @Headers() Header) {
+        const res: any = await this.exchangeService.createExchange(createExchangeDto);
         if (res.status != 201) {
             throw new HttpException({
                 success: false,
@@ -37,19 +37,19 @@ export class ExchangeController {
                 res.status
             );
         }
-               await this.logService.createLog(
-                    `${createExchangeDto.id}번 교환,환불,누락 건으로 새 오더 생성`,
-                    '교환/환불/누락목록',
-                    Header
-                );
-        return {success:true, status:HttpStatus.CREATED};
-    } 
+        await this.logService.createLog(
+            `${createExchangeDto.id}번 교환,환불,누락 건으로 새 오더 생성`,
+            '교환/환불/누락목록',
+            Header
+        );
+        return { success: true, status: HttpStatus.CREATED };
+    }
 
-    @ApiOperation({summary: '교환 환불,누락 오더 리스트 가져오기'})
+    @ApiOperation({ summary: '교환 환불,누락 오더 리스트 가져오기' })
     @Get('/getExchangeList')
-    async getExchageList(@Query() getListDto : GetListDto, @Headers() Header){
-        const res:any = await this.exchangeService.getExchangeList(getListDto);
-        if(res.status != 200){
+    async getExchageList(@Query() getListDto: GetListDto, @Headers() Header) {
+        const res: any = await this.exchangeService.getExchangeList(getListDto);
+        if (res.status != 200) {
             throw new HttpException({
                 success: false,
                 status: res.status,
@@ -62,12 +62,12 @@ export class ExchangeController {
         return res;
     }
 
-    @ApiOperation({summary:'환불 완료 처리'})
+    @ApiOperation({ summary: '환불 완료 처리' })
     @Post('/completeRefund')
-    async completeRefund(@Body('id') completeRefundDto : CompleteRefundDto, @Headers() Header){
-        const res:any = await this.exchangeService.completeRefund(completeRefundDto);
-        
-        if(res.status != 200){
+    async completeRefund(@Body('id') completeRefundDto: CompleteRefundDto, @Headers() Header) {
+        const res: any = await this.exchangeService.completeRefund(completeRefundDto);
+
+        if (res.status != 200) {
             throw new HttpException({
                 success: false,
                 status: res.status,
