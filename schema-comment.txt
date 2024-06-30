@@ -74,6 +74,7 @@ model patient {
   phoneNum   String      ///환자 핸드폰 번호
   addr       String      ///환자 주소
   socialNum  String      ///환자 주민번호
+  useFlag    Boolean     ///soft delete용 flag
   orders     order[]
   tempOrders tempOrder[]
 }
@@ -111,6 +112,7 @@ model order {
   cash            Int            ///현금 결제액
   card            Int            ///카드 결제액
   note            String         ///outage용 비고
+  useFlag         Boolean        ///soft delete용 flag
   patient         patient        @relation(fields: [patientId], references: [id])
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
@@ -168,6 +170,7 @@ model orderBodyType {
   nowDrug      String  ///현재 복용 중인 약
   pastDrug     String  ///과거 다이어트 약 복용
   pastSurgery  String  ///과거에 수술하신 경우
+  useFlag      Boolean ///soft delete용 flag
   orderId      Int    @unique ///해당 주문 오더 key
   order        order  @relation(fields: [orderId], references: [id])
 }
@@ -177,6 +180,7 @@ model orderItem {
   item    String   /// 주문한 아이템
   type    ItemType /// 아이템 타입
   orderId Int      /// 해당 주문 오더 key
+  useFlag Boolean  ///soft delete용 flag
   order   order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "orderItem_orderId_fkey")

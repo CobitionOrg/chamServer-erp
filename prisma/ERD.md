@@ -56,6 +56,7 @@ erDiagram
   String phoneNum
   String addr "nullable"
   String socialNum
+  Boolean useFlag "nullable"
 }
 "item" {
   Int id PK
@@ -95,6 +96,7 @@ erDiagram
   Boolean consultingFlag "nullable"
   String addr "nullable"
   Int payFlag "nullable"
+  Boolean useFlag "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -149,12 +151,14 @@ erDiagram
   String pastDrug
   String pastSurgery
   Int orderId FK
+  Boolean useFlag "nullable"
 }
 "orderItem" {
   Int id PK
   String item
   ItemType type
   Int orderId FK
+  Boolean useFlag "nullable"
 }
 "orderUpdateInfo" {
   Int id PK
@@ -252,6 +256,7 @@ erDiagram
   - `phoneNum`: 환자 핸드폰 번호
   - `addr`: 환자 주소
   - `socialNum`: 환자 주민번호
+  - `useFlag`: 
 
 ### `item`
 
@@ -295,6 +300,7 @@ erDiagram
   - `consultingFlag`: 상담 연결 여부
   - `addr`: 주문 주소
   - `payFlag`: 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
+  - `useFlag`: 
 
 ### `tempOrder`
 
@@ -359,6 +365,7 @@ erDiagram
   - `pastDrug`: 과거 다이어트 약 복용
   - `pastSurgery`: 과거에 수술하신 경우
   - `orderId`: 해당 주문 오더 key
+  - `useFlag`: 
 
 ### `orderItem`
 
@@ -367,6 +374,7 @@ erDiagram
   - `item`: 주문한 아이템
   - `type`: 아이템 타입
   - `orderId`: 해당 주문 오더 key
+  - `useFlag`: 
 
 ### `orderUpdateInfo`
 
