@@ -2119,29 +2119,41 @@ export class ErpService {
     async cancelOrder(cancelOrderDto: CancelOrderDto) {
         try {
             if (cancelOrderDto.isFirst) {
-                //초진 일 시 환자 데이터까지 삭제
+                //초진 일 시 환자 데이터까지 soft delete
                 const orderId = cancelOrderDto.orderId;
                 const patientId = cancelOrderDto.patientId;
 
                 await this.prisma.$transaction(async (tx) => {
-                    //orderBodyType 삭제
-                    await tx.orderBodyType.delete({
-                        where: { orderId: orderId }
+                    //orderBodyType soft delete
+                    await tx.orderBodyType.update({
+                        where: { orderId: orderId },
+                        data: {
+                            useFlag: false,
+                        }
                     });
 
-                    //orderItem 삭제
-                    await tx.orderItem.deleteMany({
-                        where: { orderId: orderId }
+                    //orderItem soft delete
+                    await tx.orderItem.updateMany({
+                        where: { orderId: orderId },
+                        data: {
+                            useFlag: false,
+                        }
                     });
 
-                    //order 삭제
-                    await tx.order.delete({
-                        where: { id: orderId }
+                    //order soft delete
+                    await tx.order.update({
+                        where: { id: orderId },
+                        data: {
+                            useFlag: false,
+                        }
                     });
 
-                    //patient 삭제
-                    await tx.patient.delete({
-                        where: { id: patientId }
+                    //patient soft delete
+                    await tx.patient.update({
+                        where: { id: patientId },
+                        data: {
+                            useFlag: false,
+                        }
                     });
 
                 });
@@ -2151,10 +2163,10 @@ export class ErpService {
                 //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
                 const orderId = cancelOrderDto.orderId;
 
-                //오더만 isComplete를 true로 변경
+                //오더만 useFlag false로 변경
                 await this.prisma.order.update({
                     where: { id: orderId },
-                    data: { isComplete: true }
+                    data: { useFlag: false }
                 });
 
                 return { success: true, status: HttpStatus.OK, msg: '재진 삭제' }
