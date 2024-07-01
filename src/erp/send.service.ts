@@ -1458,6 +1458,10 @@ export class SendService {
             });
 
             const appendRow = sheet.addRow(rowDatas);
+            appendRow.eachCell((cell,colNum)=>
+                {
+                    styleCell(cell);
+                })
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
