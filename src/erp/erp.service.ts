@@ -26,6 +26,7 @@ import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
+import { NewOrderDto } from './Dto/newOrder.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -138,7 +139,7 @@ export class ErpService {
                         price: price,
                         patientId: patient.id,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr
                     }
                 });
@@ -197,7 +198,7 @@ export class ErpService {
             console.log(socialNum);
             const res = await this.prisma.patient.findMany({
                 where: { name } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
-                },
+            },
                
             );
             console.log(res);
@@ -461,7 +462,7 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr,
                     }
                 });
@@ -1217,6 +1218,7 @@ export class ErpService {
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
+            console.log(sendOne);
 
             const res = await tx.tempOrder.create({
                 data: {
@@ -2479,6 +2481,120 @@ export class ErpService {
                 where: { patientId: res[i].id },
                 data: { addr: res[i].addr }
             });
+        }
+    }
+
+    async newOrder(newOrderDto: NewOrderDto){
+        try{
+            const encryptedAddr = this.crypto.encrypt(newOrderDto.addr);
+            const encryptedPhoneNum = this.crypto.encrypt(newOrderDto.phoneNum);
+            const encryptedSocialNum = this.crypto.encrypt(newOrderDto.socialNum);
+            
+            const date = new Date(newOrderDto.date);
+            const kstDate = new Date(date.getTime()+ 9 * 60 * 60 * 1000);
+           
+            if(newOrderDto.isFirst){
+                //초진일 시
+                await this.prisma.$transaction(async (tx) => {
+                    const newPatient = await tx.patient.create({
+                        data: {
+                            name: newOrderDto.name,
+                            phoneNum: encryptedPhoneNum,
+                            addr: encryptedAddr,
+                            socialNum: encryptedSocialNum,
+                            useFlag: true, 
+                        }
+                    });
+                   
+                   await tx.order.create({
+                       data: {
+                        route: '',
+                        message: '',
+                        cachReceipt: '',
+                        typeCheck: '',
+                        consultingTime: '',
+                        payType: newOrderDto.payType,
+                        essentialCheck: '',
+                        outage: '',
+                        isFirst: newOrderDto.isFirst,
+                        price: 0,
+                        patientId: newPatient.id,
+                        date: kstDate,
+                        orderSortNum: 1, //구수방인지 체크
+                        addr: encryptedAddr
+                       } 
+                   })
+                });
+
+            }else{
+                //재진일 시
+                await this.prisma.$transaction(async (tx) => {
+                    const exPatient = await tx.patient.findMany({
+                        where:{
+                            name: newOrderDto.name,
+                            socialNum: encryptedSocialNum
+                        }
+                    });
+
+                    if(!exPatient) {
+                        throw new HttpException({
+                            success: false,
+                            status: HttpStatus.NOT_FOUND
+                        },
+                            HttpStatus.NOT_FOUND
+                        );
+                    }else if(exPatient.length>1){
+                        throw new HttpException({
+                            success: false,
+                            status: HttpStatus.CONFLICT
+                        },
+                            HttpStatus.CONFLICT
+                        );
+                    }
+
+                    await tx.patient.update({
+                        where:{
+                            id: exPatient[0].id
+                        },
+                        data: {
+                            name: newOrderDto.name,
+                            phoneNum: encryptedPhoneNum,
+                            addr: encryptedAddr,
+                            socialNum: encryptedSocialNum,
+                            useFlag: true, 
+                        }
+                    });
+
+                    await tx.order.create({
+                        data: {
+                            route: '',
+                            message: '',
+                            cachReceipt: '',
+                            typeCheck: '',
+                            consultingTime: '',
+                            payType: newOrderDto.payType,
+                            essentialCheck: '',
+                            outage: '',
+                            isFirst: newOrderDto.isFirst,
+                            price: 0,
+                            patientId: exPatient[0].id,
+                            date: kstDate,
+                            orderSortNum: 1, //구수방인지 체크
+                            addr: encryptedAddr
+                           } 
+                    });
+                })
+            }
+
+            return {success: true, status: HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
