@@ -15,6 +15,7 @@ import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
 import { getFooter } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
+import { sortItems } from "src/util/sortItems";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -201,7 +202,9 @@ export class SendService {
                 }
             });
 
-            const sortedList = getSortedList(list);
+            const sortItemsList = sortItems(list, true);
+
+            const sortedList = getSortedList(sortItemsList);
 
             for (let row of sortedList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);

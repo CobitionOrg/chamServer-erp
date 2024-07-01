@@ -3,23 +3,41 @@ interface OrderItems {
   type: string;
 }
 
-export const sortItems = (list: any[]) => {
-  return list.map((order) => {
-    return {
-      ...order,
-      orderItems: order.orderItems.sort((a: OrderItems, b: OrderItems) => {
-        if (a.item < b.item) {
-          return -1;
-        }
-        if (a.item > b.item) {
-          return 1;
-        }
-        return 0;
-      }),
-    };
-  });
+export const sortItems = (list: any[], isTempOrderList: boolean = false) => {
+  if(isTempOrderList) {
+    return list.map((item) => ({
+      ...item,
+      order: {
+        ...item.order,
+        orderItems: item.order.orderItems.sort((a: OrderItems, b: OrderItems) => {
+          if (a.item < b.item) {
+            return -1;
+          }
+          if (a.item > b.item) {
+            return 1;
+          }
+          return 0;
+        }),
+      },
+    }));
+  } else {
+    return list.map((order) => {
+      return {
+        ...order,
+        orderItems: order.orderItems.sort((a: OrderItems, b: OrderItems) => {
+          if (a.item < b.item) {
+            return -1;
+          }
+          if (a.item > b.item) {
+            return 1;
+          }
+          return 0;
+        }),
+      };
+    });
+  }
+  
 };
-
 
 // 정렬 함수 정의
 export const sortAllItems = (a, b) => {
