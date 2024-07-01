@@ -611,6 +611,15 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary:'데스크에서 업데이트 내역 체크'})
+    @Patch('/checkUpdateAtDesk/:id')
+    async checkUpdateAtDesk(@Param("id") id: number) {
+        this.logger.log('데스크에서 업데이트 내역 체크');
+        const res = await this.sendService.checkUpdateAtDesk(id);
+
+        return res;
+    }
+
 
     @Get('/ffff')
     async ffff(){

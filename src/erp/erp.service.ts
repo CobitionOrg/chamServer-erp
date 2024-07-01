@@ -2484,6 +2484,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * 원내에서 새 오더 생성
+     * @param newOrderDto 
+     * @returns 
+     */
     async newOrder(newOrderDto: NewOrderDto){
         try{
             const encryptedAddr = this.crypto.encrypt(newOrderDto.addr);
