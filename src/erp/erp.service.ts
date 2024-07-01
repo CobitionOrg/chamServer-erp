@@ -139,7 +139,7 @@ export class ErpService {
                         price: price,
                         patientId: patient.id,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr
                     }
                 });
@@ -462,7 +462,7 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr,
                     }
                 });
@@ -1218,6 +1218,7 @@ export class ErpService {
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
+            console.log(sendOne);
 
             const res = await tx.tempOrder.create({
                 data: {
@@ -2491,7 +2492,7 @@ export class ErpService {
             
             const date = new Date(newOrderDto.date);
             const kstDate = new Date(date.getTime()+ 9 * 60 * 60 * 1000);
-
+           
             if(newOrderDto.isFirst){
                 //초진일 시
                 await this.prisma.$transaction(async (tx) => {
@@ -2550,6 +2551,19 @@ export class ErpService {
                             HttpStatus.CONFLICT
                         );
                     }
+
+                    await tx.patient.update({
+                        where:{
+                            id: exPatient[0].id
+                        },
+                        data: {
+                            name: newOrderDto.name,
+                            phoneNum: encryptedPhoneNum,
+                            addr: encryptedAddr,
+                            socialNum: encryptedSocialNum,
+                            useFlag: true, 
+                        }
+                    });
 
                     await tx.order.create({
                         data: {
