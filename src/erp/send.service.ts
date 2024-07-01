@@ -162,6 +162,7 @@ export class SendService {
                     payType: true,
                     addr: true,
                     updateInfoCheck: true,
+                    cancelFlag: true,
                     patient: {
                         select: {
                             id: true,
@@ -1293,6 +1294,32 @@ export class SendService {
     }
 
     /**
+     * 발송 목록에서 주문 취소 처리(soft delete)
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg:string}
+     */
+    async cancelSendOrderFlag(id: number) {
+        try{
+            await this.prisma.tempOrder.update({
+                where:{id:id},
+                data:{cancelFlag:true}
+            });
+
+            return {success:true, status:HttpStatus.OK, msg:'주문 취소'}
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**
      * 데스크에서 업데이트 내역 체크
      * @param id 
      * @returns {success:boolean, status: HttpStatus}
@@ -1314,7 +1341,6 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
-
         }
     }
 

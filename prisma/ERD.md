@@ -120,6 +120,7 @@ erDiagram
   Int sendListId FK
   String addr "nullable"
   Boolean updateInfoCheck "nullable"
+  Boolean cancelFlag "nullable"
 }
 "tempOrderItem" {
   Int id PK
@@ -327,6 +328,7 @@ erDiagram
   - `sendListId`: 발송목록 key
   - `addr`: 해당 오더 발송 주소
   - `updateInfoCheck`: 접수대에서 수정여부 체크 확인 플래그
+  - `cancelFlag`: 주문 취소 플래그
 
 ### `tempOrderItem`
 
