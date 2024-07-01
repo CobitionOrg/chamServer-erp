@@ -161,6 +161,7 @@ export class SendService {
                     sendNum: true,
                     payType: true,
                     addr: true,
+                    updateInfoCheck: true,
                     patient: {
                         select: {
                             id: true,
@@ -451,7 +452,8 @@ export class SendService {
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
-                        payType: objOrder.payType
+                        payType: objOrder.payType,
+                        updateInfoCheck: false,
                     }
                 })
 
@@ -1287,6 +1289,32 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 데스크에서 업데이트 내역 체크
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus}
+     */
+    async checkUpdateAtDesk(id: number){
+        try{
+            await this.prisma.tempOrder.update({
+                where:{id:id},
+                data:{updateInfoCheck:true}
+            });
+
+            return {success:true, status:HttpStatus.OK, msg:'확인 완료'}
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 
