@@ -25,6 +25,7 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
+import { NewOrderDto } from './Dto/newOrder.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -598,6 +599,15 @@ export class ErpController {
                 `${id}번 결제 완료 처리`,'발송목록',header
             )
         }
+        return res;
+    }
+
+    @ApiOperation({summary:'원내에서 주문 생성'})
+    @Post('/newOrder')
+    async newOrder(@Body() newOrderDto: NewOrderDto,@Headers() header){
+        this.logger.log('원내에서 주문 생성');
+        const res = await this.erpService.newOrder(newOrderDto);
+
         return res;
     }
 
