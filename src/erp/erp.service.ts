@@ -1210,9 +1210,13 @@ export class ErpService {
 
             //     address = patient.addr
             // }
-            const addr = address == undefined ? sendOne.addr : address;
-
-            const encryptedAddr = this.crypto.encrypt(addr);
+            
+            let encryptedAddr;
+            if(address == undefined) {
+                encryptedAddr = sendOne.addr;
+            } else {
+                encryptedAddr = this.crypto.encrypt(address);
+            }
 
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
