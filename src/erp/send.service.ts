@@ -255,6 +255,7 @@ export class SendService {
                             cachReceipt: true,
                             payType: true,
                             orderSortNum: true,
+                            addr: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -270,8 +271,10 @@ export class SendService {
 
             const decryptedPhoneNum = this.crypto.decrypt(list.patient.phoneNum);
             const decryptePatientdAddr = this.crypto.decrypt(list.patient.addr);
+            const decrypteAddr = this.crypto.decrypt(list.order.addr);
             list.patient.phoneNum = decryptedPhoneNum;
             list.patient.addr = decryptePatientdAddr;
+            list.order.addr = decrypteAddr;
 
             return { success: true, list };
         } catch (err) {
