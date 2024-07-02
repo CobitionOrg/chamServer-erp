@@ -2669,9 +2669,19 @@ export class ErpService {
                             }
                         });
 
+                        const order = await tx.order.findUnique({
+                            where:{id:checkDiscountDto.orderId},
+                            select:{remark:true}
+                        });
+
+                        let remark = order.remark + '/지인 10포';
+
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
-                            data:{orderSortNum:4}
+                            data:{
+                                orderSortNum:4,
+                                remark:remark
+                            }
                         });
                     })
                    
