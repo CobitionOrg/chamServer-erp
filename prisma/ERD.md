@@ -98,6 +98,15 @@ erDiagram
   Int payFlag "nullable"
   Boolean useFlag "nullable"
 }
+"friendRecommend" {
+  Int id PK
+  String name
+  String phoneNum
+  Boolean checkFlag "nullable"
+  DateTime date
+  Int patientId FK
+  Int orderId FK
+}
 "tempOrder" {
   Int id PK
   String route
@@ -182,6 +191,8 @@ erDiagram
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
 "order" }o--|| "patient" : patient
+"friendRecommend" }o--|| "patient" : patient
+"friendRecommend" |o--|| "order" : order
 "tempOrder" }o--|| "order" : order
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
@@ -303,6 +314,17 @@ erDiagram
   - `addr`: 주문 주소
   - `payFlag`: 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
   - `useFlag`: 
+
+### `friendRecommend`
+
+**Properties**
+  - `id`: index key
+  - `name`: 추천인 이름
+  - `phoneNum`: 추천인 전화번호
+  - `checkFlag`: 확인 여부
+  - `date`: 접수 일자
+  - `patientId`: 환자 key
+  - `orderId`: 원 오더 key
 
 ### `tempOrder`
 
