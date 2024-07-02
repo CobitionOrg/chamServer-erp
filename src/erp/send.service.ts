@@ -196,7 +196,9 @@ export class SendService {
                     },
                     tempOrderItems: {
                         select: {
-                            item: true
+                            id: true,
+                            item: true,
+                            sendTax: true,
                         }
                     }
                 }
@@ -329,103 +331,110 @@ export class SendService {
                 }
             });
 
-            const exTempOrder = await this.prisma.tempOrder.findMany({
-                where:{orderId:orderId},
-                select:{
-                    orderSortNum:true,
-                    tempOrderItems:{
-                        select:{
-                            id:true,
-                            sendTax:true
-                        }
-                    },
-                    order:{
-                        select:{
-                            price:true,
-                            orderItems:true,
-                            payFlag: true,
-                            combineNum: true,
-                        }
-                    }
-                }
-            });
-
-            let price = 0;
-            const itemList = await this.erpService.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
-
-            if(exTempOrder[0].orderSortNum<6){ 
-                //합배송, 분리 배송이 아닐 시
-                price = getOrderPrice.getPrice();
-            }else if(exTempOrder[0].orderSortNum == 6) {
-                console.log('합배송일 시')
-
-                const combineOrders = await this.prisma.order.findMany({
-                    where:{
-                        combineNum : exTempOrder[0].order.combineNum
-                    },
-                    select:{
-                        orderItems:true,
-                        price: true,
-                        id: true
-                    }
-                }); //기존 합배송 데이터 
-
-                const anotherOrder = combineOrders.filter(i => i.id !== orderId);
-
-                const tempObjOrder = [];
-                objOrderItem.forEach(e => tempObjOrder.push(e))
-                anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
-
-                let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
-                console.log('sendTaxFlag : '+sendTaxFlag);
-                if(sendTaxFlag){
-                    //택배비 부과 주문일 시
-                    price = getOnlyPrice(objOrderItem,itemList);
-                    let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
-
-                    price > anotherPrice ? anotherPrice+=3500 : price+=3500; //일단 가격이 적은 쪽으로 택배비 책정
-                    
-                    console.log('-------------'+anotherPrice);
-                    console.log('///////////////'+price);
-                    await this.prisma.order.update({
-                        where:{id:anotherOrder[0].id},
-                        data:{price:anotherPrice}
-                    });
-
-                }else{
-                    //택배비 부과 주문이 아닐 시
-                    price = getOnlyPrice(objOrderItem,itemList); //수정된 주문의 가격만 책정
-
-                     //택배비 부과 주문이 아니기 때문에 같이 묶인 합배송도 해당 가격만 책정해서 업데이트
-                    let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
-                   
-                    await this.prisma.order.update({
-                        where:{id:anotherOrder[0].id},
-                        data:{price:anotherPrice}
-                    })
-                }
-
-             
-               
-            }else if(exTempOrder[0].orderSortNum == 7){
-                //분리배송 일시
-                price = getOrderPrice.getOnlyPrice();// 제품 가격만 합산
-                exTempOrder.forEach((e) => {
-                    console.log(e);
-                    if(e.tempOrderItems.sendTax){
-                        //각 분리 배송 데이터가 택배비를 받아야 할 때
-                        price+=3500; //제품 가격에 택배비 합산
-                    }
-                });
-            }
-
-            console.log('---------------'+price+'-----------------')
-
-            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
-            const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
            
             await this.prisma.$transaction(async (tx) => {
+                const exTempOrder = await tx.tempOrder.findMany({
+                    where:{orderId:orderId},
+                    select:{
+                        orderSortNum:true,
+                        tempOrderItems:{
+                            select:{
+                                id:true,
+                                sendTax:true
+                            }
+                        },
+                        order:{
+                            select:{
+                                price:true,
+                                orderItems:true,
+                                payFlag: true,
+                                combineNum: true,
+                            }
+                        }
+                    }
+                });
+
+                let price = 0;
+                const itemList = await this.erpService.getItems();
+                const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
+
+                if(exTempOrder[0].orderSortNum<6){ 
+                    //합배송, 분리 배송이 아닐 시
+                    price = getOrderPrice.getPrice();
+                }else if(exTempOrder[0].orderSortNum == 6) {
+                    console.log('합배송일 시')
+
+                    const combineOrders = await tx.order.findMany({
+                        where:{
+                            combineNum : exTempOrder[0].order.combineNum
+                        },
+                        select:{
+                            orderItems:true,
+                            price: true,
+                            id: true
+                        }
+                    }); //기존 합배송 데이터 
+
+                    const anotherOrder = combineOrders.filter(i => i.id !== orderId);
+
+                    const tempObjOrder = [];
+                    objOrderItem.forEach(e => tempObjOrder.push(e))
+                    anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
+
+                    let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
+                    console.log('sendTaxFlag : '+sendTaxFlag);
+                    if(sendTaxFlag){
+                        //택배비 부과 주문일 시
+                        price = getOnlyPrice(objOrderItem,itemList);
+                        let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+
+                        price > anotherPrice ? anotherPrice+=3500 : price+=3500; //일단 가격이 적은 쪽으로 택배비 책정
+                        
+                        console.log('-------------'+anotherPrice);
+                        console.log('///////////////'+price);
+                        await tx.order.update({
+                            where:{id:anotherOrder[0].id},
+                            data:{price:anotherPrice}
+                        });
+
+                    }else{
+                        //택배비 부과 주문이 아닐 시
+                        price = getOnlyPrice(objOrderItem,itemList); //수정된 주문의 가격만 책정
+
+                        //택배비 부과 주문이 아니기 때문에 같이 묶인 합배송도 해당 가격만 책정해서 업데이트
+                        let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+                    
+                        await tx.order.update({
+                            where:{id:anotherOrder[0].id},
+                            data:{price:anotherPrice}
+                        })
+                    }
+
+                
+                
+                }else if(exTempOrder[0].orderSortNum == 7){
+                    //분리배송 일시
+                    price = getOnlyPrice(objOrderItem,itemList);//수정된 주문의 제품 가격만 합산
+
+                    if(surveyDto.separateOrder !== undefined) {
+                        if(surveyDto.separateOrder.sendTax) price+=3500;
+
+                        exTempOrder.forEach((e) => {
+                            console.log(e);
+                            if(e.tempOrderItems.id !== surveyDto.separateOrder.id && e.tempOrderItems.sendTax){
+                                //각 분리 배송 데이터가 택배비를 받아야 할 때
+                                price+=3500; //제품 가격에 택배비 합산
+                            }
+                        });
+                    }
+                    
+                }
+
+                console.log('---------------'+price+'-----------------')
+
+                const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+                const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
+                
                 const patient = await tx.patient.update({
                     where: {
                         id: patientId
@@ -504,6 +513,30 @@ export class SendService {
                 const orderItem = await tx.orderItem.createMany({
                     data: items
                 });
+
+                //분리 배송 시 업데이트
+                if(surveyDto.separateOrder !== undefined) {
+                    await tx.tempOrderItem.update({
+                        where:{
+                            id: surveyDto.separateOrder.id
+                        },
+                        data:{
+                            item: surveyDto.separateOrder.orderItem,
+                            sendTax: surveyDto.separateOrder.sendTax
+                        }
+                    });
+
+                    const encryptedAddr = this.crypto.encrypt(surveyDto.separateOrder.addr);
+
+
+                    await tx.tempOrder.updateMany({
+                        where:{orderId:orderId},
+                        data:{ 
+                            addr: encryptedAddr
+                        }
+                    })
+    
+                }
             });
 
             return { success: true, status: HttpStatus.CREATED };
