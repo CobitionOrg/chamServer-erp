@@ -206,7 +206,7 @@ model order {
   orderBodyType   orderBodyType?
   orderItems      orderItem[]
   tempOrders      tempOrder[]
-  friendRecommends friendRecommend[]
+  friendRecommends friendRecommend?
 
 
   @@index([patientId], map: "order_patientId_fkey")
@@ -215,13 +215,20 @@ model order {
 model friendRecommend {
    /// index key
    id               Int               @id @default(autoincrement())
-   counst Int? @default(0)
+   /// 추천인 이름
+   name String
+   /// 추천인 전화번호
+   phoneNum   String
+   /// 확인 여부
+   checkFlag Boolean? @default(false)
+   /// 접수 일자
+   date            DateTime       @db.DateTime(0)
    /// 환자 key
    patientId        Int
    /// 원 오더 key
-   orderId          Int
+   orderId          Int @unique
    patient         patient        @relation(fields: [patientId], references: [id])
-   order            order             @relation(fields: [orderId], references: [id])
+   order        order    @relation(fields: [orderId], references: [id])
 }
 
 model tempOrder {

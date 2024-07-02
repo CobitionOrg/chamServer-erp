@@ -27,6 +27,7 @@ import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
 import { NewOrderDto } from './Dto/newOrder.dto';
+import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -337,8 +338,17 @@ export class ErpService {
                             type: true,
                         }
                     },
+                    friendRecommends: {
+                        select:{
+                            checkFlag: true,
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
                 }
             });
+
+            console.log(list);
 
             const sortedList = sortItems(list);
 
@@ -2596,6 +2606,75 @@ export class ErpService {
             }
 
             return {success: true, status: HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async checkDiscount(checkDiscountDto: CheckDiscountDto){
+        try{
+            const res = await this.prisma.patient.findMany({
+                where:{name: checkDiscountDto.name}
+            });
+
+            console.log(res);
+
+            for(const e of res) {
+                console.log(e);
+                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+
+                console.log(checkPhoneNum);
+
+                if(
+                    e.name === checkDiscountDto.name 
+                    && checkPhoneNum.includes(checkDiscountDto.phoneNum)
+                ){
+                    await this.prisma.$transaction(async (tx) => {
+                        await tx.friendRecommend.create({
+                            data:{
+                                orderId: checkDiscountDto.orderId,
+                                patientId: e.id,
+                                checkFlag: true,
+                                date: checkDiscountDto.date,
+                                name: checkDiscountDto.name,
+                                phoneNum: checkDiscountDto.phoneNum,
+                            }
+                        });
+
+                        await tx.order.update({
+                            where:{id:checkDiscountDto.orderId},
+                            data:{orderSortNum:4}
+                        });
+                    })
+                   
+                    break;
+                }else{
+                    // await this.prisma.friendRecommend.create({
+                    //     data:{
+                    //         orderId: checkDiscountDto.orderId,
+                    //         patientId: e.id,
+                    //         checkFlag: false,
+                    //         date: checkDiscountDto.date,
+                    //         name: checkDiscountDto.name,
+                    //         phoneNum: checkDiscountDto.phoneNum,
+                    //     }
+                    // });
+
+                    return {
+                        success:false,
+                        status: HttpStatus.NOT_FOUND, 
+                        msg:'등록하신 환자 데이터를 찾을 수 없습니다'
+                    };
+                }
+            }
+
+            return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

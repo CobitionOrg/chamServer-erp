@@ -100,7 +100,10 @@ erDiagram
 }
 "friendRecommend" {
   Int id PK
-  Int counst "nullable"
+  String name
+  String phoneNum
+  Boolean checkFlag "nullable"
+  DateTime date
   Int patientId FK
   Int orderId FK
 }
@@ -189,7 +192,7 @@ erDiagram
 "questionImg" }o--|| "question" : question
 "order" }o--|| "patient" : patient
 "friendRecommend" }o--|| "patient" : patient
-"friendRecommend" }o--|| "order" : order
+"friendRecommend" |o--|| "order" : order
 "tempOrder" }o--|| "order" : order
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
@@ -316,7 +319,10 @@ erDiagram
 
 **Properties**
   - `id`: index key
-  - `counst`: 
+  - `name`: 추천인 이름
+  - `phoneNum`: 추천인 전화번호
+  - `checkFlag`: 확인 여부
+  - `date`: 접수 일자
   - `patientId`: 환자 key
   - `orderId`: 원 오더 key
 

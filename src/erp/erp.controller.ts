@@ -26,6 +26,7 @@ import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 import { NewOrderDto } from './Dto/newOrder.dto';
+import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -626,6 +627,15 @@ export class ErpController {
     async checkUpdateAtDesk(@Param("id") id: number) {
         this.logger.log('데스크에서 업데이트 내역 체크');
         const res = await this.sendService.checkUpdateAtDesk(id);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'지인 확인 할인 여부 체크'})
+    @Post('/checkDiscount')
+    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto){
+        this.logger.log('지인 확인 할인 여부 체크');
+        const res = await this.erpService.checkDiscount(checkDiscountDto);
 
         return res;
     }
