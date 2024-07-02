@@ -422,7 +422,7 @@ export class ErpService {
 
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
-            const price = getOrderPrice.getPrice();
+            let price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
 
@@ -457,6 +457,22 @@ export class ErpService {
                     }
                 });
 
+                //지인 10% 할인 플래그
+                let checkFlag = false;
+                const recommendList = await tx.friendRecommend.findMany({
+                    where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
+                });
+                console.log(recommendList);
+                if(recommendList.length !== 0 && (recommendList.length)%3 == 0){
+                    checkFlag = true;
+                    price = price*0.9;
+
+                    await tx.friendRecommend.updateMany({
+                        where:{patientId:patient.patient.id,checkFlag:true,useFlag:true},
+                        data:{useFlag:false}
+                    })
+                }
+
 
                 const order = await tx.order.create({
                     data: {
@@ -474,6 +490,7 @@ export class ErpService {
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr,
+                        friendDiscount: checkFlag,
                     }
                 });
 
@@ -2617,6 +2634,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * 지인 확인 할인 여부 체크
+     * @param checkDiscountDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
     async checkDiscount(checkDiscountDto: CheckDiscountDto){
         try{
             const res = await this.prisma.patient.findMany({
@@ -2647,9 +2669,19 @@ export class ErpService {
                             }
                         });
 
+                        const order = await tx.order.findUnique({
+                            where:{id:checkDiscountDto.orderId},
+                            select:{remark:true}
+                        });
+
+                        let remark = order.remark + '/지인 10포';
+
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
-                            data:{orderSortNum:4}
+                            data:{
+                                orderSortNum:4,
+                                remark:remark
+                            }
                         });
                     })
                    
