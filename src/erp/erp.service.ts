@@ -657,12 +657,42 @@ export class ErpService {
                     }
                 });
 
+                let price = 0;
+
+                const items = objOrderItem.map((item) => ({
+                    item: item.item,
+                    type: item.type,
+                    orderId: token.orderId
+                }));
+
+                console.log(items);
+                const itemList = await this.getItems();
+                const getOrderPrice = new GetOrderSendPrice(items, itemList); //주문 가격
+                price = getOrderPrice.getPrice();
+                console.log(price);
+
+                //지인 10% 할인 플래그
+                const exOrder = await tx.order.findUnique({
+                    where:{id:token.orderId},
+                    select:{friendDiscount:true}
+                });
+       
+                if(exOrder.friendDiscount){
+                    price = price*0.9;
+ 
+                    await tx.friendRecommend.updateMany({
+                        where:{patientId:token.patientId,checkFlag:true,useFlag:true},
+                        data:{useFlag:false}
+                    });
+                }
+
                 const order = await tx.order.update({
                     where: {
                         id: token.orderId
                     },
                     data: {
-                        payType: objOrder.payType
+                        payType: objOrder.payType,
+                        price:price
                     }
                 });
 
@@ -671,14 +701,6 @@ export class ErpService {
                         orderId: token.orderId
                     }
                 });
-
-                const items = objOrderItem.map((item) => ({
-                    item: item.item,
-                    type: item.type,
-                    orderId: order.id
-                }));
-
-                console.log(items);
 
                 const orderItem = await tx.orderItem.createMany({
                     data: items
@@ -2674,7 +2696,7 @@ export class ErpService {
                             select:{remark:true}
                         });
 
-                        let remark = order.remark + '/지인 10포';
+                        let remark = '지인 10포/' + order.remark;
 
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
