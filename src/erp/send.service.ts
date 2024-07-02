@@ -430,6 +430,16 @@ export class SendService {
                     
                 }
 
+                const checkDiscount = await tx.order.findUnique({
+                    where:{id:orderId},
+                    select:{friendDiscount:true}
+                });
+
+                //지인 할인 여부 확인 시 10퍼센트 할인 처리
+                if(checkDiscount.friendDiscount){
+                    price=price*0.9;
+                }
+
                 console.log('---------------'+price+'-----------------')
 
                 const encryptedAddr = this.crypto.encrypt(objPatient.addr);
