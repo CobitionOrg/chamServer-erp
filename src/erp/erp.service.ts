@@ -324,6 +324,7 @@ export class ErpService {
                     card: true,
                     cash: true,
                     addr: true,
+                    friendDiscount: true,
                     patient: {
                         select: {
                             id: true,
@@ -459,6 +460,7 @@ export class ErpService {
 
                 //지인 10% 할인 플래그
                 let checkFlag = false;
+                let remark = '';
                 const recommendList = await tx.friendRecommend.findMany({
                     where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
                 });
@@ -466,7 +468,7 @@ export class ErpService {
                 if(recommendList.length !== 0 && (recommendList.length)%3 == 0){
                     checkFlag = true;
                     price = price*0.9;
-
+                    remark = '지인 10% 할인/'
                     await tx.friendRecommend.updateMany({
                         where:{patientId:patient.patient.id,checkFlag:true,useFlag:true},
                         data:{useFlag:false}
@@ -491,6 +493,7 @@ export class ErpService {
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr,
                         friendDiscount: checkFlag,
+                        remark: remark,
                     }
                 });
 
@@ -2746,6 +2749,62 @@ export class ErpService {
             }
 
             return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 지인 할인 취소
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async cancelDiscount(id: number){
+        try{
+            const exOrder = await this.prisma.order.findUnique({
+                where:{id:id},
+                select:{
+                    friendDiscount:true,
+                    patient:{
+                        select:{
+                            id:true,
+                        }
+                    },
+                    price:true,
+                    remark:true
+                }
+            });
+
+            if(!exOrder.friendDiscount) return {success:false, status:HttpStatus.NOT_FOUND, msg:'해당 주문은 할인 대상이 아닙니다'}
+
+            await this.prisma.$transaction(async (tx) => {
+                let price = exOrder.price;
+                price = (price/9) * 10; //가격 원래대로
+                let newRemark = exOrder.remark.replace('지인 10% 할인/','');
+
+                await tx.order.update({
+                    where:{id:id},
+                    data:{
+                        price: price,
+                        friendDiscount: false,
+                        remark: newRemark 
+                    }
+                });
+
+                await tx.friendRecommend.updateMany({
+                    where:{patientId:exOrder.patient.id},
+                    data:{useFlag:true}
+                });
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
