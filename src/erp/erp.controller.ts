@@ -640,6 +640,15 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary:'지인 할인 취소'})
+    @Patch('/cancelDiscount/:id')
+    async cancelDiscount(@Param("id") id: number) {
+        this.logger.log('지인 할인 취소');
+        const res = await this.erpService.cancelDiscount(id);
+
+        return res;
+    }
+
 
     @Get('/ffff')
     async ffff(){
