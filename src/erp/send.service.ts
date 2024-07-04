@@ -1372,6 +1372,7 @@ export class SendService {
 
     /**
      * 발송 목록에서 주문 취소 처리(soft delete)
+     * 발송목록에서 주문 취소는 나중에 일괄 처리한다고 함
      * @param id 
      * @returns {success:boolean, status: HttpStatus, msg:string}
      */
@@ -1381,6 +1382,31 @@ export class SendService {
                 where:{id:id},
                 data:{cancelFlag:true}
             });
+
+            const exOrder = await this.prisma.tempOrder.findUnique({
+                where:{id:id},
+                select:{
+                    order:{
+                        select:{
+                            friendDiscount:true,
+                        }
+                    },
+                    patient:{
+                        select:{
+                            id:true
+                        }
+                    },
+                    
+                }
+            });
+
+            //지인 10퍼 할인 주문일 시 주문 체크 원 상태로 복구
+            if(exOrder.order.friendDiscount){
+                await this.prisma.friendRecommend.updateMany({
+                    where:{patientId:exOrder.patient.id},
+                    data:{useFlag:true}
+                });
+            }
 
             return {success:true, status:HttpStatus.OK, msg:'주문 취소'}
 
