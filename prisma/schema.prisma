@@ -201,8 +201,12 @@ model order {
   addr             String?          @db.Text
   /// 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
   payFlag          Int?             @default(0)
+  /// 발송목록 삭제 플래그
   useFlag          Boolean?         @default(true)
+  /// 지인 할인 10% 대상 플래그
   friendDiscount   Boolean?         @default(false)
+  /// 유선 상담 시 상담 미연결 플래그
+  notCall          Boolean?         @default(false)
   friendRecommends friendRecommend?
   patient          patient          @relation(fields: [patientId], references: [id])
   orderBodyType    orderBodyType?
