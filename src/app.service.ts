@@ -126,7 +126,6 @@ page.on('console', msg => {
         console.log(textarea);
         return textarea.value;
       },textareaSelector);
-      await new Promise(resolve => setTimeout(resolve, 3000));
       await page.type('textarea#failed_content', templateContent);
       await new Promise(resolve => setTimeout(resolve, 3000));
       const sendButton = '.msg_link10';
@@ -140,8 +139,11 @@ page.on('console', msg => {
           console.error(`Checkbox not found: ${selector}`);
         }
       }, sendButton);
+      await page.waitForSelector('a.msg_link10', { visible: true })
       await page.click('a.msg_link10');
-
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      await page.keyboard.press('Enter');
+      await page.keyboard.press('Enter');
     } catch (err) {
       console.log(err);
     }
