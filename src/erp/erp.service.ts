@@ -26,6 +26,8 @@ import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
+import { NewOrderDto } from './Dto/newOrder.dto';
+import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -138,7 +140,7 @@ export class ErpService {
                         price: price,
                         patientId: patient.id,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr
                     }
                 });
@@ -197,7 +199,7 @@ export class ErpService {
             console.log(socialNum);
             const res = await this.prisma.patient.findMany({
                 where: { name } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
-                },
+            },
                
             );
             console.log(res);
@@ -261,6 +263,7 @@ export class ErpService {
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
+                    useFlag: true,
                 }
             } else {
                 //날짜 조건 O
@@ -269,6 +272,7 @@ export class ErpService {
                 orderConditions = {
                     consultingType: false,
                     isComplete: false,
+                    useFlag: true,
                     date: {
                         gte: startDate,
                         lt: endDate,
@@ -320,6 +324,7 @@ export class ErpService {
                     card: true,
                     cash: true,
                     addr: true,
+                    friendDiscount: true,
                     patient: {
                         select: {
                             id: true,
@@ -334,8 +339,17 @@ export class ErpService {
                             type: true,
                         }
                     },
+                    friendRecommends: {
+                        select:{
+                            checkFlag: true,
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
                 }
             });
+
+            console.log(list);
 
             const sortedList = sortItems(list);
 
@@ -409,7 +423,7 @@ export class ErpService {
 
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
-            const price = getOrderPrice.getPrice();
+            let price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
 
@@ -444,6 +458,23 @@ export class ErpService {
                     }
                 });
 
+                //지인 10% 할인 플래그
+                let checkFlag = false;
+                let remark = '';
+                const recommendList = await tx.friendRecommend.findMany({
+                    where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
+                });
+                console.log(recommendList);
+                if(recommendList.length !== 0 && (recommendList.length)%3 == 0){
+                    checkFlag = true;
+                    price = price*0.9;
+                    remark = '지인 10% 할인/'
+                    await tx.friendRecommend.updateMany({
+                        where:{patientId:patient.patient.id,checkFlag:true,useFlag:true},
+                        data:{useFlag:false}
+                    })
+                }
+
 
                 const order = await tx.order.create({
                     data: {
@@ -459,8 +490,10 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 0, //구수방인지 체크
+                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
                         addr: encryptedAddr,
+                        friendDiscount: checkFlag,
+                        remark: remark,
                     }
                 });
 
@@ -627,12 +660,42 @@ export class ErpService {
                     }
                 });
 
+                let price = 0;
+
+                const items = objOrderItem.map((item) => ({
+                    item: item.item,
+                    type: item.type,
+                    orderId: token.orderId
+                }));
+
+                console.log(items);
+                const itemList = await this.getItems();
+                const getOrderPrice = new GetOrderSendPrice(items, itemList); //주문 가격
+                price = getOrderPrice.getPrice();
+                console.log(price);
+
+                //지인 10% 할인 플래그
+                const exOrder = await tx.order.findUnique({
+                    where:{id:token.orderId},
+                    select:{friendDiscount:true}
+                });
+       
+                if(exOrder.friendDiscount){
+                    price = price*0.9;
+ 
+                    await tx.friendRecommend.updateMany({
+                        where:{patientId:token.patientId,checkFlag:true,useFlag:true},
+                        data:{useFlag:false}
+                    });
+                }
+
                 const order = await tx.order.update({
                     where: {
                         id: token.orderId
                     },
                     data: {
-                        payType: objOrder.payType
+                        payType: objOrder.payType,
+                        price:price
                     }
                 });
 
@@ -641,14 +704,6 @@ export class ErpService {
                         orderId: token.orderId
                     }
                 });
-
-                const items = objOrderItem.map((item) => ({
-                    item: item.item,
-                    type: item.type,
-                    orderId: order.id
-                }));
-
-                console.log(items);
 
                 const orderItem = await tx.orderItem.createMany({
                     data: items
@@ -761,12 +816,14 @@ export class ErpService {
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
+                    useFlag: true,
                 }
             } else {
                 const { startDate, endDate } = getKstDate(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
+                    useFlag: true,
                     date: {
                         gte: startDate,
                         lt: endDate,
@@ -814,6 +871,7 @@ export class ErpService {
                     isPickup: true,
                     price: true,
                     addr: true,
+                    notCall: true,
                     patient: {
                         select: {
                             id: true,
@@ -864,6 +922,32 @@ export class ErpService {
             );
         }
     }
+
+    /**
+     * 유선 상담 미연결 처리
+     * @param id 
+     * @returns {success: boolean, status: HttpStatus, msg: stirng}
+     */
+    async notCall(id: number) {
+        try{
+            console.log(id);
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{notCall:true}
+            });
+
+            return {success:true,status:201,msg:'업데이트 완료'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
 
     /**
      * 유선 상담 완료 처리
@@ -1205,14 +1289,19 @@ export class ErpService {
 
             //     address = patient.addr
             // }
-            const addr = address == undefined ? sendOne.addr : address;
-
-            const encryptedAddr = this.crypto.encrypt(addr);
+            
+            let encryptedAddr;
+            if(address == undefined) {
+                encryptedAddr = sendOne.addr;
+            } else {
+                encryptedAddr = this.crypto.encrypt(address);
+            }
 
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
             console.log(id);
             console.log(sendListId);
+            console.log(sendOne);
 
             const res = await tx.tempOrder.create({
                 data: {
@@ -1552,12 +1641,18 @@ export class ErpService {
                         select: {
                             orderSortNum: true
                         }
-                    }
+                    },
+                    friendDiscount:true,
                 }
             });
 
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            const price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
+            let price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
+
+            //지인 10퍼센트 할인 시 할인 처리
+            if(order.friendDiscount){
+                price=price*0.9;
+            }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
@@ -1625,9 +1720,20 @@ export class ErpService {
                 orderId: id
             }));
             console.log(items);
+            
+            //지인 10퍼센트 할인 시 할인 처리
+            const exOrder = await this.prisma.order.findUnique({
+                where:{id:id},
+                select:{friendDiscount:true}
+            });
+
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            const price = getOrderPrice.getPrice();
+            let price = getOrderPrice.getPrice();
+            
+            if(exOrder.friendDiscount){
+                price=price*0.9;
+            }
             const orderData = { ...updateSurveyDto, price: price, addr: encryptedAddr };
 
             const res = await this.prisma.$transaction(async (tx) => {
@@ -2119,31 +2225,34 @@ export class ErpService {
     async cancelOrder(cancelOrderDto: CancelOrderDto) {
         try {
             if (cancelOrderDto.isFirst) {
-                //초진 일 시 환자 데이터까지 삭제
+                //초진 일 시 환자 데이터까지 soft delete
                 const orderId = cancelOrderDto.orderId;
                 const patientId = cancelOrderDto.patientId;
 
                 await this.prisma.$transaction(async (tx) => {
-                    //orderBodyType 삭제
-                    await tx.orderBodyType.delete({
-                        where: { orderId: orderId }
+                    //orderBodyType soft delete
+                    await tx.orderBodyType.update({
+                        where: { orderId: orderId },
+                        data: { useFlag: false }
                     });
 
-                    //orderItem 삭제
-                    await tx.orderItem.deleteMany({
-                        where: { orderId: orderId }
+                    //orderItem soft delete
+                    await tx.orderItem.updateMany({
+                        where: { orderId: orderId },
+                        data: { useFlag: false }
                     });
 
-                    //order 삭제
-                    await tx.order.delete({
-                        where: { id: orderId }
+                    //order soft delete
+                    await tx.order.update({
+                        where: { id: orderId },
+                        data: { useFlag: false }
                     });
 
-                    //patient 삭제
-                    await tx.patient.delete({
-                        where: { id: patientId }
+                    //patient soft delete
+                    await tx.patient.update({
+                        where: { id: patientId },
+                        data: { useFlag: false }
                     });
-
                 });
 
                 return { success: true, status: HttpStatus.OK, msg: '초진 삭제' }
@@ -2151,10 +2260,10 @@ export class ErpService {
                 //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
                 const orderId = cancelOrderDto.orderId;
 
-                //오더만 isComplete를 true로 변경
+                //오더만 useFlag false로 변경
                 await this.prisma.order.update({
                     where: { id: orderId },
-                    data: { isComplete: true }
+                    data: { useFlag: false }
                 });
 
                 return { success: true, status: HttpStatus.OK, msg: '재진 삭제' }
@@ -2302,6 +2411,166 @@ export class ErpService {
         }
     }
 
+    async getCanceledOrderList(getListDto: GetListDto) {
+        try {
+            let orderConditions = {};
+            if (getListDto.date === undefined) {
+                //날짜 조건 X
+                orderConditions = {
+                    useFlag: false,
+                    isComplete: false,
+                }
+            } else {
+                //날짜 조건 O
+                const { startDate, endDate } = getKstDate(getListDto.date);
+
+                orderConditions = {
+                    useFlag: false,
+                    isComplete: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            if (getListDto.searchKeyword !== "") {
+                //검색어 O
+                if (getListDto.searchCategory === "all") {
+                    patientConditions = {
+                        OR: [
+                            { patient: { name: { contains: getListDto.searchKeyword } } },
+                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
+                        ]
+                    }
+                }
+                else if (getListDto.searchCategory === "name") {
+                    patientConditions = {
+                        patient: { name: { contains: getListDto.searchKeyword } }
+                    }
+                }
+                else if (getListDto.searchCategory === "num") {
+                    patientConditions = {
+                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
+                    }
+                }
+            }
+            const list = await this.prisma.order.findMany({
+                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingFlag: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
+                    price: true,
+                    card: true,
+                    cash: true,
+                    addr: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    },
+                }
+            });
+
+            const sortedList = sortItems(list);
+
+            for (let row of sortedList) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+                row.patient.phoneNum = decryptedPhoneNum;
+                row.addr = decryptedAddr;
+                row.patient.addr = decryptedPatientAddr;
+            }
+
+            return { success: true, list: sortedList };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async restoreCanceledOrder(restoreOrderDto: CancelOrderDto) {
+        console.log(restoreOrderDto);
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        console.log(kstDate);
+
+        if (restoreOrderDto.isFirst) {
+            //초진일 시 다른 데이터까지 복구
+            const orderId = restoreOrderDto.orderId;
+            const patientId = restoreOrderDto.patientId;
+
+            await this.prisma.$transaction(async (tx) => {
+                await tx.orderBodyType.update({
+                    where: { orderId: orderId },
+                    data: { useFlag: true }
+                });
+
+                await tx.orderItem.updateMany({
+                    where: { orderId: orderId },
+                    data: { useFlag: true }
+                });
+
+                await tx.order.update({
+                    where: { id: orderId },
+                    data: {
+                        useFlag: true,
+                        date: kstDate,
+                    }
+                });
+
+                await tx.patient.update({
+                    where: { id: patientId },
+                    data: { useFlag: true }
+                });
+            });
+
+            return { success: true, status: HttpStatus.OK, msg: '초진 복구'}
+        } else {
+            //재진일 시 오더 정보만 복구
+            const orderId = restoreOrderDto.orderId;
+
+            await this.prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    useFlag: true,
+                    date: kstDate,
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK, msg: '재진 복구'}
+        }
+    }
+
     async updateAddr() {
         const res = await this.prisma.patient.findMany({
             select: { id: true, addr: true }
@@ -2312,6 +2581,265 @@ export class ErpService {
                 where: { patientId: res[i].id },
                 data: { addr: res[i].addr }
             });
+        }
+    }
+
+    /**
+     * 원내에서 새 오더 생성
+     * @param newOrderDto 
+     * @returns 
+     */
+    async newOrder(newOrderDto: NewOrderDto){
+        try{
+            const encryptedAddr = this.crypto.encrypt(newOrderDto.addr);
+            const encryptedPhoneNum = this.crypto.encrypt(newOrderDto.phoneNum);
+            const encryptedSocialNum = this.crypto.encrypt(newOrderDto.socialNum);
+            
+            const date = new Date(newOrderDto.date);
+            const kstDate = new Date(date.getTime()+ 9 * 60 * 60 * 1000);
+           
+            if(newOrderDto.isFirst){
+                //초진일 시
+                await this.prisma.$transaction(async (tx) => {
+                    const newPatient = await tx.patient.create({
+                        data: {
+                            name: newOrderDto.name,
+                            phoneNum: encryptedPhoneNum,
+                            addr: encryptedAddr,
+                            socialNum: encryptedSocialNum,
+                            useFlag: true, 
+                        }
+                    });
+                   
+                   await tx.order.create({
+                       data: {
+                        route: '',
+                        message: '',
+                        cachReceipt: '',
+                        typeCheck: '',
+                        consultingTime: '',
+                        payType: newOrderDto.payType,
+                        essentialCheck: '',
+                        outage: '',
+                        isFirst: newOrderDto.isFirst,
+                        price: 0,
+                        patientId: newPatient.id,
+                        date: kstDate,
+                        orderSortNum: 1, //구수방인지 체크
+                        addr: encryptedAddr
+                       } 
+                   })
+                });
+
+            }else{
+                //재진일 시
+                await this.prisma.$transaction(async (tx) => {
+                    const exPatient = await tx.patient.findMany({
+                        where:{
+                            name: newOrderDto.name,
+                            socialNum: encryptedSocialNum
+                        }
+                    });
+
+                    if(!exPatient) {
+                        throw new HttpException({
+                            success: false,
+                            status: HttpStatus.NOT_FOUND
+                        },
+                            HttpStatus.NOT_FOUND
+                        );
+                    }else if(exPatient.length>1){
+                        throw new HttpException({
+                            success: false,
+                            status: HttpStatus.CONFLICT
+                        },
+                            HttpStatus.CONFLICT
+                        );
+                    }
+
+                    await tx.patient.update({
+                        where:{
+                            id: exPatient[0].id
+                        },
+                        data: {
+                            name: newOrderDto.name,
+                            phoneNum: encryptedPhoneNum,
+                            addr: encryptedAddr,
+                            socialNum: encryptedSocialNum,
+                            useFlag: true, 
+                        }
+                    });
+
+                    await tx.order.create({
+                        data: {
+                            route: '',
+                            message: '',
+                            cachReceipt: '',
+                            typeCheck: '',
+                            consultingTime: '',
+                            payType: newOrderDto.payType,
+                            essentialCheck: '',
+                            outage: '',
+                            isFirst: newOrderDto.isFirst,
+                            price: 0,
+                            patientId: exPatient[0].id,
+                            date: kstDate,
+                            orderSortNum: 1, //구수방인지 체크
+                            addr: encryptedAddr
+                           } 
+                    });
+                })
+            }
+
+            return {success: true, status: HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 지인 확인 할인 여부 체크
+     * @param checkDiscountDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async checkDiscount(checkDiscountDto: CheckDiscountDto){
+        try{
+            const res = await this.prisma.patient.findMany({
+                where:{name: checkDiscountDto.name}
+            });
+
+            console.log(res);
+
+            for(const e of res) {
+                console.log(e);
+                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+
+                console.log(checkPhoneNum);
+
+                if(
+                    e.name === checkDiscountDto.name 
+                    && checkPhoneNum.includes(checkDiscountDto.phoneNum)
+                ){
+                    await this.prisma.$transaction(async (tx) => {
+                        await tx.friendRecommend.create({
+                            data:{
+                                orderId: checkDiscountDto.orderId,
+                                patientId: e.id,
+                                checkFlag: true,
+                                date: checkDiscountDto.date,
+                                name: checkDiscountDto.name,
+                                phoneNum: checkDiscountDto.phoneNum,
+                            }
+                        });
+
+                        const order = await tx.order.findUnique({
+                            where:{id:checkDiscountDto.orderId},
+                            select:{remark:true}
+                        });
+
+                        let remark = '지인 10포/' + order.remark;
+
+                        await tx.order.update({
+                            where:{id:checkDiscountDto.orderId},
+                            data:{
+                                orderSortNum:4,
+                                remark:remark
+                            }
+                        });
+                    })
+                   
+                    break;
+                }else{
+                    // await this.prisma.friendRecommend.create({
+                    //     data:{
+                    //         orderId: checkDiscountDto.orderId,
+                    //         patientId: e.id,
+                    //         checkFlag: false,
+                    //         date: checkDiscountDto.date,
+                    //         name: checkDiscountDto.name,
+                    //         phoneNum: checkDiscountDto.phoneNum,
+                    //     }
+                    // });
+
+                    return {
+                        success:false,
+                        status: HttpStatus.NOT_FOUND, 
+                        msg:'등록하신 환자 데이터를 찾을 수 없습니다'
+                    };
+                }
+            }
+
+            return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 지인 할인 취소
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async cancelDiscount(id: number){
+        try{
+            const exOrder = await this.prisma.order.findUnique({
+                where:{id:id},
+                select:{
+                    friendDiscount:true,
+                    patient:{
+                        select:{
+                            id:true,
+                        }
+                    },
+                    price:true,
+                    remark:true
+                }
+            });
+
+            if(!exOrder.friendDiscount) return {success:false, status:HttpStatus.NOT_FOUND, msg:'해당 주문은 할인 대상이 아닙니다'}
+
+            await this.prisma.$transaction(async (tx) => {
+                let price = exOrder.price;
+                price = (price/9) * 10; //가격 원래대로
+                let newRemark = exOrder.remark.replace('지인 10% 할인/','');
+
+                await tx.order.update({
+                    where:{id:id},
+                    data:{
+                        price: price,
+                        friendDiscount: false,
+                        remark: newRemark 
+                    }
+                });
+
+                await tx.friendRecommend.updateMany({
+                    where:{patientId:exOrder.patient.id},
+                    data:{useFlag:true}
+                });
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

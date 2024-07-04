@@ -8,13 +8,15 @@ import { ErpService } from "./erp.service";
 import { getItem, getItemAtAccount } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
-import { GetOrderSendPrice, checkSend } from "src/util/getOrderPrice";
+import { GetOrderSendPrice, checkSend, getOnlyPrice } from "src/util/getOrderPrice";
 import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
 import { getFooter } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
+import { sortItems } from "src/util/sortItems";
+import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -161,6 +163,8 @@ export class SendService {
                     sendNum: true,
                     payType: true,
                     addr: true,
+                    updateInfoCheck: true,
+                    cancelFlag: true,
                     patient: {
                         select: {
                             id: true,
@@ -193,13 +197,17 @@ export class SendService {
                     },
                     tempOrderItems: {
                         select: {
-                            item: true
+                            id: true,
+                            item: true,
+                            sendTax: true,
                         }
                     }
                 }
             });
 
-            const sortedList = getSortedList(list);
+            const sortItemsList = sortItems(list, true);
+
+            const sortedList = getSortedList(sortItemsList);
 
             for (let row of sortedList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
@@ -252,6 +260,9 @@ export class SendService {
                             message: true,
                             cachReceipt: true,
                             payType: true,
+                            orderSortNum: true,
+                            addr: true,
+                            price: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -267,8 +278,10 @@ export class SendService {
 
             const decryptedPhoneNum = this.crypto.decrypt(list.patient.phoneNum);
             const decryptePatientdAddr = this.crypto.decrypt(list.patient.addr);
+            const decrypteAddr = this.crypto.decrypt(list.order.addr);
             list.patient.phoneNum = decryptedPhoneNum;
             list.patient.addr = decryptePatientdAddr;
+            list.order.addr = decrypteAddr;
 
             return { success: true, list };
         } catch (err) {
@@ -320,74 +333,120 @@ export class SendService {
                 }
             });
 
-            const exTempOrder = await this.prisma.tempOrder.findMany({
-                where:{orderId:orderId},
-                select:{
-                    orderSortNum:true,
-                    tempOrderItems:{
-                        select:{
-                            id:true,
-                            sendTax:true
-                        }
-                    },
-                    order:{
-                        select:{
-                            price:true,
-                            orderItems:true,
-                            payFlag: true
-                        }
-                    }
-                }
-            });
-
-            let price = 0;
-            const itemList = await this.erpService.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
-
-            if(exTempOrder[0].orderSortNum<6){ 
-                //합배송, 분리 배송이 아닐 시
-                price = getOrderPrice.getPrice();
-            }else if(exTempOrder[0].orderSortNum == 6) {
-                console.log('합배송일 시')
-                price = getOrderPrice.getOnlyPrice(); // 제품 가격만 합산 
-                console.log(price)
-                const exOrder = await this.prisma.order.findUnique({
-                    where:{id:orderId},
-                    select:{
-                        price:true,
-                        orderItems:true,
-                    }
-                });
-
-                const exOrderPrice = new GetOrderSendPrice(exOrder.orderItems, itemList);
-
-                if(exOrderPrice.getOnlyPrice() !== exOrder.price){
-                    //합배송 중 택배비가 부과된 주문일 경우
-                    if(checkSend(objOrderItem)){
-                        //수정 한 주문이 택배비를 부과해야 되는 경우
-                        price+= 3500;
-                    }else {
-                    
-                    }
-                }
-            }else if(exTempOrder[0].orderSortNum == 7){
-                //분리배송 일시
-                price = getOrderPrice.getOnlyPrice();// 제품 가격만 합산
-                exTempOrder.forEach((e) => {
-                    console.log(e);
-                    if(e.tempOrderItems.sendTax){
-                        //각 분리 배송 데이터가 택배비를 받아야 할 때
-                        price+=3500; //제품 가격에 택배비 합산
-                    }
-                });
-            }
-
-            console.log('---------------'+price+'-----------------')
-
-            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
-            const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
            
             await this.prisma.$transaction(async (tx) => {
+                const exTempOrder = await tx.tempOrder.findMany({
+                    where:{orderId:orderId},
+                    select:{
+                        orderSortNum:true,
+                        tempOrderItems:{
+                            select:{
+                                id:true,
+                                sendTax:true
+                            }
+                        },
+                        order:{
+                            select:{
+                                price:true,
+                                orderItems:true,
+                                payFlag: true,
+                                combineNum: true,
+                            }
+                        }
+                    }
+                });
+
+                let price = 0;
+                const itemList = await this.erpService.getItems();
+                const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
+
+                if(exTempOrder[0].orderSortNum<6){ 
+                    //합배송, 분리 배송이 아닐 시
+                    price = getOrderPrice.getPrice();
+                }else if(exTempOrder[0].orderSortNum == 6) {
+                    console.log('합배송일 시')
+
+                    const combineOrders = await tx.order.findMany({
+                        where:{
+                            combineNum : exTempOrder[0].order.combineNum
+                        },
+                        select:{
+                            orderItems:true,
+                            price: true,
+                            id: true
+                        }
+                    }); //기존 합배송 데이터 
+
+                    const anotherOrder = combineOrders.filter(i => i.id !== orderId);
+
+                    const tempObjOrder = [];
+                    objOrderItem.forEach(e => tempObjOrder.push(e))
+                    anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
+
+                    let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
+                    console.log('sendTaxFlag : '+sendTaxFlag);
+                    if(sendTaxFlag){
+                        //택배비 부과 주문일 시
+                        price = getOnlyPrice(objOrderItem,itemList);
+                        let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+
+                        price > anotherPrice ? anotherPrice+=3500 : price+=3500; //일단 가격이 적은 쪽으로 택배비 책정
+                        
+                        console.log('-------------'+anotherPrice);
+                        console.log('///////////////'+price);
+                        await tx.order.update({
+                            where:{id:anotherOrder[0].id},
+                            data:{price:anotherPrice}
+                        });
+
+                    }else{
+                        //택배비 부과 주문이 아닐 시
+                        price = getOnlyPrice(objOrderItem,itemList); //수정된 주문의 가격만 책정
+
+                        //택배비 부과 주문이 아니기 때문에 같이 묶인 합배송도 해당 가격만 책정해서 업데이트
+                        let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
+                    
+                        await tx.order.update({
+                            where:{id:anotherOrder[0].id},
+                            data:{price:anotherPrice}
+                        })
+                    }
+
+                
+                
+                }else if(exTempOrder[0].orderSortNum == 7){
+                    //분리배송 일시
+                    price = getOnlyPrice(objOrderItem,itemList);//수정된 주문의 제품 가격만 합산
+
+                    if(surveyDto.separateOrder !== undefined) {
+                        if(surveyDto.separateOrder.sendTax) price+=3500;
+
+                        exTempOrder.forEach((e) => {
+                            console.log(e);
+                            if(e.tempOrderItems.id !== surveyDto.separateOrder.id && e.tempOrderItems.sendTax){
+                                //각 분리 배송 데이터가 택배비를 받아야 할 때
+                                price+=3500; //제품 가격에 택배비 합산
+                            }
+                        });
+                    }
+                    
+                }
+
+                const checkDiscount = await tx.order.findUnique({
+                    where:{id:orderId},
+                    select:{friendDiscount:true}
+                });
+
+                //지인 할인 여부 확인 시 10퍼센트 할인 처리
+                if(checkDiscount.friendDiscount){
+                    price=price*0.9;
+                }
+
+                console.log('---------------'+price+'-----------------')
+
+                const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+                const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
+                
                 const patient = await tx.patient.update({
                     where: {
                         id: patientId
@@ -410,6 +469,7 @@ export class SendService {
                         addr: encryptedAddr,
                         message : objOrder.message,
                         payType: objOrder.payType,
+                        orderSortNum: parseInt(objOrder.orderSortNum),
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
@@ -420,7 +480,8 @@ export class SendService {
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
-                        payType: objOrder.payType
+                        payType: objOrder.payType,
+                        updateInfoCheck: false,
                     }
                 })
 
@@ -428,6 +489,7 @@ export class SendService {
                 console.log(objOrderItem)
                 const items = [];
                 objOrderItem.forEach((e) => {
+                    console.log(e);
                     if (e.type == 'assistant') {
                         //assistant는 string
                         const obj = {
@@ -463,6 +525,30 @@ export class SendService {
                 const orderItem = await tx.orderItem.createMany({
                     data: items
                 });
+
+                //분리 배송 시 업데이트
+                if(surveyDto.separateOrder !== undefined) {
+                    await tx.tempOrderItem.update({
+                        where:{
+                            id: surveyDto.separateOrder.id
+                        },
+                        data:{
+                            item: surveyDto.separateOrder.orderItem,
+                            sendTax: surveyDto.separateOrder.sendTax
+                        }
+                    });
+
+                    const encryptedAddr = this.crypto.encrypt(surveyDto.separateOrder.addr);
+
+
+                    await tx.tempOrder.updateMany({
+                        where:{orderId:orderId},
+                        data:{ 
+                            addr: encryptedAddr
+                        }
+                    })
+    
+                }
             });
 
             return { success: true, status: HttpStatus.CREATED };
@@ -475,7 +561,33 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
 
+    /**
+     * 발송목록에서 금액만 수정
+     * @param updateSendPriceDto 
+     * @returns {success:boolean, status:HttpStatus, msg: string}
+     */
+    async updateSendPrice(updateSendPriceDto: UpdateSendPriceDto) {
+        try{
+            const orderId = updateSendPriceDto.id;
+            const price = updateSendPriceDto.price;
+
+            await this.prisma.order.update({
+                where:{id:orderId},
+                data:{price:price}
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'업데이트 완료'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -1247,6 +1359,83 @@ export class SendService {
 
                 return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
             }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 발송 목록에서 주문 취소 처리(soft delete)
+     * 발송목록에서 주문 취소는 나중에 일괄 처리한다고 함
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg:string}
+     */
+    async cancelSendOrderFlag(id: number) {
+        try{
+            await this.prisma.tempOrder.update({
+                where:{id:id},
+                data:{cancelFlag:true}
+            });
+
+            const exOrder = await this.prisma.tempOrder.findUnique({
+                where:{id:id},
+                select:{
+                    order:{
+                        select:{
+                            friendDiscount:true,
+                        }
+                    },
+                    patient:{
+                        select:{
+                            id:true
+                        }
+                    },
+                    
+                }
+            });
+
+            //지인 10퍼 할인 주문일 시 주문 체크 원 상태로 복구
+            if(exOrder.order.friendDiscount){
+                await this.prisma.friendRecommend.updateMany({
+                    where:{patientId:exOrder.patient.id},
+                    data:{useFlag:true}
+                });
+            }
+
+            return {success:true, status:HttpStatus.OK, msg:'주문 취소'}
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**
+     * 데스크에서 업데이트 내역 체크
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus}
+     */
+    async checkUpdateAtDesk(id: number){
+        try{
+            await this.prisma.tempOrder.update({
+                where:{id:id},
+                data:{updateInfoCheck:true}
+            });
+
+            return {success:true, status:HttpStatus.OK, msg:'확인 완료'}
+
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

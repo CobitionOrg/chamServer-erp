@@ -56,6 +56,7 @@ erDiagram
   String phoneNum
   String addr "nullable"
   String socialNum
+  Boolean useFlag "nullable"
 }
 "item" {
   Int id PK
@@ -95,6 +96,19 @@ erDiagram
   Boolean consultingFlag "nullable"
   String addr "nullable"
   Int payFlag "nullable"
+  Boolean useFlag "nullable"
+  Boolean friendDiscount "nullable"
+  Boolean notCall "nullable"
+}
+"friendRecommend" {
+  Int id PK
+  String name
+  String phoneNum
+  Boolean checkFlag "nullable"
+  DateTime date
+  Int patientId FK
+  Int orderId FK
+  Boolean useFlag "nullable"
 }
 "tempOrder" {
   Int id PK
@@ -117,6 +131,8 @@ erDiagram
   String sendNum "nullable"
   Int sendListId FK
   String addr "nullable"
+  Boolean updateInfoCheck "nullable"
+  Boolean cancelFlag "nullable"
 }
 "tempOrderItem" {
   Int id PK
@@ -149,12 +165,14 @@ erDiagram
   String pastDrug
   String pastSurgery
   Int orderId FK
+  Boolean useFlag "nullable"
 }
 "orderItem" {
   Int id PK
   String item
   ItemType type
   Int orderId FK
+  Boolean useFlag "nullable"
 }
 "orderUpdateInfo" {
   Int id PK
@@ -176,6 +194,8 @@ erDiagram
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
 "order" }o--|| "patient" : patient
+"friendRecommend" |o--|| "order" : order
+"friendRecommend" }o--|| "patient" : patient
 "tempOrder" }o--|| "order" : order
 "tempOrder" }o--|| "patient" : patient
 "tempOrder" }o--|| "sendList" : sendList
@@ -252,6 +272,7 @@ erDiagram
   - `phoneNum`: 환자 핸드폰 번호
   - `addr`: 환자 주소
   - `socialNum`: 환자 주민번호
+  - `useFlag`: 
 
 ### `item`
 
@@ -295,6 +316,21 @@ erDiagram
   - `consultingFlag`: 상담 연결 여부
   - `addr`: 주문 주소
   - `payFlag`: 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
+  - `useFlag`: 발송목록 삭제 플래그
+  - `friendDiscount`: 지인 할인 10% 대상 플래그
+  - `notCall`: 유선 상담 시 상담 미연결 플래그
+
+### `friendRecommend`
+
+**Properties**
+  - `id`: index key
+  - `name`: 추천인 이름
+  - `phoneNum`: 추천인 전화번호
+  - `checkFlag`: 확인 여부
+  - `date`: 접수 일자
+  - `patientId`: 환자 key
+  - `orderId`: 원 오더 key
+  - `useFlag`: 
 
 ### `tempOrder`
 
@@ -318,7 +354,9 @@ erDiagram
   - `orderId`: 원 오더 key
   - `sendNum`: 송장 번호
   - `sendListId`: 발송목록 key
-  - `addr`: 
+  - `addr`: 해당 오더 발송 주소
+  - `updateInfoCheck`: 접수대에서 수정여부 체크 확인 플래그
+  - `cancelFlag`: 주문 취소 플래그
 
 ### `tempOrderItem`
 
@@ -359,6 +397,7 @@ erDiagram
   - `pastDrug`: 과거 다이어트 약 복용
   - `pastSurgery`: 과거에 수술하신 경우
   - `orderId`: 해당 주문 오더 key
+  - `useFlag`: 
 
 ### `orderItem`
 
@@ -367,6 +406,7 @@ erDiagram
   - `item`: 주문한 아이템
   - `type`: 아이템 타입
   - `orderId`: 해당 주문 오더 key
+  - `useFlag`: 
 
 ### `orderUpdateInfo`
 

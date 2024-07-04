@@ -25,6 +25,9 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { InsertUpdateInfoDto } from './Dto/insertUpdateInfo.dto';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
+import { NewOrderDto } from './Dto/newOrder.dto';
+import { CheckDiscountDto } from './Dto/checkDiscount.dto';
+import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -97,6 +100,17 @@ export class ErpController {
 
         return res;
     }
+
+
+    @ApiOperation({summary:'유선 상담 미연결 처리'})
+    @Patch('/notCall/:id')
+    async notCall(@Param("id") id: number) {
+        this.logger.log('유선 상담 미연결 처리');
+        const res = await this.erpService.notCall(id);
+
+        return res;
+    }
+
 
     @ApiOperation({summary:'유선 상담 완료 처리'})
     @Post('/callComplete')
@@ -237,7 +251,7 @@ export class ErpController {
 
 
     @ApiOperation({summary:'입금 상담 목록에서 주문 취소 처리'})
-    @Delete('/cancel')
+    @Patch('/cancel')
     async cancelOrder(@Body() cancelOrderDto: CancelOrderDto,@Headers() header){
         this.logger.log('입금 상담 목록에서 주문 취소 처리');
         const res = await this.erpService.cancelOrder(cancelOrderDto);
@@ -251,18 +265,53 @@ export class ErpController {
         return res;
     }
 
-    @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
-    @Delete('/cancelSend')
-    async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto,@Headers() header){
-        this.logger.log('발송 목록에서 주문 취소 처리');
-        const res = await this.sendService.cancelSendOrder(cancelSendOrderDto);
-        if(res.success){
+    @ApiOperation({ summary: '취소된 주문 조회' })
+    @Get('/canceledOrderList')
+    async getCanceledOrderList(@Query() getListDto: GetListDto) {
+        this.logger.log('취소된 주문 조회');
+        const res = await this.erpService.getCanceledOrderList(getListDto);
+        return res;
+    }
+
+    @ApiOperation({ summary: '취소된 주문 복구' })
+    @Patch('/restoreCanceledOrder')
+    async restoreCanceledOrder(@Body() cancelOrderDto: CancelOrderDto, @Headers() header) {
+        this.logger.log('취소된 주문 복구');
+        const res = await this.erpService.restoreCanceledOrder(cancelOrderDto);
+
+        if(res.success) {
             await this.logService.createLog(
-                `${cancelSendOrderDto.patientId}번 환자의 ${cancelSendOrderDto.orderId}번 주문 취소`,
-                '발송목록',
+                `취소된 ${cancelOrderDto.orderId}번 주문 복구`,
+                `취소된 상담 목록`,
                 header
-            )
+            );
         }
+
+        return res;
+    }
+
+    // 이 api는 아예 주문을 날려버리는 api이므로 나중에 다시 확인하도록 하겠습니다.
+    // @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
+    // @Delete('/cancelSend')
+    // async cancelSend(@Body() cancelSendOrderDto:CancelSendOrderDto,@Headers() header){
+    //     this.logger.log('발송 목록에서 주문 취소 처리');
+    //     const res = await this.sendService.cancelSendOrder(cancelSendOrderDto);
+    //     if(res.success){
+    //         await this.logService.createLog(
+    //             `${cancelSendOrderDto.patientId}번 환자의 ${cancelSendOrderDto.orderId}번 주문 취소`,
+    //             '발송목록',
+    //             header
+    //         )
+    //     }
+    //     return res;
+    // }
+
+    @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
+    @Delete('/cancelSendOrder/:id')
+    async cancelSendOrder(@Param("id") id: number){
+        this.logger.log('발송 목록에서 주문 취소 처리');
+        const res = await this.sendService.cancelSendOrderFlag(id);
+
         return res;
     }
 
@@ -291,6 +340,16 @@ export class ErpController {
 
         return res;
     }
+
+    @ApiOperation({summary:'발송목록에서 금액만 수정'})
+    @Patch('/updateSendPrice')
+    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto){
+        this.logger.log('발송목록에서 금액만 수정');
+        const res = await this.sendService.updateSendPrice(updateSendPriceDto);
+
+        return res;
+    }
+    
 
     @ApiOperation({summary:'송장번호를 위한 엑셀'})
     //@UseGuards(IpGuard)
@@ -573,6 +632,42 @@ export class ErpController {
                 `${id}번 결제 완료 처리`,'발송목록',header
             )
         }
+        return res;
+    }
+
+    @ApiOperation({summary:'원내에서 주문 생성'})
+    @Post('/newOrder')
+    async newOrder(@Body() newOrderDto: NewOrderDto,@Headers() header){
+        this.logger.log('원내에서 주문 생성');
+        const res = await this.erpService.newOrder(newOrderDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'데스크에서 업데이트 내역 체크'})
+    @Patch('/checkUpdateAtDesk/:id')
+    async checkUpdateAtDesk(@Param("id") id: number) {
+        this.logger.log('데스크에서 업데이트 내역 체크');
+        const res = await this.sendService.checkUpdateAtDesk(id);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'지인 확인 할인 여부 체크'})
+    @Post('/checkDiscount')
+    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto){
+        this.logger.log('지인 확인 할인 여부 체크');
+        const res = await this.erpService.checkDiscount(checkDiscountDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'지인 할인 취소'})
+    @Patch('/cancelDiscount/:id')
+    async cancelDiscount(@Param("id") id: number) {
+        this.logger.log('지인 할인 취소');
+        const res = await this.erpService.cancelDiscount(id);
+
         return res;
     }
 

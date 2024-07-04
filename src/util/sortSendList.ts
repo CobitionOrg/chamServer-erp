@@ -1,6 +1,8 @@
 interface PriorityInfo {
   priority: number;
-  totalMonths: number;
+  gamMonths: number;
+  cenMonths: number;
+  yoMonths: number;
 }
 
 const extractMonths = (item: string): number => {
@@ -35,65 +37,90 @@ const getPriorityInfo = (orderItems: any[]): PriorityInfo => {
 
   let priority = 0;
   if (gamCount > 0 && cenCount === 0 && yoCount === 0) {
-    // 감
-    priority = 1;
+    priority = 1; // 감
   } else if (cenCount > 0 && gamCount === 0 && yoCount === 0) {
-    // 쎈
-    priority = 2;
+    priority = 2; // 쎈
   } else if (gamCount > 0 && cenCount > 0 && yoCount === 0) {
-    // 감&쎈
-    priority = 3;
+    priority = 3; // 감&쎈
   } else if (yoCount > 0 && gamCount === 0 && cenCount === 0) {
-    // 요
-    priority = 4;
+    priority = 4; // 요
   } else if (gamCount > 0 && yoCount > 0 && cenCount === 0) {
-    // 감&요
-    priority = 5;
+    priority = 5; // 감&요
+  } else if (cenCount > 0 && yoCount > 0 && gamCount === 0) {
+    priority = 6; // 쎈&요
   } else {
-    // 감&쎈&요
-    priority = 6;
+    priority = 7; // 감&쎈&요
   }
 
   return {
     priority,
-    totalMonths: gamMonths + cenMonths + yoMonths,
+    gamMonths,
+    cenMonths,
+    yoMonths,
   };
 };
 
-const compareItems = (a: any, b: any) => {
-  const aTotalMonths = a.order.orderItems.reduce(
-    (sum: number, item: any) => sum + extractMonths(item.item),
-    0,
-  );
-  const bTotalMonths = b.order.orderItems.reduce(
-    (sum: number, item: any) => sum + extractMonths(item.item),
-    0,
-  );
+const payTypeOrder = {
+  계좌이체: 1,
+  혼용: 2,
+  카드결제: 3,
+};
 
-  if (aTotalMonths !== bTotalMonths) {
-    // 개월수 오름차순 정렬
-    return aTotalMonths - bTotalMonths;
-  }
-
-  const aPriorityInfo = getPriorityInfo(a.order.orderItems);
-  const bPriorityInfo = getPriorityInfo(b.order.orderItems);
-
+const compareByPriority = (
+  aPriorityInfo: PriorityInfo,
+  bPriorityInfo: PriorityInfo,
+) => {
   if (aPriorityInfo.priority !== bPriorityInfo.priority) {
-    // 우선도에 따라 정렬
     return aPriorityInfo.priority - bPriorityInfo.priority;
   }
 
-  if (a.orderSortNum !== b.orderSortNum) {
-    // orderSortNum 오름차순 정렬
-    return a.orderSortNum - b.orderSortNum;
+  switch (aPriorityInfo.priority) {
+    case 1: // 감
+      return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
+    case 2: // 쎈
+      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+    case 3: // 감&쎈
+      if (aPriorityInfo.gamMonths !== bPriorityInfo.gamMonths) {
+        return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
+      }
+      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+    case 4: // 요
+      return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+    case 5: // 감&요
+      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
+        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+      }
+      return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
+    case 6: // 쎈&요
+      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
+        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+      }
+      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+    case 7: // 감&쎈&요
+      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
+        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+      }
+      if (aPriorityInfo.gamMonths !== bPriorityInfo.gamMonths) {
+        return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
+      }
+      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+    default:
+      return 0;
+  }
+};
+
+const compareItems = (a: any, b: any) => {
+  const aPriorityInfo = getPriorityInfo(a.order.orderItems);
+  const bPriorityInfo = getPriorityInfo(b.order.orderItems);
+
+  const priorityComparison = compareByPriority(aPriorityInfo, bPriorityInfo);
+  if (priorityComparison !== 0) {
+    return priorityComparison;
   }
 
-  // payType 순서에 따라 정렬
-  const payTypeOrder = {
-    계좌이체: 1,
-    혼용: 2,
-    카드결제: 3,
-  };
+  if (a.orderSortNum !== b.orderSortNum) {
+    return a.orderSortNum - b.orderSortNum;
+  }
 
   const aPayTypeOrder = payTypeOrder[a.payType] || 4;
   const bPayTypeOrder = payTypeOrder[b.payType] || 4;
@@ -101,12 +128,7 @@ const compareItems = (a: any, b: any) => {
   return aPayTypeOrder - bPayTypeOrder;
 };
 
-// 분리 배송도 그 안에서 오름차순으로 정렬
 const compareTempOrderItems = (a: any, b: any) => {
-  if (a.order.id !== b.order.id) {
-    return a.order.id - b.order.id;
-  }
-
   const aMonths = extractMonths(a.tempOrderItems?.item || '');
   const bMonths = extractMonths(b.tempOrderItems?.item || '');
 
@@ -127,37 +149,39 @@ const groupBy = (list: any[], keyGetter: (item: any) => string) => {
   return map;
 };
 
-const getTotalMonths = (items: any[]) => {
-  return items.reduce((total, item) => {
-    return (
-      total +
-      item.order.orderItems.reduce(
-        (sum: number, orderItem: any) => sum + extractMonths(orderItem.item),
-        0,
-      )
-    );
-  }, 0);
-};
-
 export const getSortedList = (orders: Array<any>): Array<any> => {
-  const sortedList = orders
-    .filter((item) => item.orderSortNum < 6)
-    .sort(compareItems);
+  const sortedMinus4To0 = orders
+    .filter((item) => item.orderSortNum >= -4 && item.orderSortNum <= 0)
+    .sort((a, b) => {
+      if (a.orderSortNum !== b.orderSortNum) {
+        return a.orderSortNum - b.orderSortNum;
+      }
+      return compareItems(a, b);
+    });
 
-  const combineListMap = groupBy(
+  const sorted1To5 = orders
+    .filter((item) => item.orderSortNum >= 1 && item.orderSortNum <= 5)
+    .sort((a, b) => {
+      return compareItems(a, b);
+    });
+
+  const sorted6Map = groupBy(
     orders.filter((item) => item.orderSortNum === 6),
     (item) => item.addr,
   );
 
-  const combineList = Array.from(combineListMap.values())
-    .sort((a, b) => getTotalMonths(a) - getTotalMonths(b))
+  const sorted6 = Array.from(sorted6Map.values())
+    .sort((a, b) => compareItems(a[0], b[0]))
     .flat();
 
-  const sorted7 = orders
-    .filter((item) => item.orderSortNum === 7)
-    .sort(compareTempOrderItems);
+  const sorted7Map = groupBy(
+    orders.filter((item) => item.orderSortNum === 7),
+    (item) => item.order.id.toString(),
+  );
 
-  const finalSortedList = [...sortedList, ...combineList, ...sorted7];
+  const sorted7 = Array.from(sorted7Map.values())
+    .sort((a, b) => compareTempOrderItems(a[0], b[0]))
+    .flat();
 
-  return finalSortedList;
+  return [...sortedMinus4To0, ...sorted1To5, ...sorted6, ...sorted7];
 };

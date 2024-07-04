@@ -15,6 +15,7 @@ export class Crypto {
 
     this.key = Buffer.from(keyBase64, 'base64');
     this.iv = Buffer.from(ivBase64, 'base64');
+    
   }
 
   encrypt(text: string): string {
