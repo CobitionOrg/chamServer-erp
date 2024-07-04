@@ -98,6 +98,7 @@ erDiagram
   Int payFlag "nullable"
   Boolean useFlag "nullable"
   Boolean friendDiscount "nullable"
+  Boolean notCall "nullable"
 }
 "friendRecommend" {
   Int id PK
@@ -315,8 +316,9 @@ erDiagram
   - `consultingFlag`: 상담 연결 여부
   - `addr`: 주문 주소
   - `payFlag`: 결제 확인 플래그(0 미결제 1 결제 2 결제 요청)
-  - `useFlag`: 
-  - `friendDiscount`: 
+  - `useFlag`: 발송목록 삭제 플래그
+  - `friendDiscount`: 지인 할인 10% 대상 플래그
+  - `notCall`: 유선 상담 시 상담 미연결 플래그
 
 ### `friendRecommend`
 

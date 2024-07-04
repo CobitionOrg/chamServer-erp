@@ -871,6 +871,7 @@ export class ErpService {
                     isPickup: true,
                     price: true,
                     addr: true,
+                    notCall: true,
                     patient: {
                         select: {
                             id: true,
@@ -921,6 +922,32 @@ export class ErpService {
             );
         }
     }
+
+    /**
+     * 유선 상담 미연결 처리
+     * @param id 
+     * @returns {success: boolean, status: HttpStatus, msg: stirng}
+     */
+    async notCall(id: number) {
+        try{
+            console.log(id);
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{notCall:true}
+            });
+
+            return {success:true,status:201,msg:'업데이트 완료'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
 
     /**
      * 유선 상담 완료 처리

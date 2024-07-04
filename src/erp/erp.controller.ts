@@ -101,6 +101,17 @@ export class ErpController {
         return res;
     }
 
+
+    @ApiOperation({summary:'유선 상담 미연결 처리'})
+    @Patch('/notCall/:id')
+    async notCall(@Param("id") id: number) {
+        this.logger.log('유선 상담 미연결 처리');
+        const res = await this.erpService.notCall(id);
+
+        return res;
+    }
+
+
     @ApiOperation({summary:'유선 상담 완료 처리'})
     @Post('/callComplete')
     async callComplete(@Body() callConsultingDto : CallConsultingDto, @Headers() header){
