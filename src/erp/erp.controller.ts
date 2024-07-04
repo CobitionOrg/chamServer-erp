@@ -27,6 +27,7 @@ import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
+import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -328,6 +329,16 @@ export class ErpController {
 
         return res;
     }
+
+    @ApiOperation({summary:'발송목록에서 금액만 수정'})
+    @Patch('/updateSendPrice')
+    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto){
+        this.logger.log('발송목록에서 금액만 수정');
+        const res = await this.sendService.updateSendPrice(updateSendPriceDto);
+
+        return res;
+    }
+    
 
     @ApiOperation({summary:'송장번호를 위한 엑셀'})
     //@UseGuards(IpGuard)

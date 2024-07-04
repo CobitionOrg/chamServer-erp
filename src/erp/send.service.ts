@@ -16,6 +16,7 @@ import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
 import { getFooter } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
 import { sortItems } from "src/util/sortItems";
+import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -261,6 +262,7 @@ export class SendService {
                             payType: true,
                             orderSortNum: true,
                             addr: true,
+                            price: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -559,7 +561,33 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
 
+    /**
+     * 발송목록에서 금액만 수정
+     * @param updateSendPriceDto 
+     * @returns {success:boolean, status:HttpStatus, msg: string}
+     */
+    async updateSendPrice(updateSendPriceDto: UpdateSendPriceDto) {
+        try{
+            const orderId = updateSendPriceDto.id;
+            const price = updateSendPriceDto.price;
+
+            await this.prisma.order.update({
+                where:{id:orderId},
+                data:{price:price}
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'업데이트 완료'}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
