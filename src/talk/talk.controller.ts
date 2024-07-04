@@ -4,7 +4,27 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { TalkService } from './talk.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
+/*
+인쇄번역
+★ 접수확인알림톡 (초/재진 한번에)
+-접수확인알림톡(리뉴얼)
+- 9시/ 12시/3시
 
+★ 미결제
+- 미결제발송지연
+- 금요일 오전 10시
+
+★ 구매후기 (당주 월-금 초진만)
+- 구매확정요청
+- 토요일 9시
+
+★ 유선상담연결안될시
+- 유선상담 후 연결안되는경우
+- 금요일 오전 10시
+
+★ 발송알림톡
+- 발송(재진)/ 발송(초진)
+- 월, 화, 목, 금 오전 11시 */
 @Controller('talk')
 @UseFilters(new HttpExceptionFilter())
 @ApiTags('카톡 발송 관련 엑셀 api')
