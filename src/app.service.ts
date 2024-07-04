@@ -127,10 +127,8 @@ page.on('console', msg => {
         return textarea.value;
       },textareaSelector);
       await new Promise(resolve => setTimeout(resolve, 3000));
-      console.log(templateContent);
       await page.type('textarea#failed_content', templateContent);
       await new Promise(resolve => setTimeout(resolve, 3000));
-
       const sendButton = '.msg_link10';
       await page.evaluate((selector) => {
         const button = document.querySelector(selector) as HTMLElement | null;
