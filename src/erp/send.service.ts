@@ -5,7 +5,7 @@ import { error } from "winston";
 import * as Excel from 'exceljs'
 import { styleHeaderCell ,styleCell,setColor} from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
-import { getItem, getItemAtAccount } from "src/util/getItem";
+import { getItem, getItemAtAccount, getServiceItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice, checkSend, getOnlyPrice } from "src/util/getOrderPrice";
@@ -698,13 +698,20 @@ export class SendService {
                 const message = e.order.message;
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
+                let service = 0;
 
                 for (let i = 0; i < orderItemList.length; i++) {
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
-                        if (i == orderItemList.length - 1) orderStr += `${item}`
-                        else orderStr += `${item}+`
+                        const { onlyItem, serviceItem } = getServiceItem(item);
+                        service+=parseInt(serviceItem);
+                        if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
+                        else orderStr += `${onlyItem}+`
                     }
+                }
+
+                if(service != 0){
+                    orderStr += ` s(${service})`
                 }
 
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];

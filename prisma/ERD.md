@@ -99,6 +99,7 @@ erDiagram
   Boolean useFlag "nullable"
   Boolean friendDiscount "nullable"
   Boolean notCall "nullable"
+  Boolean reviewFlag "nullable"
 }
 "friendRecommend" {
   Int id PK
@@ -319,6 +320,7 @@ erDiagram
   - `useFlag`: 발송목록 삭제 플래그
   - `friendDiscount`: 지인 할인 10% 대상 플래그
   - `notCall`: 유선 상담 시 상담 미연결 플래그
+  - `reviewFlag`: 
 
 ### `friendRecommend`
 

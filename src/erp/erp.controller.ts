@@ -28,6 +28,8 @@ import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -238,7 +240,7 @@ export class ErpController {
     async getSendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 목록 리스트');
         const res = await this.sendService.getOrderTempList(id);
-        return res;
+        return res; 
     }
 
     @ApiOperation({summary:'발송 단일 데이터 조회'})
@@ -671,6 +673,25 @@ export class ErpController {
         return res;
     }
 
+
+    @ApiOperation({summary:'후기 대상 목록에서 비고 수정'})
+    @Patch('/updateNote')
+    async updateNote(@Body() updateNoteDto: UpdateNoteDto) {
+        this.logger.log('후기 대상 목록에서 비고 수정');
+        const res = await this.erpService.updateNote(updateNoteDto);
+
+        return res;
+    }
+
+
+    @ApiOperation({summary:'후기 대상 목록에서 새 후기 대상 생성'})
+    @Post('/createNewReview')
+    async createNewReview(@Body() createNewReviewDto: CreateNewReviewDto) {
+        this.logger.log('후기 대상 목록에서 새 후기 대상 생성');
+        const res = await this.erpService.createNewReview(createNewReviewDto);
+
+        return res;
+    }
 
 
     @Get('/ffff')
