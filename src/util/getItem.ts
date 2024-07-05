@@ -112,6 +112,16 @@ const getItemShortName = (item: string) => {
             return item;
     }
 }
+ 
+export const getServiceItem = (item) => {
+    console.log(item);
+    const arr = item.split('(s');
+    console.log(arr);
+    const onlyItem = arr[0];
+    const serviceItem = arr[1] != undefined ? arr[1].replace(')','') : '0'
+
+    return { onlyItem, serviceItem };
+}
 
 export const getItemAtAccount = (orderItems) => {
     let common = '';
