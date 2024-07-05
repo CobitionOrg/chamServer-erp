@@ -96,4 +96,31 @@ export class VisitService {
         return res;
 
     }
+
+    /**
+     * 방문 수령 계좌 결제 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async accountPay(id: number){
+        return await this.visitRepository.accountPay(id);
+    }
+
+    
+    /**
+     * 방문 수령 방문 결제 처리
+     * @param id 
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            msg: string;
+        }>
+     */
+    async visitPay(id: number) {
+        return await this.visitRepository.visitPay(id);
+    }
 }

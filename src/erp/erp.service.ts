@@ -1080,6 +1080,8 @@ export class ErpService {
                         }
                     });
 
+                    console.log('시발')
+
                     //해당 오더 발송 개수 가져오기
                     const orderItems = await tx.orderItem.findMany({
                         where: {
@@ -1087,6 +1089,8 @@ export class ErpService {
                             type: { in: ['common', 'yoyo'] }
                         }
                     });
+
+                    console.log('진짜 개 좇같다')
 
                     console.log(`-----------${orderItems.length}-----------`);
                     console.log(orderItems);
