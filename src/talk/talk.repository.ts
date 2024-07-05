@@ -100,6 +100,32 @@ export class TalkRepositoy{
         }
     }
 
+
+    async getExOrder(id: number) {
+        try{
+            const res = await this.prisma.order.findUnique({
+                where:{
+                    id:id
+                },
+                select:{
+                    message:true,
+                    date:true,
+                    route:true,
+                }
+            });
+
+            return res;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     /**
      * 상담 연결 처리
      * @param id 
@@ -111,7 +137,7 @@ export class TalkRepositoy{
     async consultingFlag(id: number) {
         try{
             console.log(id);
-            await this.prisma.order.update({
+            await this.prisma.order.updateMany({
                 where:{
                     id:id,talkFlag:true
                 },

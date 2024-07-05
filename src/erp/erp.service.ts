@@ -2255,7 +2255,7 @@ export class ErpService {
                     //patient soft delete
                     await tx.patient.update({
                         where: { id: patientId },
-                        data: { useFlag: false }
+                        data: { useFlag: false } 
                     });
                 });
 
@@ -2747,7 +2747,7 @@ export class ErpService {
                             select:{remark:true}
                         });
 
-                        let remark = '지인 10포/' + order.remark;
+                        let remark = '지인 10포/' + order.remark ?? '';
 
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},

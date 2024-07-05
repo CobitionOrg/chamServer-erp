@@ -6,6 +6,7 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
+import { CheckDiscountDto } from 'src/erp/Dto/checkDiscount.dto';
 const fs = require('fs');
 
 @Injectable()
@@ -135,7 +136,29 @@ export class TalkService {
         }>
      */
     async consultingFlag(id: number) {
+        const exOrder = await this.talkRepository.getExOrder(id);
+        console.log(exOrder);
+        //상담연결 처리하면서 지인 서비스 처리
+        if(exOrder.route.length > 0){
+            const message = exOrder.route;
+
+            if(message.includes('/')) {
+                const arr = message.split('/');
+                const name = arr[0];
+                const phoneNum = arr[1];
+
+                const checkDiscountDto: CheckDiscountDto = {
+                    orderId: id,
+                    name: name,
+                    phoneNum: phoneNum,
+                    date: exOrder.date
+                }
+                await this.erpService.checkDiscount(checkDiscountDto);
+            }
+        }
+
         const res = await this.talkRepository.consultingFlag(id);
+        
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         else return {success:true,status:201};
