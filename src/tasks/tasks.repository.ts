@@ -85,8 +85,10 @@ export class TasksRepository {
             const oldRecords = await this.prisma.order.findMany({
                 where:{
                     date:{
-                        lt: twoMonthAgo
+                        lt: twoMonthAgo,
                     },
+                    talkFlag: true, //알람톡은 발송 됐으나
+                    consultingFlag: false, //상담은 시작 안한 애들
                 },
                 select:{
                     id: true,
