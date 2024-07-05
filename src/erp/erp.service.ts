@@ -28,6 +28,8 @@ import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -2377,6 +2379,7 @@ export class ErpService {
                     cash: true,
                     note: true,
                     addr: true,
+                    reviewFlag:true,
                     patient: {
                         select: {
                             id: true,
@@ -2395,12 +2398,13 @@ export class ErpService {
             });
 
             const sortedList = sortItems(list);
-
+ 
             for (let row of sortedList) {
+                console.log(row);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedAddr = this.crypto.decrypt(row.addr);
+                // const decryptedAddr = this.crypto.decrypt(row.addr);
                 row.patient.phoneNum = decryptedPhoneNum;
-                row.addr = decryptedAddr;
+                // row.addr = decryptedAddr;
             }
 
             return { success: true, list: sortedList };
@@ -2832,6 +2836,111 @@ export class ErpService {
                     where:{patientId:exOrder.patient.id},
                     data:{useFlag:true}
                 });
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 후기 대상 목록에서 비고 수정
+     * @param updateNoteDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async updateNote(updateNoteDto: UpdateNoteDto) {
+        try{
+            await this.prisma.order.update({
+                where:{id:updateNoteDto.orderId},
+                data:{
+                    note:updateNoteDto.note,
+                    reviewFlag: true
+                }
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 후기 대상 목록에서 새 후기 대상 생성
+     * @param createNewReviewDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async createNewReview(createNewReviewDto: CreateNewReviewDto) {
+        try{
+            const patient = await this.prisma.patient.findMany({
+                where:{
+                    name: createNewReviewDto.name
+                }
+            });
+
+            let patientData = null;
+
+            for(const e of patient){
+                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+                const checkSocialNum = this.crypto.decrypt(e.socialNum);
+
+                if(
+                    checkPhoneNum.includes(createNewReviewDto.phoneNum)
+                    && checkSocialNum.includes(createNewReviewDto.socialNum)
+                ){
+                    patientData = e;
+                    break;
+                }
+            }
+
+            if(patient==null){
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.NOT_FOUND,
+                    msg:'환자 데이터를 찾을 수 없습니다.'
+                },
+                    HttpStatus.NOT_FOUND
+                );
+            }
+
+            const date = new Date(createNewReviewDto.date);
+            // 한국 시간으로 변환
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+            
+            await this.prisma.order.create({
+                data:{
+                    useFlag:false,
+                    route:'',
+                    message:'',
+                    cachReceipt:'',
+                    typeCheck:'',
+                    consultingTime:'',
+                    payType:'',
+                    essentialCheck:'',
+                    outage:'후기대상목록에서 생성',
+                    consultingType:false,
+                    phoneConsulting:false,
+                    isComplete:false,
+                    patientId:patientData.id,
+                    isFirst:false,
+                    date:kstDate,
+                    orderSortNum: 1,
+                    note: createNewReviewDto.note,
+                    addr:'',
+                }
             });
 
             return {success:true, status:HttpStatus.CREATED, msg:'완료'};
