@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import { ExOrderObjDto } from "./Dto/exOrderObj.dto";
 import { ExOrderItemObjDto } from "./Dto/exOrderItemObj.dto";
 import { ExOrderBodyTypeDto } from "./Dto/exOrderBodyType.dto";
+import { getCurrentDateAndTime } from "src/util/kstDate.util";
 
 @Injectable()
 export class ExchangeRepository {
@@ -87,7 +88,7 @@ export class ExchangeRepository {
                     essentialCheck: objOrder.essentialCheck,
                     price: objOrder.price,
                     addr: objOrder.addr,
-                    date:new Date(),
+                    date: getCurrentDateAndTime(),
                     orderSortNum: orderSortNum
                 }
             });

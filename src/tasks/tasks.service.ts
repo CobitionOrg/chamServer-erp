@@ -52,4 +52,36 @@ export class TasksService {
     }
 
     //자동 퇴근 처리 기능
+    @Cron('0 11 * * 1,4') // 월요일, 목요일 오전 11시 (UTC) -> 저녁 8시 (KST)
+    async leavWorkAt20 () {
+        this.logger.debug('월, 목요일 20시 자동 퇴근');
+        await this.logService.createLog(
+            '월, 목요일 20시 자동 퇴근',
+            '월, 목요일 20시 자동 퇴근',
+            null
+        );
+        await this.tasksRepository.leaveWorkAt(20);
+    }
+
+    @Cron('0 9 * * 2,5') // 화요일, 금요일 오전 9시 (UTC) -> 저녁 6시 (KST)
+    async leavWorkAt18 () {
+        this.logger.debug('화, 금요일 18시 자동 퇴근');
+        await this.logService.createLog(
+            '화, 금요일 18시 자동 퇴근',
+            '화, 금요일 18시 자동 퇴근',
+            null
+        );
+        await this.tasksRepository.leaveWorkAt(18);
+    }
+
+    @Cron('0 6 * * 6') // 토요일 오전 6시 (UTC) -> 오후 3시 (KST)
+    async leaveWorkAt15 () {
+        this.logger.debug('토요일 15시 자동 퇴근');
+        await this.logService.createLog(
+            '토요일 15시 자동 퇴근',
+            '토요일 15시 자동 퇴근',
+            null
+        );
+        await this.tasksRepository.leaveWorkAt(15);
+    }
 }

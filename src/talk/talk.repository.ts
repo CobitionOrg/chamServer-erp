@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
-import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
+import { getDayStartAndEnd } from "src/util/kstDate.util";
 
 @Injectable()
 export class TalkRepositoy{
@@ -30,7 +30,7 @@ export class TalkRepositoy{
      */
     async orderInsertTalk(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -176,7 +176,7 @@ export class TalkRepositoy{
      */
     async notConsulting(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -223,7 +223,7 @@ export class TalkRepositoy{
      */
     async notPay(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
