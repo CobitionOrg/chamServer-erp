@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { CancelOrderDto } from "src/erp/Dto/cancelOrder.dto";
 import { ErpService } from "src/erp/erp.service";
 import { PrismaService } from "src/prisma.service";
+import { getStartOfToday } from "src/util/kstDate.util";
 import { deleteUploadObject } from "src/util/s3";
 const fs = require('fs');
 const path = require('path');
@@ -163,4 +164,25 @@ export class TasksRepository {
             );
         }
     }
+
+    // async leaveWorkAt(time: number) {
+    //     try {
+    //         const date = getStartOfToday();
+    //         const endTime = new Date(getStartOfToday().setUTCHours(time, 0, 0, 0));
+
+    //         await this.prisma.attendance.updateMany({
+    //             where: { date: date },
+    //             data: { endTime: endTime }
+    //         })
+    //     } catch (err) {
+    //         this.logger.error(err);
+    //         throw new HttpException({
+    //             success: false,
+    //             status: HttpStatus.INTERNAL_SERVER_ERROR,
+    //             msg: '내부서버 에러'
+    //         },
+    //             HttpStatus.INTERNAL_SERVER_ERROR
+    //         );
+    //     }
+    // }
 }
