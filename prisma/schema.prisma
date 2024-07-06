@@ -284,6 +284,7 @@ model tempOrder {
   updateInfoCheck  Boolean?          @default(true)
   /// 주문 취소 플래그
   cancelFlag       Boolean?
+  sortFixNum       Int?              @default(0)
   addSend          addSend?
   orderUpdateInfos orderUpdateInfo[]
   order            order             @relation(fields: [orderId], references: [id])

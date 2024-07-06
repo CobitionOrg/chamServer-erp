@@ -352,7 +352,7 @@ export class ErpService {
                 }
             });
 
-            console.log(list);
+            //console.log(list);
 
             const sortedList = sortItems(list);
 
@@ -1052,6 +1052,7 @@ export class ErpService {
 
             console.log(order);
             //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
+            //분리 배송, 합배송 시 미리 생성되기 때문
             if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
                 await this.prisma.order.update({
                     where: {
@@ -1083,8 +1084,6 @@ export class ErpService {
                         }
                     });
 
-                    console.log('시발')
-
                     //해당 오더 발송 개수 가져오기
                     const orderItems = await tx.orderItem.findMany({
                         where: {
@@ -1093,7 +1092,6 @@ export class ErpService {
                         }
                     });
 
-                    console.log('진짜 개 좇같다')
 
                     console.log(`-----------${orderItems.length}-----------`);
                     console.log(orderItems);
@@ -1310,6 +1308,20 @@ export class ErpService {
             console.log(sendListId);
             console.log(sendOne);
 
+            const sendList = await tx.tempOrder.aggregate({
+                where:{
+                    sendListId: sendListId
+                },
+                _max:{
+                    sortFixNum: true
+                }
+            });
+
+            console.log('==================')
+            console.log(sendList._max.sortFixNum)
+
+            const max = sendList._max.sortFixNum;
+
             const res = await tx.tempOrder.create({
                 data: {
                     route: sendOne.route,
@@ -1327,6 +1339,7 @@ export class ErpService {
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
                     addr: encryptedAddr,
+                    sortFixNum: max == 0 || max == null ? 0 : max+1,
                     order: {
                         connect: { id: id }
                     },
