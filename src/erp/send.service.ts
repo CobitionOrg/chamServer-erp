@@ -177,7 +177,7 @@ export class SendService {
                 },
                 orderBy: {
                     //id: 'asc',
-                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
+                    sortFixNum: 'asc' //sortNum으로 order by 해야됨
                 },
                 select: {
                     id: true,
