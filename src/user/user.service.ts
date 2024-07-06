@@ -390,6 +390,91 @@ export class UserService {
         }
     }
 
+    /**
+     * 출근 여부 확인
+     */
+    async isWorking(header) {
+        try {
+            const token = await this.jwtService.decode(header);
+            const userId = token.sub;
+
+            const attendanceData = await this.prisma.attendance.findFirst({
+                where: {
+                    date: getStartOfToday(),
+                    userId: userId,
+                }
+            });
+
+            let isWorking = false;
+
+            if(attendanceData !== null) {
+                isWorking = true;
+                if(attendanceData.startTime !== attendanceData.endTime) {
+                    isWorking = false;
+                }
+            }
+
+            console.log(attendanceData);
+            console.log("this is is working");
+            console.log(isWorking);
+
+            return { success: true, isWorking: isWorking };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 이미 로그인 했을 경우
+     * 토큰만 사용해서 출근
+     */
+    async justAttendance(header) {
+        try {
+            const token = await this.jwtService.decode(header);
+            const userId = token.sub;
+
+            // 중복 출근 방지
+            const attendanceData = getStartOfToday();
+            const alreadyAttendance =  await this.prisma.attendance.findFirst({
+                where: {
+                    userId: userId,
+                    date: attendanceData
+                }
+            });
+
+            if(alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
+
+            const startTime = getCurrentDateAndTime();
+            const isTardy = checkTardy(startTime);
+
+            await this.prisma.attendance.create({
+                data: {
+                    date: attendanceData,
+                    startTime: startTime,
+                    endTime: startTime,
+                    userId: userId,
+                    tardy: isTardy,
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     async requestReview() {
         try {
             const today = getStartOfToday();
