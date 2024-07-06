@@ -239,7 +239,7 @@ export class ErpController {
     @Get('/sendList/:id')
     async getSendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 목록 리스트');
-        const res = await this.sendService.getOrderTempList(id);
+        const res = await this.sendService.getOrderTemp(id);
         return res; 
     }
 
