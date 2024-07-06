@@ -24,12 +24,14 @@ import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
 import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
-import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
+import { SendService } from './send.service';
+import { getSortedList } from 'src/util/sortSendList';
+
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -1193,6 +1195,11 @@ export class ErpService {
                                 amount: checkAmount
                             }
                         });
+                        
+                        if(checkAmount>345 && checkAmount<=350){
+                            await this.fixSendList(sendList[1].id,tx);
+                        }
+
                         return sendList[1].id
                     }
                 } else {
@@ -1209,6 +1216,9 @@ export class ErpService {
                                 fixFlag: true, //350개 되면 자동으로 fix
                             }
                         });
+
+                        await this.fixSortNum(sendList[0].id,tx);
+                        
                     } else {
                         await tx.sendList.update({
                             where: {
@@ -1218,6 +1228,10 @@ export class ErpService {
                                 amount: checkAmount
                             }
                         })
+                    }
+
+                    if(checkAmount>345 && checkAmount<=350){
+                        await this.fixSendList(sendList[0].id,tx);
                     }
 
                     return sendList[0].id
@@ -2959,6 +2973,151 @@ export class ErpService {
             return {success:true, status:HttpStatus.CREATED, msg:'완료'};
 
         }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    //이것도 리팩토링 안하면 절 죽이세요
+    async fixSendList(id: number, tx: any){
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        fixFlag: true,
+                    }
+                });
+
+                await this.fixSortNum(id,tx);
+    
+            });
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async fixSortNum(id: number ,tx: any) {
+        try{
+            const sendData = await this.getOrderTempList(id);
+
+            const list = sendData.list; //발송목록 tempOrder list;
+
+            // console.log(list);
+            for(let i = 0; i<list.length; i++) {
+                console.log(list[i]);
+                await tx.tempOrder.update({
+                    where:{id:list[i].id},
+                    data:{sortFixNum:i+1}
+                });
+            }
+
+            return {success:true}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    
+    /** 이거 제가 까먹고 리팩토링 안하면 절 죽이세요
+     * 고정 안 된 발송목록(tempOrder)에서 가져오기
+     * @returns 
+     */
+    async getOrderTempList(id: number) {
+        try {
+            console.log('this list is not fixed');
+            const list = await this.prisma.tempOrder.findMany({
+                where: {
+                    sendListId: id
+                },
+                orderBy: {
+                    //id: 'asc',
+                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    sendNum: true,
+                    payType: true,
+                    addr: true,
+                    updateInfoCheck: true,
+                    cancelFlag: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            //addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            remark: true,
+                            cachReceipt: true,
+                            price: true,
+                            cash: true,
+                            card: true,
+                            orderSortNum:true,
+                            combineNum:true,
+                            payFlag: true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            id: true,
+                            item: true,
+                            sendTax: true,
+                        }
+                    }
+                }
+            });
+
+            const sortItemsList = sortItems(list, true);
+
+            const sortedList = getSortedList(sortItemsList);
+
+            for (let row of sortedList) {
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return { success: true, list: sortedList };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
