@@ -5,6 +5,7 @@ import { InsertQuestionDto } from './Dto/question.dto';
 import { Choice, Visit } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { PermitListDto } from './Dto/permitUser.dto';
+import { getCurrentMonth } from 'src/util/kstDate.util';
 
 @Injectable()
 export class AdminService {
@@ -199,8 +200,7 @@ export class AdminService {
             const checkAdmin = await this.checkAdmin(header);
             if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
 
-            const date = new Date();
-            const month = date.getMonth()+1;
+            const month = getCurrentMonth();
             const data = await this.userService.getAttendance(userId,month);
             //console.log(data);
             return {success:true,data};
