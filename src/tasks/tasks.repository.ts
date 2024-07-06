@@ -165,24 +165,24 @@ export class TasksRepository {
         }
     }
 
-    // async leaveWorkAt(time: number) {
-    //     try {
-    //         const date = getStartOfToday();
-    //         const endTime = new Date(getStartOfToday().setUTCHours(time, 0, 0, 0));
+    async leaveWorkAt(time: number) {
+        try {
+            const date = getStartOfToday();
+            const endTime = new Date(getStartOfToday().setUTCHours(time, 0, 0, 0));
 
-    //         await this.prisma.attendance.updateMany({
-    //             where: { date: date },
-    //             data: { endTime: endTime }
-    //         })
-    //     } catch (err) {
-    //         this.logger.error(err);
-    //         throw new HttpException({
-    //             success: false,
-    //             status: HttpStatus.INTERNAL_SERVER_ERROR,
-    //             msg: '내부서버 에러'
-    //         },
-    //             HttpStatus.INTERNAL_SERVER_ERROR
-    //         );
-    //     }
-    // }
+            await this.prisma.attendance.updateMany({
+                where: { date: date },
+                data: { endTime: endTime }
+            })
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
