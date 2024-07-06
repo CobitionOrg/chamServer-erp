@@ -6,9 +6,9 @@ import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
-import { dateUtil, tardy, todayDate } from 'src/util/date.util';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { getMonth } from 'src/util/getMonth';
+import { getCurrentDateAndTime, getStartOfToday, checkTardy } from 'src/util/kstDate.util';
 
 @Injectable()
 export class UserService {
@@ -161,7 +161,7 @@ export class UserService {
             if (!login.success) return login;
 
             //중복 출근 방지 
-            const attendanceDate = todayDate(attendanceDto.todayDate);
+            const attendanceDate = getStartOfToday();
             const alreadyAttendance = await this.prisma.attendance.findFirst({
                 where: {
                     userId: login.id,
@@ -172,8 +172,8 @@ export class UserService {
             if (alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
 
             //console.log(attendanceDto.todayDate)
-            let startTime = dateUtil(attendanceDto.todayDate);
-            let isTardy = tardy(attendanceDto.todayDate);
+            let startTime = getCurrentDateAndTime();
+            let isTardy = checkTardy(startTime);
 
             await this.prisma.attendance.create({
                 data: {
@@ -218,7 +218,7 @@ export class UserService {
                     userId: token.sub
                 },
                 data: {
-                    endTime: new Date(leaveWork.date)
+                    endTime: getCurrentDateAndTime(),
                 },
             });
 
@@ -392,7 +392,7 @@ export class UserService {
 
     async requestReview() {
         try {
-            const today = new Date();
+            const today = getStartOfToday();
     
             // 이번 주 월요일부터 금요일까지의 날짜를 계산
             const monday = new Date(today);

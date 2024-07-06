@@ -8,6 +8,7 @@ import { ExOrderBodyTypeDto } from './Dto/exOrderBodyType.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { CompleteRefundDto } from './Dto/completeRefund.dto';
 import { Crypto } from 'src/util/crypto.util';
+import { getDayStartAndEnd } from 'src/util/kstDate.util';
 
 @Injectable()
 export class ExchangeService {
@@ -98,11 +99,7 @@ export class ExchangeService {
                 isComplete: false
             };
         }else {
-            const gmtDate = new Date(getListDto.date);
-            const kstDate = new Date(gmtDate.getTime() + 9 * 60 * 60 * 1000);
-
-            const startDate = new Date(kstDate.setHours(0,0,0,0));
-            const endDate = new Date(kstDate.setHours(23,59,59,999));
+            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
             orderConditions = {
                 consultingType: false,
                 isComplete: false,

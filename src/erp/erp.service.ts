@@ -22,7 +22,6 @@ import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
-import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
 import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
@@ -30,6 +29,8 @@ import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
+import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfToday } from 'src/util/kstDate.util';
+import { getMonth } from 'src/util/getMonth';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -269,7 +270,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
 
                 orderConditions = {
                     consultingType: false,
@@ -821,7 +822,7 @@ export class ErpService {
                     useFlag: true,
                 }
             } else {
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -1424,7 +1425,7 @@ export class ErpService {
     async newPatientExcel(date: string) {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
-            const { startDate, endDate } = getKstDate(date);
+            const { startDate, endDate } = getDayStartAndEnd(date);
 
             console.log(startDate);
             console.log(endDate);
@@ -1796,7 +1797,7 @@ export class ErpService {
     async cashExcel(insertCashDto: InsertCashDto) {
         try {
             //console.log(insertCashDto);
-            const { startDate, endDate } = getKstDate(insertCashDto.date);
+            const { startDate, endDate } = getDayStartAndEnd(insertCashDto.date);
             const cashList = await this.getCashTypeList(startDate, endDate);
             const itemList = await this.getItems();
             //console.log(cashList);
@@ -2318,7 +2319,7 @@ export class ErpService {
             let orderConditions = {};
             if (getOutageListDto.date !== undefined) {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getOutageListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getOutageListDto.date);
 
                 orderConditions = {
                     date: {
@@ -2430,7 +2431,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
 
                 orderConditions = {
                     useFlag: false,
