@@ -89,4 +89,9 @@ export class TasksService {
     async test() {
         console.debug('test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 23:58');
     }
+
+    @Cron('58 23 * * 6')
+    async test2() {
+        console.debug('test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 23:58 not convert');
+    }
 }
