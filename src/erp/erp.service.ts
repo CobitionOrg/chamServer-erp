@@ -30,6 +30,7 @@ import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
+import { getSortedList } from 'src/util/sortSendList';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
