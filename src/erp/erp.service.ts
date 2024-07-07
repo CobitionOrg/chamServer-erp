@@ -31,6 +31,7 @@ import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
+import { getOutage } from 'src/util/getOutage';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -2440,7 +2441,8 @@ export class ErpService {
                 // row.addr = decryptedAddr;
             }
 
-            return { success: true, list: sortedList };
+            const outageList = getOutage(sortedList);
+            return { success: true, list: outageList };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
