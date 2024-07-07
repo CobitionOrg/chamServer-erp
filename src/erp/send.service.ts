@@ -1726,6 +1726,21 @@ export class SendService {
             let isSeparteId = 0;
 
             tempOrderList.forEach((e,i) => {
+                // 현금 영수증 관련
+                let cashReceipt = e.order.cachReceipt;
+                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
+                if(e.order.payType === "계좌이체"
+                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                    && e.order.cash < 100000) {
+                        cashReceipt = 'x';
+                    }
+                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 이상이면 빈 칸으로
+                if(e.order.payType === "계좌이체"
+                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                    && e.order.cash >= 100000
+                ) {
+                    cashReceipt = '';
+                }
                 if(e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
@@ -1734,7 +1749,6 @@ export class SendService {
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
                     const card = e.order.card == 0? '' : e.order.card;
                     const message =(e.order.remark ? e.order.remark + '/' : '')+  e.order.message;
-                    const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
                
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
     
@@ -1758,8 +1772,7 @@ export class SendService {
                         const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                         const cash = e.order.cash == 0 ? '' : e.order.cash;
                         const card = e.order.card == 0? '' : e.order.card;
-                        const message = e.order.remark ?? '' + '/' +  e.order.message;
-                        const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
+                        const message = e.order.remark ?? '' + '/' +  e.order.message; 
                    
                         const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
         
