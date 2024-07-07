@@ -1689,6 +1689,13 @@ export class ErpService {
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
 
+            console.log('====================');
+            
+            delete orderData.id;
+            delete orderData.friendRecommends;
+            
+            console.log(orderData);
+
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {

@@ -197,7 +197,7 @@ export class ErpController {
                 `${id}번 주문 정보 업데이트`,
                 '입금상담목록',
                 header
-            )
+            );
         }
 
         return res;

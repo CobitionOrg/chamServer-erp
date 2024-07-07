@@ -5,6 +5,8 @@ export interface UpdateSurveyDto {
     patientId : number;
     orderId : number;
     separateOrder?: Separate
+    friendRecommends?: friendRecommends
+
 }
 
 export interface Separate {
@@ -13,3 +15,9 @@ export interface Separate {
     sendTax: boolean | undefined; //택배비
     orderItem: string | undefined;
 }
+
+export interface friendRecommends {
+    checkFlag: boolean;
+    name: string;
+    phoneNum: string;
+  }
