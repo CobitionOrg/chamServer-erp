@@ -208,7 +208,7 @@ model order {
   /// 유선 상담 시 상담 미연결 플래그
   notCall          Boolean?         @default(false)
   reviewFlag       Boolean?         @default(false)
-  friendRecommends friendRecommend?
+  friendRecommends friendRecommend[]
   patient          patient          @relation(fields: [patientId], references: [id])
   orderBodyType    orderBodyType?
   orderItems       orderItem[]

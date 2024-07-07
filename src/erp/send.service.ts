@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";

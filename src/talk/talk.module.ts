@@ -10,7 +10,16 @@ import { UserService } from 'src/user/user.service';
 import { Crypto } from 'src/util/crypto.util';
 
 @Module({
-    providers:[PrismaService,TalkService,TalkRepositoy,ErpService,AdminService,UserService,Crypto],
+    providers:[
+        PrismaService,
+        TalkService,
+        TalkRepositoy,
+        ErpService,
+        AdminService,
+        UserService,
+        Crypto,
+        
+    ],
     controllers: [TalkController]
 }) 
 export class TalkModule {}
