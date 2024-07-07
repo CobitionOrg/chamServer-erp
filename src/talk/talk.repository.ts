@@ -4,11 +4,13 @@ import { PrismaService } from "src/prisma.service";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 import { getDayStartAndEnd } from "src/util/kstDate.util";
+import { Crypto } from "src/util/crypto.util";
 
 @Injectable()
 export class TalkRepositoy{
     constructor(
-        private prisma: PrismaService
+        private prisma: PrismaService,
+        private crypto: Crypto,
     ){}
 
     private readonly logger = new Logger(TalkRepositoy.name);
@@ -44,6 +46,11 @@ export class TalkRepositoy{
                     patient:{select:{name:true,phoneNum:true},}
                 }
             });
+
+            for (let row of list) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
             
             console.log(list);
 
@@ -192,6 +199,11 @@ export class TalkRepositoy{
                 }
             });
 
+            for (let row of list) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
             return {success:true, list, status:HttpStatus.OK};
 
         }catch(err){
@@ -246,6 +258,11 @@ export class TalkRepositoy{
 
             const list = data.filter(i => i.price != (i.cash + i.card) );
             console.log(list);
+
+            for (let row of list) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
 
             return {success:true, list, status:HttpStatus.OK};
 
