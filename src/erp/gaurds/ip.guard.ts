@@ -9,7 +9,7 @@ import { Request } from 'express';
 @Injectable()
 export class IpGuard implements CanActivate {
   // 일단 localhost만 가능
-  private allowedIPs = ['127.0.0.1', '::1'];
+  private allowedIPs = ['127.0.0.1', '::1', process.env.MY_IPV6, process.env.MY_IPV4];
 
   canActivate(context: ExecutionContext): boolean {
     const request: Request = context.switchToHttp().getRequest();
