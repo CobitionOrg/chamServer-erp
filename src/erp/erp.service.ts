@@ -1105,7 +1105,7 @@ export class ErpService {
 
                     if (!res.success) throw error();
 
-                });
+                },{timeout:10000});
 
             }
 
@@ -2992,7 +2992,7 @@ export class ErpService {
     //이것도 리팩토링 안하면 절 죽이세요
     async fixSendList(id: number, tx: any){
         try{
-            await this.prisma.$transaction(async (tx) => {
+            // await this.prisma.$transaction(async (tx) => {
                 await tx.sendList.update({
                     where: {
                         id: id
@@ -3000,11 +3000,11 @@ export class ErpService {
                     data: {
                         fixFlag: true,
                     }
-                });
+                 });
 
                 await this.fixSortNum(id,tx);
     
-            });
+            //});
 
         }catch(err){
             this.logger.error(err);
@@ -3019,18 +3019,38 @@ export class ErpService {
 
     async fixSortNum(id: number ,tx: any) {
         try{
-            const sendData = await this.getOrderTempList(id);
+            const sendData = await this.getOrderTempList(id,tx);
 
             const list = sendData.list; //발송목록 tempOrder list;
 
-            // console.log(list);
-            for(let i = 0; i<list.length; i++) {
-                console.log(list[i]);
-                await tx.tempOrder.update({
-                    where:{id:list[i].id},
+            console.log(list);
+            // for(let i = 0; i<list.length; i++) {
+            //     console.log(list[i]);
+            //     await tx.tempOrder.update({
+            //         where:{id:list[i].id},
+            //         data:{sortFixNum:i+1}
+            //     });
+            // }
+
+            const qryArr = list.map(async (e,i) => {
+                return tx.tempOrder.update({
+                    where:{id:e.id},
                     data:{sortFixNum:i+1}
                 });
-            }
+            })
+
+            await Promise.all([...qryArr]).then((value) => {
+                return {success:true, status:HttpStatus.CREATED};
+            }).catch((err) => {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            });
+
 
             return {success:true}
         }catch(err){
@@ -3049,10 +3069,10 @@ export class ErpService {
      * 고정 안 된 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(id: number) {
+    async getOrderTempList(id: number,tx) {
         try {
             console.log('this list is not fixed');
-            const list = await this.prisma.tempOrder.findMany({
+            const list = await tx.tempOrder.findMany({
                 where: {
                     sendListId: id
                 },
