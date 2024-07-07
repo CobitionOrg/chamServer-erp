@@ -409,13 +409,11 @@ export class UserService {
 
             if(attendanceData !== null) {
                 isWorking = true;
-                if(attendanceData.startTime !== attendanceData.endTime) {
+                if(attendanceData.startTime.getTime() !== attendanceData.endTime.getTime()) {
                     isWorking = false;
                 }
             }
-
-            console.log(attendanceData);
-            console.log("this is is working");
+            
             console.log(isWorking);
 
             return { success: true, isWorking: isWorking };
