@@ -610,6 +610,8 @@ export class ErpService {
         try {
             const token = await this.jwtService.decode(header);
 
+            console.log(surveyDto);
+
             //토큰에 데이터가 아예 없을 때
             if (!token.orderId) {
                 return { success: false, status: HttpStatus.FORBIDDEN };
@@ -651,7 +653,7 @@ export class ErpService {
                     throw error('400 error');
                 }
             });
-
+            console.log(objPatient.addr);
             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
 
             await this.prisma.$transaction(async (tx) => {
