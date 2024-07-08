@@ -4,6 +4,7 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { TalkService } from './talk.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 /*
 인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -72,6 +73,29 @@ export class TalkController {
         }
 
         return {success:true,status:res.status};
+
+    }
+    @Cron('0 9,12,15 * * 1,2,3,4,5')
+    async handleCron(){
+        this.logger.log('접수 알림톡 발송 완료 처리');
+        const request:GetListDto=
+        {
+            date:new Date().toISOString(),
+            searchCategory:"",
+            searchKeyword:""
+        }
+        const res = await this.talkService.orderInsertTalk(request,1);
+        console.log('-------------------')
+        console.log(res);
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
 
     }
 
@@ -148,5 +172,11 @@ export class TalkController {
         }
 
         return {success:true, status:res.status, firstUrl:res.firstUrl, returnUrl: res.returnUrl};
+    }
+
+    @Get('/Crontest')
+    async cronTest()
+    {
+        this.handleCron();
     }
 }
