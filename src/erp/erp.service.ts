@@ -2916,6 +2916,42 @@ export class ErpService {
     }
 
     /**
+     * 후기 대상 목록에서 후기 유무 체크
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async updateReviewFlag(id: number){
+        try{
+            const tempData = await this.prisma.$queryRaw`
+                select 
+                    reviewFlag 
+                from \`order\` 
+                where id = ${id}
+            `;
+            let flag = false;
+            if(tempData[0].reviewFlag != true){
+                flag = true;
+            }
+
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{reviewFlag:flag}
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
      * 후기 대상 목록에서 새 후기 대상 생성
      * @param createNewReviewDto 
      * @returns {success:boolean, status: HttpStatus, msg: string}

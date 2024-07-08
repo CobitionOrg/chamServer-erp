@@ -972,14 +972,48 @@ export class SendService {
      */
     async completeSend(id: number) {
         try {
-            await this.prisma.sendList.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    useFlag: false
-                }
-            });
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        useFlag: false
+                    }
+                });
+
+                const list = await tx.tempOrder.findMany({
+                    where:{sendListId: id},
+                    select:{
+                        order:{
+                            select:{
+                                id:true
+                            }
+                        }
+                    }
+                });
+
+                const qryArr = list.map(async (e) => {
+                    return tx.order.update({
+                        where:{id:e.order.id},
+                        data:{useFlag:false}
+                    });
+                });
+
+                await Promise.all([...qryArr]).then((value) => {
+                    return {success:true, status:HttpStatus.CREATED};
+                }).catch((err) => {
+                    this.logger.error(err);
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.INTERNAL_SERVER_ERROR
+                    },
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                });
+
+            })
+            
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {

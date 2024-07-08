@@ -30,6 +30,7 @@ import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
+import { zip } from 'rxjs/operators';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -681,6 +682,16 @@ export class ErpController {
         const res = await this.erpService.updateNote(updateNoteDto);
 
         return res;
+    }
+
+    @ApiOperation({summary:'후기 대상 목록에서 후기 유무 체크'})
+    @Patch('/updateReviewFlag/:id')
+    async updateReviewFlag(@Param('id') id: number) {
+        this.logger.log('후기 대상 목록에서 후기 유무 체크');
+        const res = await this.erpService.updateReviewFlag(id);
+
+        return res;
+
     }
 
 
