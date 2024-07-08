@@ -76,9 +76,9 @@ export class TalkRepositoy{
                         phoneNum:this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
-            console.log(list);
+            console.log(res);
 
-            return {success:true, list, status:HttpStatus.OK};
+            return {success:true, list:res, status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

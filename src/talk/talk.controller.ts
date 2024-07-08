@@ -6,6 +6,7 @@ import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getKstDate } from 'src/util/getKstDate';
+import { dateUtil } from 'src/util/date.util';
 /*
 인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -83,24 +84,12 @@ export class TalkController {
         const dateVar=new Date();
         const request:GetListDto=
         {
-            date:dateVar.toLocaleDateString()+dateVar.toLocaleTimeString(),
+            date:dateVar.toISOString(),
             searchCategory:"",
             searchKeyword:""
         }
         console.log(request);
         const res = await this.talkService.orderInsertTalk(request,1);
-        console.log('-------------------')
-        console.log(res);
-        if (res.status != 200) {
-            throw new HttpException({
-                success: false,
-                status: res.status,
-                msg: res.msg
-            },
-                res.status
-            );
-        }
-
     }
 
     @ApiOperation({summary:'상담 연결 처리'})
@@ -182,5 +171,6 @@ export class TalkController {
     async cronTest()
     {
         this.handleCron();
+        return true;
     }
 }

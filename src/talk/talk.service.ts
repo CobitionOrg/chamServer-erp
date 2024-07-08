@@ -7,9 +7,9 @@ import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
 const fs = require('fs');
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser,Dialog } from 'puppeteer';
 const path = require('path');
-
+const constants = require('fs').constants;
 @Injectable()
 export class TalkService {
     constructor(
@@ -80,6 +80,8 @@ export class TalkService {
             const rowDatas = [name,phoneNum,name,'','','','','','','','',''];
 
             const appendRow = sheet.addRow(rowDatas);
+            appendRow.getCell(2).value = phoneNum.toString();
+            appendRow.getCell(2).numFmt = '@';
         });
 
         const fileData = await wb.xlsx.writeBuffer();
@@ -89,11 +91,17 @@ export class TalkService {
             try{await fs.access(path.resolve('../files'))
             }
             catch(err){
-            await fs.mkdir(path.resolve('../files'));
+                if (err.code === 'ENOENT'){
+            await fs.mkdir(path.resolve('../files'),constants.F_OK,(err)=>
+                {
+                    this.logger.error(err);
+                });
+            }
             }
             fs.writeFile(filePath, fileData, (err) =>{
                 if (err) {
                     console.error('파일 저장 중 에러 발생:', err);
+                    return '';
                 } else {
                     console.log('엑셀 파일이 성공적으로 저장되었습니다.');
                 }
@@ -290,13 +298,18 @@ export class TalkService {
         return url;
     }
     async sendTalk(fileName:string,work:string):Promise<{success:boolean}> {
+        let browser:Browser;
         try {
           // 브라우저 실행
-          const browser = await puppeteer.launch({ headless: false }); // headless: false는 브라우저 UI를 표시합니다.
+          browser = await puppeteer.launch({ headless: false }); // headless: false는 브라우저 UI를 표시합니다.
           const page = await browser.newPage();
     page.on('console', msg => {
             for (let i = 0; i < msg.args().length; ++i)
               console.log(`${i}: ${msg.args()[i]}`);
+          });
+          page.on('dialog', async dialog => {
+            console.log(dialog.message()); // 대화 상자 메시지 출력
+            await dialog.accept(); // 확인 버튼 클릭
           });
           await page.goto('https://www.netshot.co.kr/account/login/?next=/kakao/notice_send/#none');
     
@@ -351,7 +364,7 @@ export class TalkService {
           await page.click('a.msg_link8');
     
     
-          const filePath = path.resolve(__dirname, fileName);
+          const filePath = path.resolve(fileName);
           const fileInputSelector = 'input[name="address_file"]';
     
           console.log(filePath);
@@ -422,11 +435,15 @@ export class TalkService {
           await page.waitForSelector('a.msg_link10', { visible: true })
           await page.click('a.msg_link10');
           await new Promise(resolve => setTimeout(resolve, 3000));
+          
           await page.keyboard.press('Enter');
           await page.keyboard.press('Enter');
           return {success:true}
         } catch (err) {
           console.log(err);
+        }finally
+        {
+            //await browser.close();
         }
     
       }
