@@ -129,7 +129,20 @@ export class TalkController {
         return {success:true,status:res.status,url:res.url};
 
     }
-
+    @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
+    @Cron('0 10 * * 5')
+    async notConsultingCron(){
+        this.logger.log('상담 연결 안된 사람들 카톡 발송');
+        const dateVar=new Date();
+        const request:GetListDto=
+        {
+            date:dateVar.toISOString(),
+            searchCategory:"",
+            searchKeyword:""
+        }
+        console.log(request);
+        const res = await this.talkService.notConsulting(request,1);
+    }
     @ApiOperation({summary:'미입금 된 인원 엑셀 데이터'})
     @Get('/notPay')
     async notPay(@Query() getListDto: GetListDto, @Headers() header){
@@ -159,7 +172,7 @@ export class TalkController {
             searchKeyword:""
         }
         console.log(request);
-        const res = await this.talkService.orderInsertTalk(request,1);
+        const res = await this.talkService.notPay(request,1);
     }
     @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
     @Get('/completeTalk/:id')
@@ -197,4 +210,17 @@ export class TalkController {
         this.completeTalkCron();
         return true;
     }
+    @Get('/notPayCron')
+    async notPayCronTest()
+    {
+        this.notPayCron();
+        return true;
+    }
+    @Get('/notConsultingCron')
+    async notConsultingCronTest()
+    {
+        this.notConsultingCron();
+        return true;
+    }
+    
 }

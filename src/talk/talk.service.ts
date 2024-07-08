@@ -205,7 +205,7 @@ export class TalkService {
         if(cronFlag)
         {
             const url = await this.getTalkExcel(res.list,getListDto.date);
-            await this.sendTalk(url,'유선상담 후 연결안되는경우');
+            await this.sendTalk(url,'유선상담 후 연결안되는 경우');
             return {successs:true, status:HttpStatus.OK, url};
         }
         const url = await this.getTalkExcel(res.list);
@@ -236,7 +236,7 @@ export class TalkService {
         if(cronFlag)
             {
                 const url = await this.getTalkExcel(res.list,getListDto.date);
-                const sendRes=await this.sendTalk(url,'미결제발송지연');
+                const sendRes=await this.sendTalk(url,'미결제 발송지연');
                 if(sendRes.success){
                 return {successs:true, status:HttpStatus.OK, url};
                 }
@@ -518,7 +518,7 @@ export class TalkService {
           console.log(err);
         }finally
         {
-            await browser.close();
+            //await browser.close();
         }
     
       }
