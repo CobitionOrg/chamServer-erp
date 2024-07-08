@@ -93,7 +93,7 @@ export class TalkService {
             }
             catch(err){
                 if (err.code === 'ENOENT'){
-            await fs.mkdir(path.resolve('../files'),constants.F_OK,(err)=>
+            await fs.mkdir(path.resolve('../files'),(err)=>
                 {
                     this.logger.error(err);
                 });
@@ -291,15 +291,15 @@ export class TalkService {
     }
     else
     {
-        const completeSendDate=getDateString(new Date().toISOString());
+        const fileName=new Date().toISOString();
+        const completeSendDate=getDateString(fileName);
         console.log(completeSendDate);
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
         console.log(completeSendRes);
+        if(!completeSendRes.cid)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         const firstTalk = await this.talkRepository.completeSendTalkFirst(completeSendRes.cid.id);
-        if(!firstTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
-
         const returnTalk = await this.talkRepository.completeSendTalkReturn(completeSendRes.cid.id);
-        if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        if((!returnTalk.success)&&(!firstTalk.success)) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
 
         for (let row of firstTalk.list) {
             const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
@@ -310,13 +310,18 @@ export class TalkService {
             const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
             row.patient.phoneNum = decryptedPhoneNum;
         }
-
-        const firstUrl = await this.completeSendExcel(firstTalk.list,completeSendDate+"_first");
-        let res=await this.sendTalk(firstUrl,'발송(초진)');
+        let res;
+        let firstUrl,returnUrl;
+        if(firstTalk.list.length>0){
+        firstUrl = await this.completeSendExcel(firstTalk.list,fileName+"first");
+        res=await this.sendTalk(firstUrl,'발송(초진)');
         if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
-        const returnUrl = await this.completeSendExcel(returnTalk.list,completeSendDate);
+        }
+        if(returnTalk.list.length>0){
+        returnUrl = await this.completeSendExcel(returnTalk.list,fileName+"second");
         res=await this.sendTalk(returnUrl,'발송(재진)');
         if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+        }
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
 
     }
@@ -330,6 +335,12 @@ export class TalkService {
     async completeSendExcel(list,fileName?) {
         const wb = new Excel.Workbook();
         const sheet = wb.addWorksheet('발송완료알림');
+        const headers = ['이름','휴대폰번호','변수1','변수2','변수3','변수4','변수5','변수6','변수7','변수8','변수9','변수10'];
+        const headerWidths = [10,10,10,10,10,10,10,10,10,10,10,10];
+        const headerRow = sheet.addRow(headers);
+        headerRow.eachCell((cell, colNum) => {
+            sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+        });
 
         list.forEach(e => {
             const name = e.patient.name;
@@ -348,11 +359,11 @@ export class TalkService {
         if(fileName)
             {
                 const filePath= `../files/${fileName}.xlsx`;
-                try{await fs.access(path.resolve('../files'))
+                try{await fs.access(path.resolve(filePath))
                 }
                 catch(err){
                     if (err.code === 'ENOENT'){
-                await fs.mkdir(path.resolve('../files'),constants.F_OK,(err)=>
+                await fs.mkdir(path.resolve('../files'),(err)=>
                     {
                         this.logger.error(err);
                     });
@@ -518,7 +529,7 @@ export class TalkService {
           console.log(err);
         }finally
         {
-            //await browser.close();
+            await browser.close();
         }
     
       }
