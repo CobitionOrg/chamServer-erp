@@ -37,15 +37,26 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async orderInsertTalk(getListDto: GetListDto,cronFlag?){
+    async orderInsertTalk(getListDto: GetListDto,cronFlag?:number){
         const res = await this.talkRepository.orderInsertTalk(getListDto);
         //console.log(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         if(cronFlag)
         {
             const url = await this.getTalkExcel(res.list,getListDto.date);
-            this.sendTalk(url,'접수확인알림톡(리뉴얼)');
+            const sendRes=await this.sendTalk(url,'접수확인알림톡(리뉴얼)');
+            if(sendRes.success){
+            const orderInsertList=res.list.map(item => ({
+                id: item.id,
+                name: item.patient.name,
+            }));
+            const InsertRes=await this.talkRepository.completeInsertTalk(orderInsertList);
+            if(InsertRes.success){
             return {successs:true};
+            }
+            return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 레포지토리 오류발생'};
+        }
+        return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 카톡전송송 오류발생'};
         }
         const url = await this.getTalkExcel(res.list);
         const checkUrl = await this.getCheckTalkExcel(res.list);
@@ -273,7 +284,7 @@ export class TalkService {
 
         return url;
     }
-    async sendTalk(fileName:string,work:string) {
+    async sendTalk(fileName:string,work:string):Promise<{success:boolean}> {
         try {
           // 브라우저 실행
           const browser = await puppeteer.launch({ headless: false }); // headless: false는 브라우저 UI를 표시합니다.
@@ -408,6 +419,7 @@ export class TalkService {
           await new Promise(resolve => setTimeout(resolve, 3000));
           await page.keyboard.press('Enter');
           await page.keyboard.press('Enter');
+          return {success:true}
         } catch (err) {
           console.log(err);
         }

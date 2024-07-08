@@ -5,6 +5,7 @@ import { TalkService } from './talk.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { getKstDate } from 'src/util/getKstDate';
 /*
 인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -80,7 +81,7 @@ export class TalkController {
         this.logger.log('접수 알림톡 발송 완료 처리');
         const request:GetListDto=
         {
-            date:new Date().toISOString(),
+            date:new Date().toLocaleString(),
             searchCategory:"",
             searchKeyword:""
         }
