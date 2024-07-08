@@ -826,6 +826,10 @@ export class SendService {
                     orderStr += ` s(${service})`
                 }
 
+                if(orderStr == '감1개월+쎈1개월'){
+                    orderStr += ` s(10)`;
+                }
+
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
