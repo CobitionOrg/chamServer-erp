@@ -56,7 +56,7 @@ export class TalkService {
             }
             return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 레포지토리 오류발생'};
         }
-        return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 카톡전송송 오류발생'};
+        return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 카톡전송 오류발생'};
         }
         const url = await this.getTalkExcel(res.list);
         const checkUrl = await this.getCheckTalkExcel(res.list);

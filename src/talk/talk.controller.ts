@@ -76,9 +76,10 @@ export class TalkController {
         return {success:true,status:res.status};
 
     }
+    @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
     @Cron('0 9,12,15 * * 1,2,3,4,5')
     async handleCron(){
-        this.logger.log('접수 알림톡 발송 완료 처리');
+        this.logger.log('접수 알림톡 자동 발송 처리');
         const request:GetListDto=
         {
             date:new Date().toLocaleString(),
