@@ -826,6 +826,10 @@ export class SendService {
                     orderStr += ` s(${service})`
                 }
 
+                if(orderStr == '감1개월+쎈1개월'){
+                    orderStr += ` s(10)`;
+                }
+
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
@@ -972,14 +976,48 @@ export class SendService {
      */
     async completeSend(id: number) {
         try {
-            await this.prisma.sendList.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    useFlag: false
-                }
-            });
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        useFlag: false
+                    }
+                });
+
+                const list = await tx.tempOrder.findMany({
+                    where:{sendListId: id},
+                    select:{
+                        order:{
+                            select:{
+                                id:true
+                            }
+                        }
+                    }
+                });
+
+                const qryArr = list.map(async (e) => {
+                    return tx.order.update({
+                        where:{id:e.order.id},
+                        data:{useFlag:false}
+                    });
+                });
+
+                await Promise.all([...qryArr]).then((value) => {
+                    return {success:true, status:HttpStatus.CREATED};
+                }).catch((err) => {
+                    this.logger.error(err);
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.INTERNAL_SERVER_ERROR
+                    },
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                });
+
+            })
+            
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
