@@ -396,6 +396,7 @@ export class TalkService {
           page.on('dialog', async dialog => {
             console.log(dialog.message()); // 대화 상자 메시지 출력
             await dialog.accept(); // 확인 버튼 클릭
+            await new Promise(resolve => setTimeout(resolve, 3000));
           });
           await page.goto('https://www.netshot.co.kr/account/login/?next=/kakao/notice_send/#none');
     
@@ -505,6 +506,7 @@ export class TalkService {
             console.log(textarea);
             return textarea.value;
           },textareaSelector);
+          
           await page.type('textarea#failed_content', templateContent);
           await new Promise(resolve => setTimeout(resolve, 3000));
           const sendButton = '.msg_link10';
@@ -518,12 +520,10 @@ export class TalkService {
               console.error(`Checkbox not found: ${selector}`);
             }
           }, sendButton);
+   
           await page.waitForSelector('a.msg_link10', { visible: true })
           await page.click('a.msg_link10');
           await new Promise(resolve => setTimeout(resolve, 3000));
-          
-          await page.keyboard.press('Enter');
-          await page.keyboard.press('Enter');
           return {success:true}
         } catch (err) {
           console.log(err);
