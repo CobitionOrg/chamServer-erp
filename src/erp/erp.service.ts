@@ -3195,4 +3195,286 @@ export class ErpService {
             );
         }
     }
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // 재사용 시 값 변경 필수
+
+    // async createRandomName() {
+    //     let randName = '';
+    //     let first = "김이박최정강조윤장임한오서신권황안송류전홍고문양손배조백허유남심노정하곽성차주우구신임나전민유진지엄채원천방공강현함변염양변여추노도소신석선설마주연방위표명기반왕모장남탁국여진구";
+    //     let last = "가강건경고관광구규근기길나남노누다단달담대덕도동두라래로루리마만명무문미민바박백범별병보사산상새서석선설섭성세소솔수숙순숭슬승시신아안애엄여연영예오옥완요용우원월위유윤율으은의이익인일자잔장재전정제조종주준중지진찬창채천철초춘충치탐태택판하한해혁현형혜호홍화환회효훈휘희운모배부림봉혼황량린을비솜공면탁온디항후려균묵송욱휴언들견추걸삼열웅분변양출타흥겸곤번식란더손술반빈실직악람권복심헌엽학개평늘랑향울련";
+
+    //     for(let i = 0; i < 3; i++) {
+    //         if(i === 0) {
+    //             randName += first.charAt(Math.floor(Math.random() * first.length));
+    //         } else {
+    //             randName += last.charAt(Math.floor(Math.random() * last.length));
+    //         }
+    //     }
+
+    //     return randName;
+    // }
+
+    // async testPatientDataInsert() {
+    //     class PatientTable {
+    //         name: string;
+    //         phoneNum: string;
+    //         addr: string;
+    //         socialNum: string;
+    //         useFlag: boolean;
+    //     }
+    //     let phn = "01099999999";
+    //     let socn = "9999999999999";
+    //     const repeat = 500
+    //     let arr = [];
+    //     for(let i = 0; i < repeat; i++) {
+    //         const phoneNum = "0" + (+phn - i).toString();
+    //         const socialNum = (+socn - i).toString();
+    //         const encryptedPhoneNum = this.crypto.encrypt(phoneNum);
+    //         const encryptedSocialNum = this.crypto.encrypt(socialNum);
+    //         const name = await this.createRandomName();
+    //         const testaddr = this.crypto.encrypt(`테스트 주소 ${i}`);
+    //         let obj: PatientTable = {
+    //             name: name,
+    //             phoneNum: encryptedPhoneNum,
+    //             addr: testaddr,
+    //             socialNum: encryptedSocialNum,
+    //             useFlag: true
+    //         };
+    //         arr.push(obj);
+    //     }
+    //     await this.prisma.patient.createMany({
+    //         data: arr,
+    //     })
+    //     return { success: true };
+    // }
+
+    // async testPatientDataExport() {
+    //     const customers = await this.prisma.patient.findMany({
+    //         where: {
+    //             useFlag: true,
+    //             id: {
+    //                 gte: 111,
+    //             }
+    //         }
+    //     });
+
+    //     const decryptedCustomers = customers.map((customer) => {
+    //         const decryptedPhoneNum = this.crypto.decrypt(customer.phoneNum);
+    //         const decryptedAddr = this.crypto.decrypt(customer.addr);
+    //         const decryptedSocialNum = this.crypto.decrypt(customer.socialNum);
+    //         return { ...customer, phoneNum: decryptedPhoneNum, addr: decryptedAddr, socialNum: decryptedSocialNum };
+    //     });
+
+    //     const wb = new Excel.Workbook();
+    //     const sheet = wb.addWorksheet("고객 정보");
+
+    //     const headers = ["이름", "핸드폰 번호", "주소", "주민번호"];
+
+    //     const headerWidths = [10, 20, 30, 20];
+
+    //     const headerRow = sheet.addRow(headers);
+
+    //     headerRow.height = 30.75;
+
+    //     headerRow.eachCell((cell, colNum) => {
+    //         styleHeaderCell(cell);
+    //         sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+    //     });
+
+    //     const hyphen = new GetHyphen('');
+
+    //     decryptedCustomers.forEach((e) => {
+    //         const rowDatas = [
+    //             e.name,
+    //             hyphen.phoneNumHyphen(e.phoneNum),
+    //             e.addr,
+    //             hyphen.socialNumHyphen(e.socialNum)
+    //         ];
+    //         sheet.addRow(rowDatas);
+    //     });
+
+    //     const fileData = await wb.xlsx.writeBuffer();
+    //     const url = await this.uploadFile(fileData);
+
+    //     return { success: true, status: HttpStatus.OK, url };
+    // }
+
+    // async testOrderDataInsert() {
+    //     //611, 861
+    //     const customers = await this.prisma.patient.findMany({
+    //         where: {
+    //             useFlag: true,
+    //             id: {
+    //                 gte: 861,
+    //             }
+    //         },
+    //         take: 250,
+    //     });
+
+    //     const items = await this.prisma.answer.findMany({
+    //         where: {
+    //             id: {
+    //                 gte: 93
+    //             }
+    //         }
+    //     });
+
+    //     const itemsObjs = [];
+        
+    //     items.forEach((e) => {
+    //         if(e.answer.includes('요요')) {
+    //             itemsObjs.push({
+    //                 item: e.answer,
+    //                 type: "yoyo"
+    //             })
+    //         } else {
+    //             itemsObjs.push({
+    //                 item: e.answer,
+    //                 type: "common"
+    //             })
+    //         }
+    //     });
+
+    //     const payTypes = ["계좌이체", "카드결제"];
+    //     const isFirstTypes = [true, false];
+    //     const orderSortNums = [1, 2, 3, 4, 5];
+
+    //     const date = new Date();
+    //     const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+    //     for(let i = 0; i < customers.length; i++) {
+    //         const randomItem = itemsObjs[Math.floor(Math.random() * itemsObjs.length)];
+    //         const newOrder = await this.prisma.order.create({
+    //             data: {
+    //                 payType: payTypes[Math.floor(Math.random() * payTypes.length)], 
+    //                 date: kstDate,
+    //                 route: '',
+    //                 message: '',
+    //                 cachReceipt: '',
+    //                 essentialCheck: '',
+    //                 typeCheck: '',
+    //                 consultingTime: '',
+    //                 outage: '',
+    //                 patientId: customers[i].id,
+    //                 addr: customers[i].addr,
+    //                 isFirst: isFirstTypes[Math.floor(Math.random() * isFirstTypes.length)],
+    //                 orderSortNum: orderSortNums[Math.floor(Math.random() * orderSortNums.length)],
+    //             }
+    //         });
+    //         const newOrderItems = await this.prisma.orderItem.create({
+    //             data: {
+    //                 item: randomItem.item,
+    //                 type: randomItem.type,
+    //                 orderId: newOrder.id,
+    //             }
+    //         })
+    //     }
+
+    //     return { success: true };
+    // }
+
+    // async testOrderDataExport() {
+    //     // 1502 1752
+    //     const orderData = await this.prisma.order.findMany({
+    //         where: {
+    //             id: {
+    //                 gte: 1502
+    //             }
+    //         },
+    //         take: 250,
+    //         select: {
+    //             id: true,
+    //             route: true,
+    //             message: true,
+    //             cachReceipt: true,
+    //             typeCheck: true,
+    //             consultingTime: true,
+    //             payType: true,
+    //             outage: true,
+    //             consultingFlag: true,
+    //             consultingType: true,
+    //             phoneConsulting: true,
+    //             isFirst: true,
+    //             date: true,
+    //             orderSortNum: true,
+    //             remark: true,
+    //             isPickup: true,
+    //             price: true,
+    //             card: true,
+    //             cash: true,
+    //             addr: true,
+    //             friendDiscount: true,
+    //             patient: {
+    //                 select: {
+    //                     id: true,
+    //                     name: true,
+    //                     addr: true,
+    //                     phoneNum: true,
+    //                 }
+    //             },
+    //             orderItems: {
+    //                 select: {
+    //                     item: true,
+    //                     type: true,
+    //                 }
+    //             }}
+    //     });
+
+    //     for (let row of orderData) {
+    //         const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+    //         const decryptedAddr = this.crypto.decrypt(row.addr);
+    //         const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+    //         row.patient.phoneNum = decryptedPhoneNum;
+    //         row.addr = decryptedAddr;
+    //         row.patient.addr = decryptedPatientAddr;
+    //     }
+
+    //     const wb = new Excel.Workbook();
+    //     const sheet = wb.addWorksheet("오더 정보");
+
+    //     const headers = ["날짜", "초진/재진", "이름", "핸드폰 번호", "상품", "가격", "주소", "배송요청메시지", "결제방법", "현금영수증"];
+
+    //     const headerWidths = [25, 10, 10, 20, 30, 20, 30, 20, 10, 20];
+
+    //     const headerRow = sheet.addRow(headers);
+
+    //     headerRow.height = 30.75;
+
+    //     headerRow.eachCell((cell, colNum) => {
+    //         styleHeaderCell(cell);
+    //         sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+    //     });
+        
+    //     // 주의 상품은 하나씩만 넣었음
+    //     orderData.forEach((e) => {
+    //         const rowDatas = [
+    //             e.date,
+    //             e.isFirst ? "초진" : "재진",
+    //             e.patient.name,
+    //             e.patient.phoneNum,
+    //             e.orderItems[0].item,
+    //             e.price,
+    //             e.addr,
+    //             e.message,
+    //             e.payType,
+    //             e.cachReceipt,
+    //         ]
+    //         const row = sheet.addRow(rowDatas);
+    //         row.getCell(1).numFmt = 'yyyy-mm-dd hh:mm:ss AM/PM';
+    //         row.getCell(1).alignment = { horizontal: 'left' };
+    //     });
+
+    //     const fileData = await wb.xlsx.writeBuffer();
+    //     const url = await this.uploadFile(fileData);
+
+    //     return { success: true, status: HttpStatus.OK, url };
+    // }
 }
