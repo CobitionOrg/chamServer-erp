@@ -816,6 +816,8 @@ export class ErpService {
             const checkAdmin = await this.adminService.checkAdmin(header);
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
 
+            console.log(getListDto);
+
             let orderConditions = {};
             if (getListDto.date === undefined) {
                 //날짜 조건 X
@@ -837,7 +839,7 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if (getListDto.searchKeyword === "") {
+            if (getListDto.searchKeyword !== "") {
                 //검색어 O
                 if (getListDto.searchCategory === "all") {
                     patientConditions = {
