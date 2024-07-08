@@ -5,6 +5,7 @@ import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 import { Crypto } from 'src/util/crypto.util';
+import { dateType } from "aws-sdk/clients/iam";
 /*
 인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -196,7 +197,18 @@ export class TalkRepositoy{
                     patient:{select:{name:true,phoneNum:true},}
                 }
             });
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+            console.log(res);
 
+            return {success:true, list:res, status:HttpStatus.OK};
             return {success:true, list, status:HttpStatus.OK};
 
         }catch(err){
@@ -250,9 +262,17 @@ export class TalkRepositoy{
             //console.log(data);
 
             const list = data.filter(i => i.price != (i.cash + i.card) );
-            console.log(list);
-
-            return {success:true, list, status:HttpStatus.OK};
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+            console.log(res);
+            return {success:true, list:res, status:HttpStatus.OK};
 
         }catch(err){
             this.logger.error(err);
@@ -265,7 +285,37 @@ export class TalkRepositoy{
         }
     }
 
-
+    /**
+     * 발송 알림 톡 id추출
+     * @param date
+     * @returns Promise<{
+            id:number
+        }>
+     */
+        async completeSendTalkGetList(date:string){
+            try{
+                const cid= await this.prisma.sendList.findFirst({
+                    where: {
+                       title:date,
+                       useFlag:false
+                    },
+                    select: {
+                        id: true,
+                    }
+                });
+                return {success:true,cid};
+            }
+            catch(err)
+            {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
     /**
      * 발송 알림 톡 초진(수정 예정)
      * @param id 

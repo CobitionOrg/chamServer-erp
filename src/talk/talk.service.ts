@@ -6,6 +6,7 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
+import { getDateString, todayDate } from 'src/util/date.util';
 const fs = require('fs');
 import puppeteer, { Browser,Dialog } from 'puppeteer';
 const path = require('path');
@@ -198,11 +199,16 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
+    async notConsulting(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notConsulting(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        if(cronFlag)
+        {
+            const url = await this.getTalkExcel(res.list,getListDto.date);
+            await this.sendTalk(url,'유선상담 후 연결안되는경우');
+            return {successs:true, status:HttpStatus.OK, url};
+        }
         const url = await this.getTalkExcel(res.list);
-             
         return {successs:true, status:HttpStatus.OK, url};
     }
 
@@ -224,11 +230,22 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notPay(getListDto: GetListDto) {
+    async notPay(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notPay(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        if(cronFlag)
+            {
+                const url = await this.getTalkExcel(res.list,getListDto.date);
+                const sendRes=await this.sendTalk(url,'미결제발송지연');
+                if(sendRes.success){
+                return {successs:true, status:HttpStatus.OK, url};
+                }
+                else
+                {
+                    return {successs:false, status:HttpStatus.INTERNAL_SERVER_ERROR, url};
+                }
+            }
         const url = await this.getTalkExcel(res.list);
-             
         return {successs:true, status:HttpStatus.OK, url};
     }
 
@@ -249,7 +266,8 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async completeSendTalk(id: number) {
+    async completeSendTalk(id?: number) {
+        if(id){
         const firstTalk = await this.talkRepository.completeSendTalkFirst(id);
         if(!firstTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
 
@@ -271,13 +289,45 @@ export class TalkService {
 
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
     }
+    else
+    {
+        const completeSendDate=getDateString(new Date().toISOString());
+        console.log(completeSendDate);
+        const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
+        console.log(completeSendRes);
+        const firstTalk = await this.talkRepository.completeSendTalkFirst(completeSendRes.cid.id);
+        if(!firstTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
 
-    /**
+        const returnTalk = await this.talkRepository.completeSendTalkReturn(completeSendRes.cid.id);
+        if(!returnTalk.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+
+        for (let row of firstTalk.list) {
+            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+            row.patient.phoneNum = decryptedPhoneNum;
+        }
+
+        for (let row of returnTalk.list) {
+            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+            row.patient.phoneNum = decryptedPhoneNum;
+        }
+
+        const firstUrl = await this.completeSendExcel(firstTalk.list,completeSendDate+"_first");
+        let res=await this.sendTalk(firstUrl,'발송(초진)');
+        if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+        const returnUrl = await this.completeSendExcel(returnTalk.list,completeSendDate);
+        res=await this.sendTalk(returnUrl,'발송(재진)');
+        if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
+        return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
+
+    }
+    }
+
+    /**재
      * 발송 알림 톡 파일
      * @param list 
      * @returns url:string
      */
-    async completeSendExcel(list) {
+    async completeSendExcel(list,fileName?) {
         const wb = new Excel.Workbook();
         const sheet = wb.addWorksheet('발송완료알림');
 
@@ -290,9 +340,34 @@ export class TalkService {
 
             const rowDatas = [name, phoneNum, name, orderItem, '로젠택배' ,sendNum, isFirst];
             const appendRow = sheet.addRow(rowDatas);
+            appendRow.getCell(2).value = phoneNum.toString();
+            appendRow.getCell(2).numFmt = '@';
         });
 
         const fileData = await wb.xlsx.writeBuffer();
+        if(fileName)
+            {
+                const filePath= `../files/${fileName}.xlsx`;
+                try{await fs.access(path.resolve('../files'))
+                }
+                catch(err){
+                    if (err.code === 'ENOENT'){
+                await fs.mkdir(path.resolve('../files'),constants.F_OK,(err)=>
+                    {
+                        this.logger.error(err);
+                    });
+                }
+                }
+                fs.writeFile(filePath, fileData, (err) =>{
+                    if (err) {
+                        console.error('파일 저장 중 에러 발생:', err);
+                        return '';
+                    } else {
+                        console.log('엑셀 파일이 성공적으로 저장되었습니다.');
+                    }
+                })
+                return filePath;
+            }
         const url = await this.erpService.uploadFile(fileData);
 
         return url;
@@ -443,7 +518,7 @@ export class TalkService {
           console.log(err);
         }finally
         {
-            //await browser.close();
+            await browser.close();
         }
     
       }
