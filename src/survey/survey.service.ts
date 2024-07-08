@@ -276,7 +276,8 @@ export class SurveyService {
       const order = await this.prisma.order.findFirst({
         where: {
           patientId: res.id,
-          isComplete: false
+          isComplete: false,
+          useFlag: true
         },
         select: {
           id: true,
