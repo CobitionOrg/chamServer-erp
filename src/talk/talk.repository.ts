@@ -4,6 +4,7 @@ import { PrismaService } from "src/prisma.service";
 import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
+import { Crypto } from 'src/util/crypto.util';
 /*
 인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -28,7 +29,8 @@ import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 @Injectable()
 export class TalkRepositoy{
     constructor(
-        private prisma: PrismaService
+        private prisma: PrismaService,
+        private crypto: Crypto,
     ){}
 
     private readonly logger = new Logger(TalkRepositoy.name);
@@ -57,6 +59,7 @@ export class TalkRepositoy{
                     lt: endDate,
                 }
             }
+            console.log(startDate,endDate);
             const list = await this.prisma.order.findMany({
                 where: {...orderConditions, orderSortNum:{gte:0},talkFlag:false},
                 select: {
@@ -64,7 +67,15 @@ export class TalkRepositoy{
                     patient:{select:{name:true,phoneNum:true},}
                 }
             });
-            
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
             console.log(list);
 
             return {success:true, list, status:HttpStatus.OK};

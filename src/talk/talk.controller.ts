@@ -80,12 +80,14 @@ export class TalkController {
     @Cron('0 9,12,15 * * 1,2,3,4,5')
     async handleCron(){
         this.logger.log('접수 알림톡 자동 발송 처리');
+        const dateVar=new Date();
         const request:GetListDto=
         {
-            date:new Date().toLocaleString(),
+            date:dateVar.toLocaleDateString()+dateVar.toLocaleTimeString(),
             searchCategory:"",
             searchKeyword:""
         }
+        console.log(request);
         const res = await this.talkService.orderInsertTalk(request,1);
         console.log('-------------------')
         console.log(res);

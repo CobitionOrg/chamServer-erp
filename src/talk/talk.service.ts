@@ -85,7 +85,12 @@ export class TalkService {
         const fileData = await wb.xlsx.writeBuffer();
         if(fileName)
         {
-            filePath= `./src/files/${fileName}.xlsx`;
+            filePath= `../files/${fileName}.xlsx`;
+            try{await fs.access(path.resolve('../files'))
+            }
+            catch(err){
+            await fs.mkdir(path.resolve('../files'));
+            }
             fs.writeFile(filePath, fileData, (err) =>{
                 if (err) {
                     console.error('파일 저장 중 에러 발생:', err);
