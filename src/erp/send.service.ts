@@ -375,6 +375,8 @@ export class SendService {
                             orderSortNum: true,
                             addr: true,
                             price: true,
+                            card: true,
+                            cash: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -581,6 +583,8 @@ export class SendService {
                         addr: encryptedAddr,
                         message : objOrder.message,
                         payType: objOrder.payType,
+                        card: parseInt(objOrder.card),
+                        cash: parseInt(objOrder.cash),
                         orderSortNum: parseInt(objOrder.orderSortNum),
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
