@@ -126,6 +126,7 @@ model patient {
   friendRecommends friendRecommend[]
   orders           order[]
   tempOrders       tempOrder[]
+  patientBodyType patientBodyType?
 }
 
 model item {
@@ -360,10 +361,35 @@ model orderBodyType {
   pastDrug     String
   /// 과거에 수술하신 경우
   pastSurgery  String
+  /// 사용 여부
+  useFlag      Boolean? @default(true)
   /// 해당 주문 오더 key
   orderId      Int      @unique
-  useFlag      Boolean? @default(true)
   order        order    @relation(fields: [orderId], references: [id])
+}
+
+model patientBodyType {
+  /// index key
+  id           Int      @id @default(autoincrement())
+  /// 키 몸무게
+  tallWeight   String
+  /// 소화 상태
+  digestion    String
+  /// 수면 상태
+  sleep        String
+  /// 변비 상태
+  constipation String
+  /// 현재 복용 중인 약
+  nowDrug      String
+  /// 과거 다이어트 약 복용
+  pastDrug     String
+  /// 과거에 수술하신 경우
+  pastSurgery  String
+  /// 해당 주문 오더 key
+  /// 사용 여부
+  useFlag      Boolean? @default(true)
+  patientId Int @unique
+  patient patient @relation(fields:[patientId], references:[id])
 }
 
 model orderItem {
