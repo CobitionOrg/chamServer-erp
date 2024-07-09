@@ -597,7 +597,6 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
-                        updateInfoCheck: false,
                     }
                 })
 
@@ -1413,7 +1412,12 @@ export class SendService {
                     where:{
                         tempOrderId:insertUpdateInfoDto.tempOrderId
                     }
-                })
+                });
+
+                await tx.tempOrder.update({
+                    where:{id:insertUpdateInfoDto.tempOrderId},
+                    data:{updateInfoCheck:false}
+                });
                 const qryArr = insertUpdateInfoDto.infoData.map(async e => {
                     console.log('------------------');
                     console.log(e);
@@ -1437,7 +1441,7 @@ export class SendService {
                     },
                         HttpStatus.INTERNAL_SERVER_ERROR
                     );
-                });
+                }); 
             })
             
            
