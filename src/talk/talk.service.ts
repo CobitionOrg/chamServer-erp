@@ -322,7 +322,7 @@ export class TalkService {
         if(returnTalk.list.length>0){
         returnUrl = await this.completeSendExcel(returnTalk.list,fileName+"second");
         //문자 발송
-        res=await this.sendTalk(returnUrl,'발송(재진)');성
+        res=await this.sendTalk(returnUrl,'발송(재진)');
         if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
         }
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
