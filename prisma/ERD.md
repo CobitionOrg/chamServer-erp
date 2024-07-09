@@ -166,8 +166,20 @@ erDiagram
   String nowDrug
   String pastDrug
   String pastSurgery
-  Int orderId FK
   Boolean useFlag "nullable"
+  Int orderId FK
+}
+"patientBodyType" {
+  Int id PK
+  String tallWeight
+  String digestion
+  String sleep
+  String constipation
+  String nowDrug
+  String pastDrug
+  String pastSurgery
+  Boolean useFlag "nullable"
+  Int patientId FK
 }
 "orderItem" {
   Int id PK
@@ -205,6 +217,7 @@ erDiagram
 "addSend" }o--|| "sendList" : sendList
 "addSend" |o--|| "tempOrder" : tempOrder
 "orderBodyType" |o--|| "order" : order
+"patientBodyType" |o--|| "patient" : patient
 "orderItem" }o--|| "order" : order
 "orderUpdateInfo" }o--|| "tempOrder" : tempOrder
 "orderUpdateInfo" }o--|| "updateInfo" : updateInfo
@@ -400,8 +413,24 @@ erDiagram
   - `nowDrug`: 현재 복용 중인 약
   - `pastDrug`: 과거 다이어트 약 복용
   - `pastSurgery`: 과거에 수술하신 경우
+  - `useFlag`: 사용 여부
   - `orderId`: 해당 주문 오더 key
-  - `useFlag`: 
+
+### `patientBodyType`
+
+**Properties**
+  - `id`: index key
+  - `tallWeight`: 키 몸무게
+  - `digestion`: 소화 상태
+  - `sleep`: 수면 상태
+  - `constipation`: 변비 상태
+  - `nowDrug`: 현재 복용 중인 약
+  - `pastDrug`: 과거 다이어트 약 복용
+  - `pastSurgery`: 과거에 수술하신 경우
+  - `useFlag`
+    > 해당 주문 오더 key
+    > 사용 여부
+  - `patientId`: 
 
 ### `orderItem`
 
