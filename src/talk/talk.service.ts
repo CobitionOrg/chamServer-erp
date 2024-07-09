@@ -235,8 +235,8 @@ export class TalkService {
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         if(cronFlag)
             {
-                const url = await this.getTalkExcel(res.list,getListDto.date);
-                const sendRes=await this.sendTalk(url,'미결제 발송지연');
+                const url = await this.getTalkExcel(res.list,getListDto.date);//엑셀파일 저장.
+                const sendRes=await this.sendTalk(url,'미결제 발송지연');//해당 엑셀파일을 가지고 카톡발송.
                 if(sendRes.success){
                 return {successs:true, status:HttpStatus.OK, url};
                 }
@@ -294,6 +294,7 @@ export class TalkService {
         const fileName=new Date().toISOString();
         const completeSendDate=getDateString(fileName);
         console.log(completeSendDate);
+        //당일 완료된 발송목록 id를 가져온다.
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
         console.log(completeSendRes);
         if(!completeSendRes.cid)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
@@ -314,12 +315,14 @@ export class TalkService {
         let firstUrl,returnUrl;
         if(firstTalk.list.length>0){
         firstUrl = await this.completeSendExcel(firstTalk.list,fileName+"first");
+        //문자발송
         res=await this.sendTalk(firstUrl,'발송(초진)');
         if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
         }
         if(returnTalk.list.length>0){
         returnUrl = await this.completeSendExcel(returnTalk.list,fileName+"second");
-        res=await this.sendTalk(returnUrl,'발송(재진)');
+        //문자 발송
+        res=await this.sendTalk(returnUrl,'발송(재진)');성
         if(!res.success)return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR};
         }
         return {success:true, status:HttpStatus.OK, firstUrl, returnUrl};
@@ -356,19 +359,23 @@ export class TalkService {
         });
 
         const fileData = await wb.xlsx.writeBuffer();
+        //저장할 파일이름을 따로 준경우
         if(fileName)
             {
                 const filePath= `../files/${fileName}.xlsx`;
-                try{await fs.access(path.resolve(filePath))
+                //디렉토리 존재확인
+                try{await fs.access(path.resolve('../files'))
                 }
                 catch(err){
                     if (err.code === 'ENOENT'){
+                        //해당디렉토리가 없는경우, 생성
                 await fs.mkdir(path.resolve('../files'),(err)=>
                     {
                         this.logger.error(err);
                     });
                 }
                 }
+                //파일저장
                 fs.writeFile(filePath, fileData, (err) =>{
                     if (err) {
                         console.error('파일 저장 중 에러 발생:', err);
@@ -433,8 +440,6 @@ export class TalkService {
             const test = document.querySelector('a.msg_link9').dispatchEvent(new Event('click'));
             console.log(test.valueOf);
             // Check the checkbox
-    
-    
           },work);
     
     
