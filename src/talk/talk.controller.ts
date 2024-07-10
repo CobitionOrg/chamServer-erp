@@ -77,7 +77,7 @@ export class TalkController {
     }
     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
 //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
-@Cron('20 20 * * 3',{timeZone:"Asia/Seoul"})
+@Cron('20 35 * * 3',{timeZone:"Asia/Seoul"})
     async orderInsertCron(){
         this.logger.log('접수 알림톡 자동 발송 처리');
         const res = await this.talkService.orderInsertCron();
@@ -122,7 +122,7 @@ export class TalkController {
     }
     @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
     //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
-    @Cron('20 20 * * 3',{timeZone:"Asia/Seoul"})
+    @Cron('20 35 * * 3',{timeZone:"Asia/Seoul"})
     async notConsultingCron(){
         this.logger.log('상담 연결 안된 사람들 카톡 발송');
        
@@ -147,7 +147,7 @@ export class TalkController {
     }
     @ApiOperation({summary:'미입금 자동 발송 처리'})
 //    @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
-@Cron('20 20 * * 3',{timeZone:"Asia/Seoul"})
+@Cron('20 35 * * 3',{timeZone:"Asia/Seoul"})
     async notPayCron(){
         this.logger.log('미입금 자동 발송 처리');
         const res = await this.talkService.notPayCron();
@@ -172,7 +172,7 @@ export class TalkController {
     }
     @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
     //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
-    @Cron('20 20 * * 3',{timeZone:"Asia/Seoul"})
+    @Cron('20 35 * * 3',{timeZone:"Asia/Seoul"})
     async completeTalkCron(){
         this.logger.log('발송 알림톡 자동 발송 처리');
         const res = await this.talkService.completeSendTalkCron();

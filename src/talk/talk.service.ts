@@ -423,7 +423,7 @@ export class TalkService {
         list.forEach(e => {
             const name = e.patient.name;
             const phoneNum = e.patient.phoneNum;
-            const orderItem = e.order.orderItems[0].item //수정 예정
+            const orderItem = e.order.orderItems.length>0?e.order.orderItems[0].item:''; //수정 예정
             const sendNum = e.sendNum;
             const isFirst = e.isFirst ? '초진' : '';
 
