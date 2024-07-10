@@ -326,7 +326,8 @@ export class TalkService {
     async completeSendTalkCron()
     {
         const fileName=new Date().toISOString();
-        const completeSendDate=getDateString(fileName);
+        //const completeSendDate=getDateString(fileName);
+        const completeSendDate="2024/7/8";
         console.log(completeSendDate);
         //당일 완료된 발송목록 id를 가져온다.
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
@@ -471,14 +472,23 @@ export class TalkService {
           // 브라우저 실행
           browser = await puppeteer.launch({ headless: false }); // headless: false는 브라우저 UI를 표시합니다.
           const page = await browser.newPage();
-    page.on('console', msg => {
-            for (let i = 0; i < msg.args().length; ++i)
-              console.log(`${i}: ${msg.args()[i]}`);
-          });
+          let alertHandled = false;
+          // 'dialog' 이벤트를 처리합니다.
           page.on('dialog', async dialog => {
-            console.log(dialog.message()); // 대화 상자 메시지 출력
-            await dialog.accept(); // 확인 버튼 클릭
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            const reg=new RegExp('포인트\\s\\d+(\\.\\d+)?로\\s알림톡\\s\\d+건\\s발송합니다.');
+            if (!alertHandled && reg.test(dialog.message())) {
+                console.log(dialog.message()); 
+                console.log("success");
+              await dialog.accept(); // alert 창을 닫습니다.
+              alertHandled = true; // 플래그를 설정하여 동일한 alert 창을 다시 확인하지 않도록 합니다.
+            } else if(!reg.test(dialog.message()))
+            { console.log(dialog.message());
+                await dialog.accept(); 
+            } 
+            else{
+              console.log('Alert already handled.');
+              await dialog.dismiss();
+            }
           });
           await page.goto('https://www.netshot.co.kr/account/login/?next=/kakao/notice_send/#none');
     
@@ -600,7 +610,7 @@ export class TalkService {
               console.error(`Checkbox not found: ${selector}`);
             }
           }, sendButton);
-   
+          alertHandled=false;
           await page.waitForSelector('a.msg_link10', { visible: true })
           await page.click('a.msg_link10');
           await new Promise(resolve => setTimeout(resolve, 3000));
@@ -609,7 +619,7 @@ export class TalkService {
           console.log(err);
         }finally
         {
-            await browser.close();
+           // await browser.close();
         }
     
       }

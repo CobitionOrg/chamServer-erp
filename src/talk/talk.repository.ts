@@ -294,7 +294,6 @@ export class TalkRepositoy{
      */
         async completeSendTalkGetList(date:string){
             try{
-                console.log(date);
                 const cid= await this.prisma.sendList.findFirst({
                     where: {
                        title:date,
