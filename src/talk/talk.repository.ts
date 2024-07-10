@@ -3,8 +3,8 @@ import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
-import { getDayStartAndEnd } from "src/util/kstDate.util";
-import { Crypto } from "src/util/crypto.util";
+import { Crypto } from 'src/util/crypto.util';
+import { dateType } from "aws-sdk/clients/iam";
 
 @Injectable()
 export class TalkRepositoy{
@@ -39,6 +39,7 @@ export class TalkRepositoy{
                     lt: endDate,
                 }
             }
+            console.log(startDate,endDate);
             const list = await this.prisma.order.findMany({
                 where: {...orderConditions, orderSortNum:{gte:0},talkFlag:false},
                 select: {
@@ -47,14 +48,18 @@ export class TalkRepositoy{
                 }
             });
 
-            for (let row of list) {
-                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                row.patient.phoneNum = decryptedPhoneNum;
-            }
-            
-            console.log(list);
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
 
-            return {success:true, list, status:HttpStatus.OK};
+
+            return {success:true, list:res, status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
@@ -198,13 +203,18 @@ export class TalkRepositoy{
                     patient:{select:{name:true,phoneNum:true},}
                 }
             });
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+            console.log(res);
+            return {success:true, list:res, status:HttpStatus.OK};
 
-            for (let row of list) {
-                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                row.patient.phoneNum = decryptedPhoneNum;
-            }
-
-            return {success:true, list, status:HttpStatus.OK};
 
         }catch(err){
             this.logger.error(err);
@@ -257,14 +267,18 @@ export class TalkRepositoy{
             //console.log(data);
 
             const list = data.filter(i => i.price != (i.cash + i.card) );
-            console.log(list);
+            const res=list.map(item=>(
+                {
+                    id:item.id,
+                    patient:
+                    {
+                        name:item.patient.name,
+                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+            console.log(res);
+            return {success:true, list:res, status:HttpStatus.OK};
 
-            for (let row of list) {
-                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                row.patient.phoneNum = decryptedPhoneNum;
-            }
-
-            return {success:true, list, status:HttpStatus.OK};
 
         }catch(err){
             this.logger.error(err);
@@ -277,7 +291,37 @@ export class TalkRepositoy{
         }
     }
 
-
+    /**
+     * 발송 알림 톡 id추출
+     * @param date
+     * @returns Promise<{
+            id:number
+        }>
+     */
+        async completeSendTalkGetList(date:string){
+            try{
+                const cid= await this.prisma.sendList.findFirst({
+                    where: {
+                       title:date,
+                       useFlag:false
+                    },
+                    select: {
+                        id: true,
+                    }
+                });
+                return {success:true,cid};
+            }
+            catch(err)
+            {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
     /**
      * 발송 알림 톡 초진(수정 예정)
      * @param id 
