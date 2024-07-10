@@ -1,5 +1,8 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { CancelOrderDto } from "src/erp/Dto/cancelOrder.dto";
+import { ErpService } from "src/erp/erp.service";
 import { PrismaService } from "src/prisma.service";
+import { getStartOfToday } from "src/util/kstDate.util";
 import { deleteUploadObject } from "src/util/s3";
 const fs = require('fs');
 const path = require('path');
@@ -7,7 +10,7 @@ const path = require('path');
 @Injectable()
 export class TasksRepository {
     constructor(
-        private prisma: PrismaService
+        private prisma: PrismaService,
     ) { }
 
     private readonly logger = new Logger(TasksRepository.name);
@@ -61,6 +64,116 @@ export class TasksRepository {
                     });
                 });
             });
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    
+    async deleteNotCallOrder() {
+        try{
+            const today = new Date();
+
+            const twoMonthAgo = new Date(today.setMonth(today.getMonth() - 2));
+
+            const oldRecords = await this.prisma.order.findMany({
+                where:{
+                    date:{
+                        lt: twoMonthAgo,
+                    },
+                    talkFlag: true, //알람톡은 발송 됐으나
+                    consultingFlag: false, //상담은 시작 안한 애들
+                },
+                select:{
+                    id: true,
+                    patient:{select:{id:true}},
+                    isFirst:true
+                }
+            });
+
+            for(const e of oldRecords) {
+                const cancelOrderDto: CancelOrderDto = {
+                    orderId: e.id,
+                    patientId: 0,
+                    isFirst: false
+                }
+
+                if (cancelOrderDto.isFirst) {
+                    //초진 일 시 환자 데이터까지 soft delete
+                    const orderId = cancelOrderDto.orderId;
+                    const patientId = cancelOrderDto.patientId;
+    
+                    await this.prisma.$transaction(async (tx) => {
+                        //orderBodyType soft delete
+                        await tx.orderBodyType.update({
+                            where: { orderId: orderId },
+                            data: { useFlag: false }
+                        });
+    
+                        //orderItem soft delete
+                        await tx.orderItem.updateMany({
+                            where: { orderId: orderId },
+                            data: { useFlag: false }
+                        });
+    
+                        //order soft delete
+                        await tx.order.update({
+                            where: { id: orderId },
+                            data: { useFlag: false }
+                        });
+    
+                        //patient soft delete
+                        await tx.patient.update({
+                            where: { id: patientId },
+                            data: { useFlag: false } 
+                        });
+                    });
+    
+                    return { success: true, status: HttpStatus.OK, msg: '초진 삭제' }
+                } else {
+                    //재진 일 시 환자 데이터는 가지고 있어야 되기 때문에 오더 정보만 삭제
+                    const orderId = cancelOrderDto.orderId;
+    
+                    //오더만 useFlag false로 변경
+                    await this.prisma.order.update({
+                        where: { id: orderId },
+                        data: { useFlag: false }
+                    });
+    
+                    return { success: true, status: HttpStatus.OK, msg: '재진 삭제' }
+    
+                }
+
+
+            }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async leaveWorkAt(time: number) {
+        try {
+            const date = getStartOfToday();
+            const endTime = new Date(getStartOfToday().setUTCHours(time, 0, 0, 0));
+
+            await this.prisma.attendance.updateMany({
+                where: { date: date },
+                data: { endTime: endTime }
+            })
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({

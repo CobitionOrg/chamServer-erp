@@ -76,6 +76,22 @@ export class UserController {
         return await this.userService.userFlagUpd(getToken(header),id);
     }
 
+    @ApiOperation({ summary: '출근 여부 확인'})
+    @HttpCode(HttpStatus.OK)
+    @Get('/isWorking')
+    async isWorking(@Headers() header) {
+        this.logger.log('출근 여부 확인');
+        return await this.userService.isWorking(getToken(header));
+    }
+
+    @ApiOperation({ summary: '로그인 상태에서 출근'})
+    @HttpCode(HttpStatus.OK)
+    @Post('/justAttendance')
+    async justAttendance(@Headers() header) {
+        this.logger.log('로그인 상태에서 출근');
+        return await this.userService.justAttendance(getToken(header));
+    }
+
     @Get('/test')
     async test(){
         return await this.userService.requestReview();

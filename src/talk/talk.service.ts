@@ -6,7 +6,7 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
-import { getDateString, todayDate } from 'src/util/date.util';
+import { getDateString } from 'src/util/date.util';
 const fs = require('fs');
 import puppeteer, { Browser,Dialog } from 'puppeteer';
 const path = require('path');
@@ -53,7 +53,7 @@ export class TalkService {
             }));
             const InsertRes=await this.talkRepository.completeInsertTalk(orderInsertList);
             if(InsertRes.success){
-            return {successs:true,status:HttpStatus.OK};
+            return {successs:true};
             }
             return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 레포지토리 오류발생'};
         }
@@ -77,7 +77,7 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async orderInsertTalk(getListDto: GetListDto)
+    async orderInsertTalk(getListDto: GetListDto,cronFlag?:number)
     {
         const res = await this.talkRepository.orderInsertTalk(getListDto);
         //console.log(getListDto);
@@ -250,9 +250,15 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
+    async notConsulting(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notConsulting(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        if(cronFlag)
+        {
+            const url = await this.getTalkExcel(res.list,getListDto.date);
+            await this.sendTalk(url,'유선상담 후 연결안되는 경우');
+            return {successs:true, status:HttpStatus.OK, url};
+        }
         const url = await this.getTalkExcel(res.list);
         return {successs:true, status:HttpStatus.OK, url};
     }
@@ -303,7 +309,7 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notPay(getListDto: GetListDto) {
+    async notPay(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notPay(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         const url = await this.getTalkExcel(res.list);
@@ -321,6 +327,7 @@ export class TalkService {
     {
         const fileName=new Date().toISOString();
         const completeSendDate=getDateString(fileName);
+        console.log(completeSendDate);
         //당일 완료된 발송목록 id를 가져온다.
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
         console.log(completeSendRes);

@@ -1,32 +1,11 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { GetListDto } from "src/erp/Dto/getList.dto";
 import { PrismaService } from "src/prisma.service";
-import { getKstDate } from "src/util/getKstDate";
 import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 import { Crypto } from 'src/util/crypto.util';
 import { dateType } from "aws-sdk/clients/iam";
-/*
-인쇄번역
-★ 접수확인알림톡 (초/재진 한번에)
--접수확인알림톡(리뉴얼)
-- 9시/ 12시/3시
 
-★ 미결제
-- 미결제발송지연
-- 금요일 오전 10시
-
-★ 구매후기 (당주 월-금 초진만)
-- 구매확정요청
-- 토요일 9시
-
-★ 유선상담연결안될시
-- 유선상담 후 연결안되는경우
-- 금요일 오전 10시
-
-★ 발송알림톡
-- 발송(재진)/ 발송(초진)
-- 월, 화, 목, 금 오전 11시 */
 @Injectable()
 export class TalkRepositoy{
     constructor(
@@ -53,7 +32,7 @@ export class TalkRepositoy{
      */
     async orderInsertTalk(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -68,6 +47,7 @@ export class TalkRepositoy{
                     patient:{select:{name:true,phoneNum:true},}
                 }
             });
+
             const res=list.map(item=>(
                 {
                     id:item.id,
@@ -77,7 +57,7 @@ export class TalkRepositoy{
                         phoneNum:this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
-            console.log(res);
+
 
             return {success:true, list:res, status:HttpStatus.OK};
         }catch(err){
@@ -132,6 +112,32 @@ export class TalkRepositoy{
         }
     }
 
+
+    async getExOrder(id: number) {
+        try{
+            const res = await this.prisma.order.findUnique({
+                where:{
+                    id:id
+                },
+                select:{
+                    message:true,
+                    date:true,
+                    route:true,
+                }
+            });
+
+            return res;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     /**
      * 상담 연결 처리
      * @param id 
@@ -143,7 +149,7 @@ export class TalkRepositoy{
     async consultingFlag(id: number) {
         try{
             console.log(id);
-            await this.prisma.order.update({
+            await this.prisma.order.updateMany({
                 where:{
                     id:id,talkFlag:true
                 },
@@ -182,7 +188,7 @@ export class TalkRepositoy{
      */
     async notConsulting(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -207,9 +213,8 @@ export class TalkRepositoy{
                     }
                 }))
             console.log(res);
-
             return {success:true, list:res, status:HttpStatus.OK};
-            return {success:true, list, status:HttpStatus.OK};
+
 
         }catch(err){
             this.logger.error(err);
@@ -240,7 +245,7 @@ export class TalkRepositoy{
      */
     async notPay(getListDto: GetListDto) {
         try{
-            const {startDate, endDate} = getKstDate(getListDto.date);
+            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -273,6 +278,7 @@ export class TalkRepositoy{
                 }))
             console.log(res);
             return {success:true, list:res, status:HttpStatus.OK};
+
 
         }catch(err){
             this.logger.error(err);
