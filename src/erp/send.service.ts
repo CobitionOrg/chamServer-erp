@@ -1,11 +1,11 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
 import * as Excel from 'exceljs'
 import { styleHeaderCell ,styleCell,setColor} from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
-import { getItem, getItemAtAccount } from "src/util/getItem";
+import { getItem, getItemAtAccount, getServiceItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice, checkSend, getOnlyPrice } from "src/util/getOrderPrice";
@@ -140,12 +140,124 @@ export class SendService {
         }
     }
 
+    async getOrderTemp(id: number) {
+        try{
+            const sendList = await this.prisma.sendList.findUnique({
+                where:{id:id},
+                select:{fixFlag:true}
+            });
+
+            if(sendList.fixFlag) {
+                return await this.getFixOrderTempList(id);
+            }else {
+                return await this.getOrderTempList(id);
+            }
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
     /**
-     * 발송목록(tempOrder)에서 가져오기
+     * 고정 된 발송목록(tempOrder)에서 가져오기
+     * @param id 
+     */
+    async getFixOrderTempList(id: number) {
+        try{
+            console.log('this is fixed list');
+            const list = await this.prisma.tempOrder.findMany({
+                where: {
+                    sendListId: id
+                },
+                orderBy: {
+                    //id: 'asc',
+                    sortFixNum: 'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    sendNum: true,
+                    payType: true,
+                    addr: true,
+                    updateInfoCheck: true,
+                    cancelFlag: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            //addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            remark: true,
+                            cachReceipt: true,
+                            price: true,
+                            cash: true,
+                            card: true,
+                            orderSortNum:true,
+                            combineNum:true,
+                            payFlag: true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            id: true,
+                            item: true,
+                            sendTax: true,
+                        }
+                    }
+                }
+            });
+
+            for (let row of list) {
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return { success: true, list: list };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**
+     * 고정 안 된 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
     async getOrderTempList(id: number) {
         try {
+            console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
@@ -263,6 +375,8 @@ export class SendService {
                             orderSortNum: true,
                             addr: true,
                             price: true,
+                            card: true,
+                            cash: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -469,6 +583,8 @@ export class SendService {
                         addr: encryptedAddr,
                         message : objOrder.message,
                         payType: objOrder.payType,
+                        card: parseInt(objOrder.card),
+                        cash: parseInt(objOrder.cash),
                         orderSortNum: parseInt(objOrder.orderSortNum),
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
@@ -481,7 +597,6 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
-                        updateInfoCheck: false,
                     }
                 })
 
@@ -698,13 +813,24 @@ export class SendService {
                 const message = e.order.message;
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
+                let service = 0;
 
                 for (let i = 0; i < orderItemList.length; i++) {
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
-                        if (i == orderItemList.length - 1) orderStr += `${item}`
-                        else orderStr += `${item}+`
+                        const { onlyItem, serviceItem } = getServiceItem(item);
+                        service+=parseInt(serviceItem);
+                        if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
+                        else orderStr += `${onlyItem}+`
                     }
+                }
+
+                if(service != 0){
+                    orderStr += ` s(${service})`
+                }
+
+                if(orderStr == '감1개월+쎈1개월'){
+                    orderStr += ` s(10)`;
                 }
 
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
@@ -853,14 +979,48 @@ export class SendService {
      */
     async completeSend(id: number) {
         try {
-            await this.prisma.sendList.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    useFlag: false
-                }
-            });
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        useFlag: false
+                    }
+                });
+
+                const list = await tx.tempOrder.findMany({
+                    where:{sendListId: id},
+                    select:{
+                        order:{
+                            select:{
+                                id:true
+                            }
+                        }
+                    }
+                });
+
+                const qryArr = list.map(async (e) => {
+                    return tx.order.update({
+                        where:{id:e.order.id},
+                        data:{useFlag:false}
+                    });
+                });
+
+                await Promise.all([...qryArr]).then((value) => {
+                    return {success:true, status:HttpStatus.CREATED};
+                }).catch((err) => {
+                    this.logger.error(err);
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.INTERNAL_SERVER_ERROR
+                    },
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                });
+
+            })
+            
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
@@ -884,17 +1044,49 @@ export class SendService {
      */
     async fixSendList(id: number) {
         try {
-            await this.prisma.sendList.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    fixFlag: true,
-                }
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        fixFlag: true,
+                    }
+                });
+
+                await this.fixSortNum(id,tx);
+    
             });
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async fixSortNum(id: number ,tx: any) {
+        try{
+            const sendData = await this.getOrderTempList(id);
+
+            const list = sendData.list; //발송목록 tempOrder list;
+
+            // console.log(list);
+            for(let i = 0; i<list.length; i++) {
+                console.log(list[i]);
+                await tx.tempOrder.update({
+                    where:{id:list[i].id},
+                    data:{sortFixNum:i+1}
+                });
+            }
+
+            return {success:true}
+        }catch(err){
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1220,7 +1412,12 @@ export class SendService {
                     where:{
                         tempOrderId:insertUpdateInfoDto.tempOrderId
                     }
-                })
+                });
+
+                await tx.tempOrder.update({
+                    where:{id:insertUpdateInfoDto.tempOrderId},
+                    data:{updateInfoCheck:false}
+                });
                 const qryArr = insertUpdateInfoDto.infoData.map(async e => {
                     console.log('------------------');
                     console.log(e);
@@ -1244,9 +1441,9 @@ export class SendService {
                     },
                         HttpStatus.INTERNAL_SERVER_ERROR
                     );
-                });
+                }); 
             })
-           
+            
            
             return {success:true, status:HttpStatus.CREATED};
 
@@ -1575,6 +1772,21 @@ export class SendService {
             let isSeparteId = 0;
 
             tempOrderList.forEach((e,i) => {
+                // 현금 영수증 관련
+                let cashReceipt = e.order.cachReceipt;
+                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
+                if(e.order.payType === "계좌이체"
+                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                    && e.order.cash < 100000) {
+                        cashReceipt = 'x';
+                    }
+                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 이상이면 빈 칸으로
+                if(e.order.payType === "계좌이체"
+                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                    && e.order.cash >= 100000
+                ) {
+                    cashReceipt = '';
+                }
                 if(e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
@@ -1583,7 +1795,6 @@ export class SendService {
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
                     const card = e.order.card == 0? '' : e.order.card;
                     const message =(e.order.remark ? e.order.remark + '/' : '')+  e.order.message;
-                    const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
                
                     const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
     
@@ -1607,8 +1818,7 @@ export class SendService {
                         const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
                         const cash = e.order.cash == 0 ? '' : e.order.cash;
                         const card = e.order.card == 0? '' : e.order.card;
-                        const message = e.order.remark ?? '' + '/' +  e.order.message;
-                        const cashReceipt = e.order.payType=='계좌이체' && e.order.cachReceipt == null ? 'x': ''; 
+                        const message = e.order.remark ?? '' + '/' +  e.order.message; 
                    
                         const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
         

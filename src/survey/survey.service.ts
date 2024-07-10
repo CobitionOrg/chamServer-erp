@@ -267,6 +267,7 @@ export class SurveyService {
    */
   async getMyOrder(getOrderDto: GetOrderDto) {
     try {
+      //환자 정보 조회
       const res = await this.getUserId(getOrderDto);
 
       if(!res.success) {
@@ -276,7 +277,7 @@ export class SurveyService {
       const order = await this.prisma.order.findFirst({
         where: {
           patientId: res.id,
-          isComplete: false
+          useFlag: true
         },
         select: {
           id: true,
@@ -303,6 +304,8 @@ export class SurveyService {
       if (!order) {
         return { success: false, msg: '주문하신 내역이 없습니다' };
       }
+
+      
 
       //조회 용 토큰 발행
       const payload = {

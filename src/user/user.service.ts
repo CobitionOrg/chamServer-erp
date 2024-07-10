@@ -6,9 +6,9 @@ import { SignUpDto } from './Dto/signUp.dto';
 import { LoginDto } from './Dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
-import { dateUtil, tardy, todayDate } from 'src/util/date.util';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { getMonth } from 'src/util/getMonth';
+import { getCurrentDateAndTime, getStartOfToday, checkTardy } from 'src/util/kstDate.util';
 
 @Injectable()
 export class UserService {
@@ -161,7 +161,7 @@ export class UserService {
             if (!login.success) return login;
 
             //중복 출근 방지 
-            const attendanceDate = todayDate(attendanceDto.todayDate);
+            const attendanceDate = getStartOfToday();
             const alreadyAttendance = await this.prisma.attendance.findFirst({
                 where: {
                     userId: login.id,
@@ -172,8 +172,8 @@ export class UserService {
             if (alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
 
             //console.log(attendanceDto.todayDate)
-            let startTime = dateUtil(attendanceDto.todayDate);
-            let isTardy = tardy(attendanceDto.todayDate);
+            let startTime = getCurrentDateAndTime();
+            let isTardy = checkTardy(startTime);
 
             await this.prisma.attendance.create({
                 data: {
@@ -218,7 +218,7 @@ export class UserService {
                     userId: token.sub
                 },
                 data: {
-                    endTime: new Date(leaveWork.date)
+                    endTime: getCurrentDateAndTime(),
                 },
             });
 
@@ -390,9 +390,92 @@ export class UserService {
         }
     }
 
+    /**
+     * 출근 여부 확인
+     */
+    async isWorking(header) {
+        try {
+            const token = await this.jwtService.decode(header);
+            const userId = token.sub;
+
+            const attendanceData = await this.prisma.attendance.findFirst({
+                where: {
+                    date: getStartOfToday(),
+                    userId: userId,
+                }
+            });
+
+            let isWorking = false;
+
+            if(attendanceData !== null) {
+                isWorking = true;
+                if(attendanceData.startTime.getTime() !== attendanceData.endTime.getTime()) {
+                    isWorking = false;
+                }
+            }
+            
+            console.log(isWorking);
+
+            return { success: true, isWorking: isWorking };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 이미 로그인 했을 경우
+     * 토큰만 사용해서 출근
+     */
+    async justAttendance(header) {
+        try {
+            const token = await this.jwtService.decode(header);
+            const userId = token.sub;
+
+            // 중복 출근 방지
+            const attendanceData = getStartOfToday();
+            const alreadyAttendance =  await this.prisma.attendance.findFirst({
+                where: {
+                    userId: userId,
+                    date: attendanceData
+                }
+            });
+
+            if(alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
+
+            const startTime = getCurrentDateAndTime();
+            const isTardy = checkTardy(startTime);
+
+            await this.prisma.attendance.create({
+                data: {
+                    date: attendanceData,
+                    startTime: startTime,
+                    endTime: startTime,
+                    userId: userId,
+                    tardy: isTardy,
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
     async requestReview() {
         try {
-            const today = new Date();
+            const today = getStartOfToday();
     
             // 이번 주 월요일부터 금요일까지의 날짜를 계산
             const monday = new Date(today);

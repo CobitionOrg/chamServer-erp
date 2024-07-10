@@ -28,6 +28,9 @@ import { CancelSendOrderDto } from './Dto/cancelSendOrder.dto';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreateNewReviewDto } from './Dto/createNewReview.dto';
+import { zip } from 'rxjs/operators';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -147,7 +150,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'신환 용 엑셀 다운로드'})
-    @UseGuards(IpGuard)
+    // @UseGuards(IpGuard)
     @Get('/newPatientExcel/:date')
     async newPatientExcel(@Param('date') date:string,@Headers() header){
         this.logger.log('신환 용 엑셀 파일 다운로드');
@@ -163,7 +166,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'차팅 용 엑셀 다운로드'})
-    @UseGuards(IpGuard)
+    // @UseGuards(IpGuard)
     @Get('/chatingExcel/:id')
     async chatingExcel(@Param("id") id:number,@Headers() header){
         this.logger.log('차팅 용 엑셀 파일 다운로드');
@@ -195,7 +198,7 @@ export class ErpController {
                 `${id}번 주문 정보 업데이트`,
                 '입금상담목록',
                 header
-            )
+            );
         }
 
         return res;
@@ -237,8 +240,8 @@ export class ErpController {
     @Get('/sendList/:id')
     async getSendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 목록 리스트');
-        const res = await this.sendService.getOrderTempList(id);
-        return res;
+        const res = await this.sendService.getOrderTemp(id);
+        return res; 
     }
 
     @ApiOperation({summary:'발송 단일 데이터 조회'})
@@ -370,7 +373,7 @@ export class ErpController {
     }
   
     @ApiOperation({summary:'송장번호 엑셀 업로드해서 송장번호 업데이트'})
-    @UseGuards(IpGuard)
+    // @UseGuards(IpGuard)
     @Patch('/setSendNum')
     async setSendNum(@Body() sendExcelDto:SendOrder[], @Headers() header){
         this.logger.log('송장번호 저장');
@@ -672,8 +675,71 @@ export class ErpController {
     }
 
 
+    @ApiOperation({summary:'후기 대상 목록에서 비고 수정'})
+    @Patch('/updateNote')
+    async updateNote(@Body() updateNoteDto: UpdateNoteDto) {
+        this.logger.log('후기 대상 목록에서 비고 수정');
+        const res = await this.erpService.updateNote(updateNoteDto);
+
+        return res;
+    }
+
+    @ApiOperation({summary:'후기 대상 목록에서 후기 유무 체크'})
+    @Patch('/updateReviewFlag/:id')
+    async updateReviewFlag(@Param('id') id: number) {
+        this.logger.log('후기 대상 목록에서 후기 유무 체크');
+        const res = await this.erpService.updateReviewFlag(id);
+
+        return res;
+
+    }
+
+
+    @ApiOperation({summary:'후기 대상 목록에서 새 후기 대상 생성'})
+    @Post('/createNewReview')
+    async createNewReview(@Body() createNewReviewDto: CreateNewReviewDto) {
+        this.logger.log('후기 대상 목록에서 새 후기 대상 생성');
+        const res = await this.erpService.createNewReview(createNewReviewDto);
+
+        return res;
+    }
+
+
     @Get('/ffff')
     async ffff(){
         await this.erpService.updateAddr();
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+
+    // @Public()
+    // @Post('/testPatientDataInsert')
+    // async testPatientDataInsert() {
+    //     return await this.erpService.testPatientDataInsert();
+    // }
+
+    // @Public()
+    // @Get('/testPatientDataExport')
+    // async testPatientDataExport() {
+    //     const res = await this.erpService.testPatientDataExport();
+    //     return res;
+    // }
+
+    // @Public()
+    // @Post('/testOrderDataInsert')
+    // async testOrderDataInsert() {
+    //     return await this.erpService.testOrderDataInsert();
+    // }
+
+    // @Public()
+    // @Get('/testOrderDataExport')
+    // async testOrderDataExport() {
+    //     const res = await this.erpService.testOrderDataExport();
+    //     return res;
+    // }
 }

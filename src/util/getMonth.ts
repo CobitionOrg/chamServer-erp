@@ -1,5 +1,7 @@
+import { getCurrentDateAndTime } from "./kstDate.util";
+
 export const getMonth = (month:number) => {
-    const date = new Date();
+    const date = getCurrentDateAndTime();
 
     const year = date.getFullYear();//윤년 판단 용.
 

@@ -22,12 +22,16 @@ import { GetHyphen } from 'src/util/hyphen';
 import { CombineOrderDto } from './Dto/combineOrder.dto';
 import { SepareteDto } from './Dto/separteData.dto';
 import { sortItems } from 'src/util/sortItems';
-import { getKstDate } from 'src/util/getKstDate';
 import { CancelOrderDto } from './Dto/cancelOrder.dto';
-import { contains } from 'class-validator';
 import { Crypto } from 'src/util/crypto.util';
 import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreateNewReviewDto } from './Dto/createNewReview.dto';
+import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfToday } from 'src/util/kstDate.util';
+import { getMonth } from 'src/util/getMonth';
+import { getSortedList } from 'src/util/sortSendList';
+import { getOutage } from 'src/util/getOutage';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -267,7 +271,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
 
                 orderConditions = {
                     consultingType: false,
@@ -349,7 +353,7 @@ export class ErpService {
                 }
             });
 
-            console.log(list);
+            //console.log(list);
 
             const sortedList = sortItems(list);
 
@@ -606,6 +610,8 @@ export class ErpService {
         try {
             const token = await this.jwtService.decode(header);
 
+            console.log(surveyDto);
+
             //토큰에 데이터가 아예 없을 때
             if (!token.orderId) {
                 return { success: false, status: HttpStatus.FORBIDDEN };
@@ -647,7 +653,7 @@ export class ErpService {
                     throw error('400 error');
                 }
             });
-
+            console.log(objPatient.addr);
             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
 
             await this.prisma.$transaction(async (tx) => {
@@ -810,6 +816,8 @@ export class ErpService {
             const checkAdmin = await this.adminService.checkAdmin(header);
             if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
 
+            console.log(getListDto);
+
             let orderConditions = {};
             if (getListDto.date === undefined) {
                 //날짜 조건 X
@@ -819,7 +827,7 @@ export class ErpService {
                     useFlag: true,
                 }
             } else {
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
@@ -831,7 +839,7 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if (getListDto.searchKeyword === "") {
+            if (getListDto.searchKeyword !== "") {
                 //검색어 O
                 if (getListDto.searchCategory === "all") {
                     patientConditions = {
@@ -1049,6 +1057,7 @@ export class ErpService {
 
             console.log(order);
             //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
+            //분리 배송, 합배송 시 미리 생성되기 때문
             if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
                 await this.prisma.order.update({
                     where: {
@@ -1088,6 +1097,7 @@ export class ErpService {
                         }
                     });
 
+
                     console.log(`-----------${orderItems.length}-----------`);
                     console.log(orderItems);
 
@@ -1100,7 +1110,7 @@ export class ErpService {
 
                     if (!res.success) throw error();
 
-                });
+                },{timeout:10000});
 
             }
 
@@ -1189,6 +1199,11 @@ export class ErpService {
                                 amount: checkAmount
                             }
                         });
+                        
+                        if(checkAmount>345 && checkAmount<=350){
+                            await this.fixSendList(sendList[1].id,tx);
+                        }
+
                         return sendList[1].id
                     }
                 } else {
@@ -1205,6 +1220,9 @@ export class ErpService {
                                 fixFlag: true, //350개 되면 자동으로 fix
                             }
                         });
+
+                        await this.fixSortNum(sendList[0].id,tx);
+                        
                     } else {
                         await tx.sendList.update({
                             where: {
@@ -1214,6 +1232,10 @@ export class ErpService {
                                 amount: checkAmount
                             }
                         })
+                    }
+
+                    if(checkAmount>345 && checkAmount<=350){
+                        await this.fixSendList(sendList[0].id,tx);
                     }
 
                     return sendList[0].id
@@ -1303,6 +1325,20 @@ export class ErpService {
             console.log(sendListId);
             console.log(sendOne);
 
+            const sendList = await tx.tempOrder.aggregate({
+                where:{
+                    sendListId: sendListId
+                },
+                _max:{
+                    sortFixNum: true
+                }
+            });
+
+            console.log('==================')
+            console.log(sendList._max.sortFixNum)
+
+            const max = sendList._max.sortFixNum;
+
             const res = await tx.tempOrder.create({
                 data: {
                     route: sendOne.route,
@@ -1320,6 +1356,7 @@ export class ErpService {
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
                     addr: encryptedAddr,
+                    sortFixNum: max == 0 || max == null ? 0 : max+1,
                     order: {
                         connect: { id: id }
                     },
@@ -1418,7 +1455,7 @@ export class ErpService {
     async newPatientExcel(date: string) {
         try {
             //신환 :  이름 주소 주민번호 핸드폰번호 
-            const { startDate, endDate } = getKstDate(date);
+            const { startDate, endDate } = getDayStartAndEnd(date);
 
             console.log(startDate);
             console.log(endDate);
@@ -1657,6 +1694,13 @@ export class ErpService {
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
             const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
 
+            console.log('====================');
+            
+            delete orderData.id;
+            delete orderData.friendRecommends;
+            
+            console.log(orderData);
+
             const res = await this.prisma.$transaction(async (tx) => {
                 const order = await tx.order.update({
                     where: {
@@ -1790,7 +1834,7 @@ export class ErpService {
     async cashExcel(insertCashDto: InsertCashDto) {
         try {
             //console.log(insertCashDto);
-            const { startDate, endDate } = getKstDate(insertCashDto.date);
+            const { startDate, endDate } = getDayStartAndEnd(insertCashDto.date);
             const cashList = await this.getCashTypeList(startDate, endDate);
             const itemList = await this.getItems();
             //console.log(cashList);
@@ -2251,7 +2295,7 @@ export class ErpService {
                     //patient soft delete
                     await tx.patient.update({
                         where: { id: patientId },
-                        data: { useFlag: false }
+                        data: { useFlag: false } 
                     });
                 });
 
@@ -2312,7 +2356,7 @@ export class ErpService {
             let orderConditions = {};
             if (getOutageListDto.date !== undefined) {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getOutageListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getOutageListDto.date);
 
                 orderConditions = {
                     date: {
@@ -2373,6 +2417,7 @@ export class ErpService {
                     cash: true,
                     note: true,
                     addr: true,
+                    reviewFlag:true,
                     patient: {
                         select: {
                             id: true,
@@ -2391,15 +2436,17 @@ export class ErpService {
             });
 
             const sortedList = sortItems(list);
-
+ 
             for (let row of sortedList) {
+                console.log(row);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedAddr = this.crypto.decrypt(row.addr);
+                // const decryptedAddr = this.crypto.decrypt(row.addr);
                 row.patient.phoneNum = decryptedPhoneNum;
-                row.addr = decryptedAddr;
+                // row.addr = decryptedAddr;
             }
 
-            return { success: true, list: sortedList };
+            const outageList = getOutage(sortedList);
+            return { success: true, list: outageList };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -2422,7 +2469,7 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getKstDate(getListDto.date);
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
 
                 orderConditions = {
                     useFlag: false,
@@ -2743,7 +2790,7 @@ export class ErpService {
                             select:{remark:true}
                         });
 
-                        let remark = '지인 10포/' + order.remark;
+                        let remark = '지인 10포/' + order.remark ?? '';
 
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
@@ -2842,4 +2889,592 @@ export class ErpService {
             );
         }
     }
+
+    /**
+     * 후기 대상 목록에서 비고 수정
+     * @param updateNoteDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async updateNote(updateNoteDto: UpdateNoteDto) {
+        try{
+            await this.prisma.order.update({
+                where:{id:updateNoteDto.orderId},
+                data:{
+                    note:updateNoteDto.note,
+                    reviewFlag: true
+                }
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 후기 대상 목록에서 후기 유무 체크
+     * @param id 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async updateReviewFlag(id: number){
+        try{
+            const tempData = await this.prisma.$queryRaw`
+                select 
+                    reviewFlag 
+                from \`order\` 
+                where id = ${id}
+            `;
+            let flag = false;
+            if(tempData[0].reviewFlag != true){
+                flag = true;
+            }
+
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{reviewFlag:flag}
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 후기 대상 목록에서 새 후기 대상 생성
+     * @param createNewReviewDto 
+     * @returns {success:boolean, status: HttpStatus, msg: string}
+     */
+    async createNewReview(createNewReviewDto: CreateNewReviewDto) {
+        try{
+            const patient = await this.prisma.patient.findMany({
+                where:{
+                    name: createNewReviewDto.name
+                }
+            });
+
+            let patientData = null;
+
+            for(const e of patient){
+                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+                const checkSocialNum = this.crypto.decrypt(e.socialNum);
+
+                if(
+                    checkPhoneNum.includes(createNewReviewDto.phoneNum)
+                    && checkSocialNum.includes(createNewReviewDto.socialNum)
+                ){
+                    patientData = e;
+                    break;
+                }
+            }
+
+            if(patient==null){
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.NOT_FOUND,
+                    msg:'환자 데이터를 찾을 수 없습니다.'
+                },
+                    HttpStatus.NOT_FOUND
+                );
+            }
+
+            const date = new Date(createNewReviewDto.date);
+            // 한국 시간으로 변환
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+            
+            await this.prisma.order.create({
+                data:{
+                    useFlag:false,
+                    route:'',
+                    message:'',
+                    cachReceipt:'',
+                    typeCheck:'',
+                    consultingTime:'',
+                    payType:'',
+                    essentialCheck:'',
+                    outage:'후기대상목록에서 생성',
+                    consultingType:false,
+                    phoneConsulting:false,
+                    isComplete:false,
+                    patientId:patientData.id,
+                    isFirst:false,
+                    date:kstDate,
+                    orderSortNum: 1,
+                    note: createNewReviewDto.note,
+                    addr:'',
+                }
+            });
+
+            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    //이것도 리팩토링 안하면 절 죽이세요
+    async fixSendList(id: number, tx: any){
+        try{
+            // await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where: {
+                        id: id
+                    },
+                    data: {
+                        fixFlag: true,
+                    }
+                 });
+
+                await this.fixSortNum(id,tx);
+    
+            //});
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async fixSortNum(id: number ,tx: any) {
+        try{
+            const sendData = await this.getOrderTempList(id,tx);
+
+            const list = sendData.list; //발송목록 tempOrder list;
+
+            console.log(list);
+            // for(let i = 0; i<list.length; i++) {
+            //     console.log(list[i]);
+            //     await tx.tempOrder.update({
+            //         where:{id:list[i].id},
+            //         data:{sortFixNum:i+1}
+            //     });
+            // }
+
+            const qryArr = list.map(async (e,i) => {
+                return tx.tempOrder.update({
+                    where:{id:e.id},
+                    data:{sortFixNum:i+1}
+                });
+            })
+
+            await Promise.all([...qryArr]).then((value) => {
+                return {success:true, status:HttpStatus.CREATED};
+            }).catch((err) => {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            });
+
+
+            return {success:true}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    
+    /** 이거 제가 까먹고 리팩토링 안하면 절 죽이세요
+     * 고정 안 된 발송목록(tempOrder)에서 가져오기
+     * @returns 
+     */
+    async getOrderTempList(id: number,tx) {
+        try {
+            console.log('this list is not fixed');
+            const list = await tx.tempOrder.findMany({
+                where: {
+                    sendListId: id
+                },
+                orderBy: {
+                    //id: 'asc',
+                    orderSortNum: 'asc' //sortNum으로 order by 해야됨
+                },
+                select: {
+                    id: true,
+                    outage: true,
+                    date: true,
+                    isFirst: true,
+                    orderSortNum: true,
+                    sendNum: true,
+                    payType: true,
+                    addr: true,
+                    updateInfoCheck: true,
+                    cancelFlag: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            phoneNum: true,
+                            name: true,
+                            //addr: true,
+                        }
+                    },
+                    order: {
+                        select: {
+                            id: true,
+                            message: true,
+                            remark: true,
+                            cachReceipt: true,
+                            price: true,
+                            cash: true,
+                            card: true,
+                            orderSortNum:true,
+                            combineNum:true,
+                            payFlag: true,
+                            orderItems: {
+                                select: { item: true, type: true }
+                            }
+                        }
+                    },
+                    orderUpdateInfos:{
+                        select:{
+                            info:true
+                        }
+                    },
+                    tempOrderItems: {
+                        select: {
+                            id: true,
+                            item: true,
+                            sendTax: true,
+                        }
+                    }
+                }
+            });
+
+            const sortItemsList = sortItems(list, true);
+
+            const sortedList = getSortedList(sortItemsList);
+
+            for (let row of sortedList) {
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return { success: true, list: sortedList };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // 재사용 시 값 변경 필수
+
+    // async createRandomName() {
+    //     let randName = '';
+    //     let first = "김이박최정강조윤장임한오서신권황안송류전홍고문양손배조백허유남심노정하곽성차주우구신임나전민유진지엄채원천방공강현함변염양변여추노도소신석선설마주연방위표명기반왕모장남탁국여진구";
+    //     let last = "가강건경고관광구규근기길나남노누다단달담대덕도동두라래로루리마만명무문미민바박백범별병보사산상새서석선설섭성세소솔수숙순숭슬승시신아안애엄여연영예오옥완요용우원월위유윤율으은의이익인일자잔장재전정제조종주준중지진찬창채천철초춘충치탐태택판하한해혁현형혜호홍화환회효훈휘희운모배부림봉혼황량린을비솜공면탁온디항후려균묵송욱휴언들견추걸삼열웅분변양출타흥겸곤번식란더손술반빈실직악람권복심헌엽학개평늘랑향울련";
+
+    //     for(let i = 0; i < 3; i++) {
+    //         if(i === 0) {
+    //             randName += first.charAt(Math.floor(Math.random() * first.length));
+    //         } else {
+    //             randName += last.charAt(Math.floor(Math.random() * last.length));
+    //         }
+    //     }
+
+    //     return randName;
+    // }
+
+    // async testPatientDataInsert() {
+    //     class PatientTable {
+    //         name: string;
+    //         phoneNum: string;
+    //         addr: string;
+    //         socialNum: string;
+    //         useFlag: boolean;
+    //     }
+    //     let phn = "01099999999";
+    //     let socn = "9999999999999";
+    //     const repeat = 500
+    //     let arr = [];
+    //     for(let i = 0; i < repeat; i++) {
+    //         const phoneNum = "0" + (+phn - i).toString();
+    //         const socialNum = (+socn - i).toString();
+    //         const encryptedPhoneNum = this.crypto.encrypt(phoneNum);
+    //         const encryptedSocialNum = this.crypto.encrypt(socialNum);
+    //         const name = await this.createRandomName();
+    //         const testaddr = this.crypto.encrypt(`테스트 주소 ${i}`);
+    //         let obj: PatientTable = {
+    //             name: name,
+    //             phoneNum: encryptedPhoneNum,
+    //             addr: testaddr,
+    //             socialNum: encryptedSocialNum,
+    //             useFlag: true
+    //         };
+    //         arr.push(obj);
+    //     }
+    //     await this.prisma.patient.createMany({
+    //         data: arr,
+    //     })
+    //     return { success: true };
+    // }
+
+    // async testPatientDataExport() {
+    //     const customers = await this.prisma.patient.findMany({
+    //         where: {
+    //             useFlag: true,
+    //             id: {
+    //                 gte: 111,
+    //             }
+    //         }
+    //     });
+
+    //     const decryptedCustomers = customers.map((customer) => {
+    //         const decryptedPhoneNum = this.crypto.decrypt(customer.phoneNum);
+    //         const decryptedAddr = this.crypto.decrypt(customer.addr);
+    //         const decryptedSocialNum = this.crypto.decrypt(customer.socialNum);
+    //         return { ...customer, phoneNum: decryptedPhoneNum, addr: decryptedAddr, socialNum: decryptedSocialNum };
+    //     });
+
+    //     const wb = new Excel.Workbook();
+    //     const sheet = wb.addWorksheet("고객 정보");
+
+    //     const headers = ["이름", "핸드폰 번호", "주소", "주민번호"];
+
+    //     const headerWidths = [10, 20, 30, 20];
+
+    //     const headerRow = sheet.addRow(headers);
+
+    //     headerRow.height = 30.75;
+
+    //     headerRow.eachCell((cell, colNum) => {
+    //         styleHeaderCell(cell);
+    //         sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+    //     });
+
+    //     const hyphen = new GetHyphen('');
+
+    //     decryptedCustomers.forEach((e) => {
+    //         const rowDatas = [
+    //             e.name,
+    //             hyphen.phoneNumHyphen(e.phoneNum),
+    //             e.addr,
+    //             hyphen.socialNumHyphen(e.socialNum)
+    //         ];
+    //         sheet.addRow(rowDatas);
+    //     });
+
+    //     const fileData = await wb.xlsx.writeBuffer();
+    //     const url = await this.uploadFile(fileData);
+
+    //     return { success: true, status: HttpStatus.OK, url };
+    // }
+
+    // async testOrderDataInsert() {
+    //     //611, 861
+    //     const customers = await this.prisma.patient.findMany({
+    //         where: {
+    //             useFlag: true,
+    //             id: {
+    //                 gte: 861,
+    //             }
+    //         },
+    //         take: 250,
+    //     });
+
+    //     const items = await this.prisma.answer.findMany({
+    //         where: {
+    //             id: {
+    //                 gte: 93
+    //             }
+    //         }
+    //     });
+
+    //     const itemsObjs = [];
+        
+    //     items.forEach((e) => {
+    //         if(e.answer.includes('요요')) {
+    //             itemsObjs.push({
+    //                 item: e.answer,
+    //                 type: "yoyo"
+    //             })
+    //         } else {
+    //             itemsObjs.push({
+    //                 item: e.answer,
+    //                 type: "common"
+    //             })
+    //         }
+    //     });
+
+    //     const payTypes = ["계좌이체", "카드결제"];
+    //     const isFirstTypes = [true, false];
+    //     const orderSortNums = [1, 2, 3, 4, 5];
+
+    //     const date = new Date();
+    //     const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+    //     for(let i = 0; i < customers.length; i++) {
+    //         const randomItem = itemsObjs[Math.floor(Math.random() * itemsObjs.length)];
+    //         const newOrder = await this.prisma.order.create({
+    //             data: {
+    //                 payType: payTypes[Math.floor(Math.random() * payTypes.length)], 
+    //                 date: kstDate,
+    //                 route: '',
+    //                 message: '',
+    //                 cachReceipt: '',
+    //                 essentialCheck: '',
+    //                 typeCheck: '',
+    //                 consultingTime: '',
+    //                 outage: '',
+    //                 patientId: customers[i].id,
+    //                 addr: customers[i].addr,
+    //                 isFirst: isFirstTypes[Math.floor(Math.random() * isFirstTypes.length)],
+    //                 orderSortNum: orderSortNums[Math.floor(Math.random() * orderSortNums.length)],
+    //             }
+    //         });
+    //         const newOrderItems = await this.prisma.orderItem.create({
+    //             data: {
+    //                 item: randomItem.item,
+    //                 type: randomItem.type,
+    //                 orderId: newOrder.id,
+    //             }
+    //         })
+    //     }
+
+    //     return { success: true };
+    // }
+
+    // async testOrderDataExport() {
+    //     // 1502 1752
+    //     const orderData = await this.prisma.order.findMany({
+    //         where: {
+    //             id: {
+    //                 gte: 1502
+    //             }
+    //         },
+    //         take: 250,
+    //         select: {
+    //             id: true,
+    //             route: true,
+    //             message: true,
+    //             cachReceipt: true,
+    //             typeCheck: true,
+    //             consultingTime: true,
+    //             payType: true,
+    //             outage: true,
+    //             consultingFlag: true,
+    //             consultingType: true,
+    //             phoneConsulting: true,
+    //             isFirst: true,
+    //             date: true,
+    //             orderSortNum: true,
+    //             remark: true,
+    //             isPickup: true,
+    //             price: true,
+    //             card: true,
+    //             cash: true,
+    //             addr: true,
+    //             friendDiscount: true,
+    //             patient: {
+    //                 select: {
+    //                     id: true,
+    //                     name: true,
+    //                     addr: true,
+    //                     phoneNum: true,
+    //                 }
+    //             },
+    //             orderItems: {
+    //                 select: {
+    //                     item: true,
+    //                     type: true,
+    //                 }
+    //             }}
+    //     });
+
+    //     for (let row of orderData) {
+    //         const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+    //         const decryptedAddr = this.crypto.decrypt(row.addr);
+    //         const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+    //         row.patient.phoneNum = decryptedPhoneNum;
+    //         row.addr = decryptedAddr;
+    //         row.patient.addr = decryptedPatientAddr;
+    //     }
+
+    //     const wb = new Excel.Workbook();
+    //     const sheet = wb.addWorksheet("오더 정보");
+
+    //     const headers = ["날짜", "초진/재진", "이름", "핸드폰 번호", "상품", "가격", "주소", "배송요청메시지", "결제방법", "현금영수증"];
+
+    //     const headerWidths = [25, 10, 10, 20, 30, 20, 30, 20, 10, 20];
+
+    //     const headerRow = sheet.addRow(headers);
+
+    //     headerRow.height = 30.75;
+
+    //     headerRow.eachCell((cell, colNum) => {
+    //         styleHeaderCell(cell);
+    //         sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+    //     });
+        
+    //     // 주의 상품은 하나씩만 넣었음
+    //     orderData.forEach((e) => {
+    //         const rowDatas = [
+    //             e.date,
+    //             e.isFirst ? "초진" : "재진",
+    //             e.patient.name,
+    //             e.patient.phoneNum,
+    //             e.orderItems[0].item,
+    //             e.price,
+    //             e.addr,
+    //             e.message,
+    //             e.payType,
+    //             e.cachReceipt,
+    //         ]
+    //         const row = sheet.addRow(rowDatas);
+    //         row.getCell(1).numFmt = 'yyyy-mm-dd hh:mm:ss AM/PM';
+    //         row.getCell(1).alignment = { horizontal: 'left' };
+    //     });
+
+    //     const fileData = await wb.xlsx.writeBuffer();
+    //     const url = await this.uploadFile(fileData);
+
+    //     return { success: true, status: HttpStatus.OK, url };
+    // }
 }
