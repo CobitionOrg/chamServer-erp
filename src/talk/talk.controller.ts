@@ -149,7 +149,6 @@ export class TalkController {
     @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
     async notPayCron(){
         this.logger.log('미입금 자동 발송 처리');
-       
         const res = await this.talkService.notPayCron();
     }
     @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
@@ -179,25 +178,25 @@ export class TalkController {
     @Get('/orderInsertCron')
     async orderInsertCronTest()
     {
-        this.orderInsertCron();
+        await this.orderInsertCron();
         return true;
     }
     @Get('/completeTalkCron')
     async completeTalkCronTest()
     {
-        this.completeTalkCron();
+        await this.completeTalkCron();
         return true;
     }
     @Get('/notPayCron')
     async notPayCronTest()
     {
-        this.notPayCron();
+        await this.notPayCron();
         return true;
     }
     @Get('/notConsultingCron')
     async notConsultingCronTest()
     {
-        this.notConsultingCron();
+        await this.notConsultingCron();
         return true;
     }
     
