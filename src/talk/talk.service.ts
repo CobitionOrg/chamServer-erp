@@ -6,9 +6,7 @@ import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
-import { getDateString} from 'src/util/date.util';
-
-import { CheckDiscountDto } from 'src/erp/Dto/checkDiscount.dto';
+import { getDateString } from 'src/util/date.util';
 const fs = require('fs');
 import puppeteer, { Browser,Dialog } from 'puppeteer';
 const path = require('path');
@@ -55,7 +53,7 @@ export class TalkService {
             }));
             const InsertRes=await this.talkRepository.completeInsertTalk(orderInsertList);
             if(InsertRes.success){
-            return {successs:true,status:HttpStatus.OK};
+            return {successs:true};
             }
             return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'접수 알림톡 레포지토리 오류발생'};
         }
@@ -79,7 +77,7 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async orderInsertTalk(getListDto: GetListDto)
+    async orderInsertTalk(getListDto: GetListDto,cronFlag?:number)
     {
         const res = await this.talkRepository.orderInsertTalk(getListDto);
         //console.log(getListDto);
@@ -203,29 +201,7 @@ export class TalkService {
         }>
      */
     async consultingFlag(id: number) {
-        const exOrder = await this.talkRepository.getExOrder(id);
-        console.log(exOrder);
-        //상담연결 처리하면서 지인 서비스 처리
-        if(exOrder.route.length > 0){
-            const message = exOrder.route;
-
-            if(message.includes('/')) {
-                const arr = message.split('/');
-                const name = arr[0];
-                const phoneNum = arr[1];
-
-                const checkDiscountDto: CheckDiscountDto = {
-                    orderId: id,
-                    name: name,
-                    phoneNum: phoneNum,
-                    date: exOrder.date
-                }
-                await this.erpService.checkDiscount(checkDiscountDto);
-            }
-        }
-
         const res = await this.talkRepository.consultingFlag(id);
-        
 
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         else return {success:true,status:201};
@@ -274,9 +250,15 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
+    async notConsulting(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notConsulting(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
+        if(cronFlag)
+        {
+            const url = await this.getTalkExcel(res.list,getListDto.date);
+            await this.sendTalk(url,'유선상담 후 연결안되는 경우');
+            return {successs:true, status:HttpStatus.OK, url};
+        }
         const url = await this.getTalkExcel(res.list);
         return {successs:true, status:HttpStatus.OK, url};
     }
@@ -327,7 +309,7 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notPay(getListDto: GetListDto) {
+    async notPay(getListDto: GetListDto,cronFlag?) {
         const res = await this.talkRepository.notPay(getListDto);
         if(!res.success) return {success:false,status:HttpStatus.INTERNAL_SERVER_ERROR,msg:'서버 내부 에러 발생'};
         const url = await this.getTalkExcel(res.list);
@@ -345,6 +327,7 @@ export class TalkService {
     {
         const fileName=new Date().toISOString();
         const completeSendDate=getDateString(fileName);
+        console.log(completeSendDate);
         //당일 완료된 발송목록 id를 가져온다.
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
         console.log(completeSendRes);
@@ -440,7 +423,7 @@ export class TalkService {
         list.forEach(e => {
             const name = e.patient.name;
             const phoneNum = e.patient.phoneNum;
-            const orderItem = e.order.orderItems[0].item //수정 예정
+            const orderItem = e.order.orderItems.length>0?e.order.orderItems[0].item:''; //수정 예정
             const sendNum = e.sendNum;
             const isFirst = e.isFirst ? '초진' : '';
 
@@ -635,7 +618,7 @@ export class TalkService {
           console.log(err);
         }finally
         {
-           await browser.close();
+           // await browser.close();
         }
     
       }

@@ -5,6 +5,7 @@ import { getSortedList } from "src/util/sortSendList";
 import { OrderInsertTalk } from "./Dto/orderInsert.dto";
 import { Crypto } from 'src/util/crypto.util';
 import { dateType } from "aws-sdk/clients/iam";
+import { getDayStartAndEnd } from "src/util/kstDate.util";
 
 @Injectable()
 export class TalkRepositoy{
