@@ -326,9 +326,7 @@ export class TalkService {
     async completeSendTalkCron()
     {
         const fileName=new Date().toISOString();
-        //const completeSendDate=getDateString(fileName);
-        const completeSendDate="2024/7/8";
-        console.log(completeSendDate);
+        const completeSendDate=getDateString(fileName);
         //당일 완료된 발송목록 id를 가져온다.
         const completeSendRes=await this.talkRepository.completeSendTalkGetList(completeSendDate);
         console.log(completeSendRes);
