@@ -10,6 +10,7 @@ import { AttendanceDto } from './Dto/attendance.dto';
 import { getToken } from 'src/util/token';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { ChangePwDto } from './Dto/changePw.dto';
 
 @Controller('user')
 @UseFilters(new HttpExceptionFilter())
@@ -90,6 +91,14 @@ export class UserController {
     async justAttendance(@Headers() header) {
         this.logger.log('로그인 상태에서 출근');
         return await this.userService.justAttendance(getToken(header));
+    }
+
+    @ApiOperation({summary:'비밀번호 변경'})
+    @Patch('/changePw')
+    async changPw(@Body() changePwDto: ChangePwDto,@Headers() header) {
+        this.logger.log('비밀번호 변경');
+        const res = await this.userService.changePw(changePwDto, getToken(header));
+        return res;
     }
 
     @Get('/test')

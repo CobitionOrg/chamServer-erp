@@ -964,8 +964,8 @@ export class ErpService {
      */
     async callComplete(callConsultingDto: CallConsultingDto, header: string) {
         try {
-            const checkAdmin = await this.adminService.checkAdmin(header);
-            if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN }; //일반 유저 거르기
+            // const checkAdmin = await this.adminService.checkAdmin(header);
+            // if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN }; //일반 유저 거르기
 
             //유선 상담 완료 처리
             await this.prisma.order.update({
