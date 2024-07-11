@@ -18,7 +18,10 @@ export class VisitRepository {
         try{
             await this.prisma.order.update({
                 where:{id:id},
-                data:{orderSortNum:-1}
+                data:{
+                    orderSortNum:-1,
+                    consultingFlag: true,
+                }
             });
 
             return {success:true, status:HttpStatus.OK};

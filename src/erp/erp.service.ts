@@ -790,6 +790,7 @@ export class ErpService {
                 },
                 data: {
                     consultingType: true,
+                    consultingFlag: true,
                 }
             });
 
@@ -1085,7 +1086,8 @@ export class ErpService {
                             isComplete: true,
                             card: order.payType =='카드결제' ? order.price : 0,
                             cash: order.payType =='계좌이체' ? order.price : 0,
-                            payFlag: 1
+                            payFlag: 1,
+                            consultingFlag: true
                         }
                     });
 
@@ -1398,7 +1400,10 @@ export class ErpService {
             await this.prisma.$transaction(async (tx) => {
                 const sendOne = await tx.order.update({
                     where: { id: orderId },
-                    data: { isComplete: true }
+                    data: { 
+                        isComplete: true,
+                        consultingFlag: true 
+                    }
                 });
 
                 // //발송 주소 가져오기
@@ -1692,7 +1697,13 @@ export class ErpService {
             }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
-            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
+            const orderData = { 
+                ...updateSurveyDto, 
+                price: price, 
+                orderSortNum: orderSortNum,
+                addr: encryptedAddr,
+                consultingFlag:true,
+            };
 
             console.log('====================');
             
