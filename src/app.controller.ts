@@ -10,8 +10,8 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('/test')
-  async test() {
-    return await this.appService.test();
-  }
+  // @Get('/test')
+  // async test() {
+  //   return await this.appService.test();
+  // }
 }

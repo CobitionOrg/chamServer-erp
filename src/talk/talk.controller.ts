@@ -75,12 +75,13 @@ export class TalkController {
         return {success:true,status:res.status};
 
     }
-    @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
-//    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
-    async orderInsertCron(){
-        this.logger.log('접수 알림톡 자동 발송 처리');
-        const res = await this.talkService.orderInsertCron();
-    }
+
+//     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
+// //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
+//     async orderInsertCron(){
+//         this.logger.log('접수 알림톡 자동 발송 처리');
+//         const res = await this.talkService.orderInsertCron();
+//     }
 
     @ApiOperation({summary:'상담 연결 처리'})
     @Patch('/consultingFlag/:id')
@@ -126,6 +127,8 @@ export class TalkController {
        
         const res = await this.talkService.notConsultingCron();
     }
+
+
     @ApiOperation({summary:'미입금 된 인원 엑셀 데이터'})
     @Get('/notPay')
     async notPay(@Query() getListDto: GetListDto, @Headers() header){
@@ -143,12 +146,16 @@ export class TalkController {
 
         return {success:true,status:res.status,url:res.url};
     }
-    @ApiOperation({summary:'미입금 자동 발송 처리'})
-//    @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
-    async notPayCron(){
-        this.logger.log('미입금 자동 발송 처리');
-        const res = await this.talkService.notPayCron();
-    }
+
+
+
+//     @ApiOperation({summary:'미입금 자동 발송 처리'})
+// //    @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
+//     async notPayCron(){
+//         this.logger.log('미입금 자동 발송 처리');
+//         const res = await this.talkService.notPayCron();
+//     }
+
     @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
     @Get('/completeTalk/:id')
     async completeTalk(@Param('id') id: number) {
@@ -167,35 +174,37 @@ export class TalkController {
 
         return {success:true, status:res.status, firstUrl:res.firstUrl, returnUrl: res.returnUrl};
     }
-    @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
-    //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
-    async completeTalkCron(){
-        this.logger.log('발송 알림톡 자동 발송 처리');
-        const res = await this.talkService.completeSendTalkCron();
-    }
-    @Get('/orderInsertCron')
-    async orderInsertCronTest()
-    {
-        await this.orderInsertCron();
-        return true;
-    }
-    @Get('/completeTalkCron')
-    async completeTalkCronTest()
-    {
-        await this.completeTalkCron();
-        return true;
-    }
-    @Get('/notPayCron')
-    async notPayCronTest()
-    {
-        await this.notPayCron();
-        return true;
-    }
-    @Get('/notConsultingCron')
-    async notConsultingCronTest()
-    {
-        await this.notConsultingCron();
-        return true;
-    }
+    // @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
+    // //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
+    // async completeTalkCron(){
+    //     this.logger.log('발송 알림톡 자동 발송 처리');
+    //     const res = await this.talkService.completeSendTalkCron();
+    // }
+
+    
+    // @Get('/orderInsertCron')
+    // async orderInsertCronTest()
+    // {
+    //     await this.orderInsertCron();
+    //     return true;
+    // }
+    // @Get('/completeTalkCron')
+    // async completeTalkCronTest()
+    // {
+    //     await this.completeTalkCron();
+    //     return true;
+    // }
+    // @Get('/notPayCron')
+    // async notPayCronTest()
+    // {
+    //     await this.notPayCron();
+    //     return true;
+    // }
+    // @Get('/notConsultingCron')
+    // async notConsultingCronTest()
+    // {
+    //     await this.notConsultingCron();
+    //     return true;
+    // }
     
 }
