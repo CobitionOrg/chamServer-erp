@@ -24,7 +24,6 @@ export class VisitRepository {
             return {success:true, status:HttpStatus.OK};
         }catch(err){
             this.logger.error(err);
-            this.logger.error(err);
             throw new HttpException({
                 success:false,
                 status:HttpStatus.INTERNAL_SERVER_ERROR,
@@ -32,7 +31,6 @@ export class VisitRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             )
-
         }
     }
 

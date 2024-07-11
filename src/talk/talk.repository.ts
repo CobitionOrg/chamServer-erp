@@ -8,11 +8,11 @@ import { dateType } from "aws-sdk/clients/iam";
 import { getDayStartAndEnd } from "src/util/kstDate.util";
 
 @Injectable()
-export class TalkRepositoy{
+export class TalkRepositoy {
     constructor(
         private prisma: PrismaService,
         private crypto: Crypto,
-    ){}
+    ) { }
 
     private readonly logger = new Logger(TalkRepositoy.name);
 
@@ -32,36 +32,36 @@ export class TalkRepositoy{
         }>
      */
     async orderInsertTalk(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
+        try {
+            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
                     lt: endDate,
                 }
             }
-            console.log(startDate,endDate);
+            console.log(startDate, endDate);
             const list = await this.prisma.order.findMany({
-                where: {...orderConditions, orderSortNum:{gte:0},talkFlag:false},
+                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true },
                 select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},}
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
                 }
             });
 
-            const res=list.map(item=>(
+            const res = list.map(item => (
                 {
-                    id:item.id,
+                    id: item.id,
                     patient:
                     {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
 
 
-            return {success:true, list:res, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, list: res, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -71,7 +71,7 @@ export class TalkRepositoy{
             );
         }
     }
-    
+
     /**
      * 접수 알림톡 발송 완료 처리
      * @param list 
@@ -80,14 +80,14 @@ export class TalkRepositoy{
             status: HttpStatus;
         }>
      */
-    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>){
-        try{   
+    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>) {
+        try {
             const qryArr = [];
 
-            for(const e of orderInsertDto) {
+            for (const e of orderInsertDto) {
                 const qry = this.prisma.order.update({
-                    where:{id:e.id},
-                    data:{talkFlag:true},
+                    where: { id: e.id },
+                    data: { talkFlag: true },
                 });
 
                 qryArr.push(qry);
@@ -100,9 +100,9 @@ export class TalkRepositoy{
                 this.logger.error(err);
                 return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
             });
-            
-            return {success:true,status:HttpStatus.OK}
-        }catch(err){
+
+            return { success: true, status: HttpStatus.OK }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -115,20 +115,20 @@ export class TalkRepositoy{
 
 
     async getExOrder(id: number) {
-        try{
+        try {
             const res = await this.prisma.order.findUnique({
-                where:{
-                    id:id
+                where: {
+                    id: id
                 },
-                select:{
-                    message:true,
-                    date:true,
-                    route:true,
+                select: {
+                    message: true,
+                    date: true,
+                    route: true,
                 }
             });
 
             return res;
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -148,19 +148,19 @@ export class TalkRepositoy{
         }>
      */
     async consultingFlag(id: number) {
-        try{
+        try {
             console.log(id);
             await this.prisma.order.updateMany({
-                where:{
-                    id:id,talkFlag:true
+                where: {
+                    id: id, talkFlag: true
                 },
-                data:{
+                data: {
                     consultingFlag: true
                 }
             });
 
-            return {success:true,status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -188,8 +188,8 @@ export class TalkRepositoy{
         }>
      */
     async notConsulting(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
+        try {
+            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -198,26 +198,26 @@ export class TalkRepositoy{
             };
 
             const list = await this.prisma.order.findMany({
-                where: {...orderConditions, orderSortNum:{gte:0},talkFlag:true,consultingFlag:false},
+                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: true, consultingFlag: false, useFlag: true },
                 select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},}
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
                 }
             });
-            const res=list.map(item=>(
+            const res = list.map(item => (
                 {
-                    id:item.id,
+                    id: item.id,
                     patient:
                     {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
             console.log(res);
-            return {success:true, list:res, status:HttpStatus.OK};
+            return { success: true, list: res, status: HttpStatus.OK };
 
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -245,8 +245,8 @@ export class TalkRepositoy{
         }>
      */
     async notPay(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
+        try {
+            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
                     gte: startDate,
@@ -255,33 +255,32 @@ export class TalkRepositoy{
             };
 
             const data = await this.prisma.order.findMany({
-                where:{...orderConditions,orderSortNum:{gte:0},talkFlag:true,consultingFlag:true},
+                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: true, consultingFlag: true, useFlag: true },
                 select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},},
-                    price:true,
-                    cash:true,
-                    card:true,
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, },
+                    price: true,
+                    cash: true,
+                    card: true,
                 }
             });
 
             //console.log(data);
 
-            const list = data.filter(i => i.price != (i.cash + i.card) );
-            const res=list.map(item=>(
+            const list = data.filter(i => i.price != (i.cash + i.card));
+            const res = list.map(item => (
                 {
-                    id:item.id,
+                    id: item.id,
                     patient:
                     {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
             console.log(res);
-            return {success:true, list:res, status:HttpStatus.OK};
+            return { success: true, list: res, status: HttpStatus.OK };
 
-
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -299,30 +298,29 @@ export class TalkRepositoy{
             id:number
         }>
      */
-        async completeSendTalkGetList(date:string){
-            try{
-                const cid= await this.prisma.sendList.findFirst({
-                    where: {
-                       title:date,
-                       useFlag:false
-                    },
-                    select: {
-                        id: true,
-                    }
-                });
-                return {success:true,cid};
-            }
-            catch(err)
-            {
-                this.logger.error(err);
-                throw new HttpException({
-                    success: false,
-                    status: HttpStatus.INTERNAL_SERVER_ERROR
+    async completeSendTalkGetList(date: string) {
+        try {
+            const cid = await this.prisma.sendList.findFirst({
+                where: {
+                    title: date,
+                    useFlag: false
                 },
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                );
-            }
+                select: {
+                    id: true,
+                }
+            });
+            return { success: true, cid };
         }
+        catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
     /**
      * 발송 알림 톡 초진(수정 예정)
      * @param id 
@@ -331,8 +329,8 @@ export class TalkRepositoy{
             list: any[];
         }>
      */
-    async completeSendTalkFirst(id: number){
-        try{
+    async completeSendTalkFirst(id: number) {
+        try {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
@@ -361,17 +359,17 @@ export class TalkRepositoy{
                             message: true,
                             cachReceipt: true,
                             price: true,
-                            orderSortNum:true,
-                            isFirst:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            isFirst: true,
+                            combineNum: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -385,7 +383,7 @@ export class TalkRepositoy{
             const sortedList = list;
 
             return { success: true, list: sortedList };
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -405,8 +403,8 @@ export class TalkRepositoy{
             list: any[];
         }>
      */
-    async completeSendTalkReturn(id: number){
-        try{
+    async completeSendTalkReturn(id: number) {
+        try {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
@@ -435,17 +433,17 @@ export class TalkRepositoy{
                             message: true,
                             cachReceipt: true,
                             price: true,
-                            orderSortNum:true,
-                            isFirst:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            isFirst: true,
+                            combineNum: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -459,7 +457,7 @@ export class TalkRepositoy{
             const sortedList = list;
 
             return { success: true, list: sortedList };
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
