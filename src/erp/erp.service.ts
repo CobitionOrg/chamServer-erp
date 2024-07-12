@@ -162,6 +162,19 @@ export class ErpService {
                     }
                 });
 
+                const patientBodyType = await tx.patientBodyType.create({
+                    data: {
+                        tallWeight: objOrderBodyType.tallWeight,
+                        digestion: objOrderBodyType.digestion.join('/'),
+                        sleep: objOrderBodyType.sleep.join('/'),
+                        constipation: objOrderBodyType.constipation.join('/'),
+                        nowDrug: objOrderBodyType.nowDrug.join('/'),
+                        pastDrug: objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
+                        patientId: patient.id,
+                    }
+                })
+
                 console.log(objOrderItem);
                 console.log('--------------------');
 
@@ -887,6 +900,17 @@ export class ErpService {
                             name: true,
                             addr: true,
                             phoneNum: true,
+                            patientBodyType: {
+                                select: {
+                                    tallWeight: true,
+                                    digestion: true,
+                                    sleep: true,
+                                    constipation: true,
+                                    nowDrug: true,
+                                    pastDrug: true,
+                                    pastSurgery: true,
+                                }
+                            }
                         }
                     },
                     orderItems: {
@@ -895,17 +919,7 @@ export class ErpService {
                             type: true,
                         }
                     },
-                    orderBodyType: {
-                        select: {
-                            tallWeight: true,
-                            digestion: true,
-                            sleep: true,
-                            constipation: true,
-                            nowDrug: true,
-                            pastDrug: true,
-                            pastSurgery: true,
-                        }
-                    }
+                  
                 }
             });
 
@@ -1799,6 +1813,8 @@ export class ErpService {
                     data: orderData
                 });
 
+                delete patientData.patientBodyType;
+
                 const patient = await tx.patient.update({
                     where: {
                         id: patientData.id
@@ -1807,12 +1823,21 @@ export class ErpService {
                 });
 
                 if (orderBodyTypeData !== null) {
-                    const orderBodyType = await tx.orderBodyType.update({
+                    
+                    await tx.patientBodyType.update({
                         where: {
-                            orderId: id
+                            patientId: patientData.id
                         },
-                        data: orderBodyTypeData
-                    });
+                        data: {
+                            tallWeight: orderBodyTypeData.tallWeight ?? '',
+                            digestion: orderBodyTypeData.digestion ?? '',
+                            sleep: orderBodyTypeData.sleep ?? '',
+                            constipation: orderBodyTypeData.constipation ?? '',
+                            nowDrug: orderBodyTypeData.nowDrug ?? '',
+                            pastDrug: orderBodyTypeData.pastDrug ?? '',
+                            pastSurgery: orderBodyTypeData.pastSurgery ?? '',
+                        }
+                    })
                 }
 
                 const deleteItems = await tx.orderItem.deleteMany({
@@ -3206,6 +3231,7 @@ export class ErpService {
             );
         }
     }
+
 
 
 
