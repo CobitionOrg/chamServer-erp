@@ -30,7 +30,10 @@ export class PatientController {
     @ApiOperation({summary:'환자 특이사항 입력'})
     @Post('/')
     async patientNote(@Body() patientNoteDto: PatientNoteDto) {
-        
+        this.logger.log('환자 특이사항 입력');
+        const res = await this.patientService.patientNote(patientNoteDto);
+
+        return res;
     }
     
 

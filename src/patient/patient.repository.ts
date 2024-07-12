@@ -49,10 +49,23 @@ export class PatientRepository {
                             pastSurgery: true,
                         }
                     },
+                    patientNotes:{
+                        where:{useFlag:false},
+                        select:{
+                            note:true
+                        }
+                    },
                     orders:{
                         select: {
                             id: true,
-                            orderItems: true,
+                            orderItems: {
+                                select:{
+                                    id:true,
+                                    item:true,
+                                    type:true,
+                                    orderId:true
+                                }
+                            },
                             tempOrders:{
                                 select:{
                                     sendList:{
@@ -80,6 +93,11 @@ export class PatientRepository {
         }
     }
 
+    /**
+     * 특이사항 생성
+     * @param patientNoteDto 
+     * @returns {success:boolean}
+     */
     async patientCreateNote(patientNoteDto: PatientNoteDto) {
         try{
             await this.prisma.patientNote.create({
@@ -102,6 +120,11 @@ export class PatientRepository {
         }
     }
 
+    /**
+     * 특이사항 수정
+     * @param patientNoteDto 
+     * @returns {success:boolean}
+     */
     async patientUpdateNote(patientNoteDto: PatientNoteDto) {
         try{
             await this.prisma.patientNote.update({

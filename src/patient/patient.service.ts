@@ -37,7 +37,11 @@ export class PatientService {
         return { success: true, list: patientList, status:HttpStatus.OK };
     }
 
-
+    /**
+     * 특이사항 관련
+     * @param patientNoteDto 
+     * @returns {success:boolean, status:HttpStatus }
+     */
     async patientNote(patientNoteDto: PatientNoteDto) {
         let res;
 
