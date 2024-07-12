@@ -299,24 +299,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
@@ -855,24 +838,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions },
@@ -2404,24 +2370,7 @@ export class ErpService {
             let patientConditions = {};
             if (getOutageListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getOutageListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getOutageListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getOutageListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getOutageListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getOutageListDto.searchKeyword } }
-                    }
-                }
-                else if (getOutageListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getOutageListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getOutageListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: {
@@ -2519,24 +2468,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },

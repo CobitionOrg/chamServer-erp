@@ -58,22 +58,7 @@ export class VisitService {
         let patientConditions = {};
 
         if(getListDto.searchKeyword !== "") {
-            if(getListDto.searchCategory === "all") {
-                patientConditions = {
-                    OR : [
-                        { patient: { name: { contains: getListDto.searchKeyword } } },
-                        { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                    ]
-                }
-            } else if (getListDto.searchCategory === "name") {
-                patientConditions = {
-                    patient: { name: { contains: getListDto.searchKeyword } }
-                }
-            } else if (getListDto.searchCategory === "num") {
-                patientConditions = {
-                    patient: { phoneNum: { contains: getListDto.searchKeyword } }
-                }
-            }
+            patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
         }
 
         const res = await this.visitRepository.visitList(orderConditions,patientConditions);
