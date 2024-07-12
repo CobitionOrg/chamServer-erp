@@ -138,9 +138,7 @@ model patientNote {
   ///사용 여부
   useFlag Boolean? @default(true)
   patientId Int
-  orderId Int
   patient          patient          @relation(fields: [patientId], references: [id])
-  order            order             @relation(fields: [orderId], references: [id])
 }
 
 model item {
@@ -228,7 +226,6 @@ model order {
   orderBodyType    orderBodyType?
   orderItems       orderItem[]
   tempOrders       tempOrder[]
-  patientNotes     patientNote[] 
   @@index([patientId], map: "order_patientId_fkey")
 }
 

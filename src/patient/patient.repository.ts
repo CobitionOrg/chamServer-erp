@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
+import { PatientNoteDto } from "./Dto/patientNote.dto";
 
 @Injectable()
 export class PatientRepository {
@@ -75,7 +76,51 @@ export class PatientRepository {
                 msg:'내부 서버 에러'
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
-            )
+            );
+        }
+    }
+
+    async patientCreateNote(patientNoteDto: PatientNoteDto) {
+        try{
+            await this.prisma.patientNote.create({
+                data:{
+                    patientId:patientNoteDto.patientId,
+                    note: patientNoteDto.note
+                }
+            });
+
+            return {success:true};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async patientUpdateNote(patientNoteDto: PatientNoteDto) {
+        try{
+            await this.prisma.patientNote.update({
+                where:{id:patientNoteDto.id},
+                data:{note:patientNoteDto.note}
+            });
+
+            return {success:true};
+
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 

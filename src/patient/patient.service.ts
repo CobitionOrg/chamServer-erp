@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PatientRepository } from './patient.repository';
 import { Crypto } from 'src/util/crypto.util';
+import { PatientNoteDto } from './Dto/patientNote.dto';
 
 @Injectable()
 export class PatientService {
@@ -33,6 +34,26 @@ export class PatientService {
             row.socialNum = markedSocialNum;
         }
 
-        return { success: true, list: patientList };
+        return { success: true, list: patientList, status:HttpStatus.OK };
+    }
+
+
+    async patientNote(patientNoteDto: PatientNoteDto) {
+        let res;
+
+        if(patientNoteDto.id == undefined) {
+            //특이사항이 없을 때
+            res = await this.patientRepository.patientCreateNote(patientNoteDto);
+        }else{
+            //특이 사항이 있을 때
+            res = await this.patientRepository.patientUpdateNote(patientNoteDto);
+        }
+
+        if(res.success){
+            return {success:true, status:HttpStatus.CREATED};
+        }else{
+            return {success:false, status:500}
+        }
+
     }
 }

@@ -63,7 +63,6 @@ erDiagram
   String note
   Boolean useFlag "nullable"
   Int patientId FK
-  Int orderId FK
 }
 "item" {
   Int id PK
@@ -215,7 +214,6 @@ erDiagram
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
 "patientNote" }o--|| "patient" : patient
-"patientNote" }o--|| "order" : order
 "order" }o--|| "patient" : patient
 "friendRecommend" |o--|| "order" : order
 "friendRecommend" }o--|| "patient" : patient
@@ -305,7 +303,6 @@ erDiagram
   - `note`: 특이 사항
   - `useFlag`: 사용 여부
   - `patientId`: 
-  - `orderId`: 
 
 ### `item`
 
