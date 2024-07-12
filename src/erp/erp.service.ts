@@ -162,6 +162,19 @@ export class ErpService {
                     }
                 });
 
+                const patientBodyType = await tx.patientBodyType.create({
+                    data: {
+                        tallWeight: objOrderBodyType.tallWeight,
+                        digestion: objOrderBodyType.digestion.join('/'),
+                        sleep: objOrderBodyType.sleep.join('/'),
+                        constipation: objOrderBodyType.constipation.join('/'),
+                        nowDrug: objOrderBodyType.nowDrug.join('/'),
+                        pastDrug: objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
+                        patientId: patient.id,
+                    }
+                })
+
                 console.log(objOrderItem);
                 console.log('--------------------');
 
@@ -3206,6 +3219,7 @@ export class ErpService {
             );
         }
     }
+
 
 
 

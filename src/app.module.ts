@@ -14,9 +14,8 @@ import { HttpExceptionFilter } from './filter/httpExceptionFilter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
 import { TalkModule } from './talk/talk.module';
-import { VisitController } from './visit/visit.controller';
-import { VisitService } from './visit/visit.service';
 import { VisitModule } from './visit/visit.module';
+import { PatientModule } from './patient/patient.module';
 @Module({
 
   imports: [
@@ -32,7 +31,8 @@ import { VisitModule } from './visit/visit.module';
     ExchangeModule,
     TasksModule,
     TalkModule,
-    VisitModule
+    VisitModule,
+    PatientModule
   ],
   controllers: [AppController],
   providers: [
@@ -41,7 +41,7 @@ import { VisitModule } from './visit/visit.module';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    },  
+    },   
   ],
 })
 export class AppModule implements NestModule {
