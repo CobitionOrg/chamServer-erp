@@ -58,6 +58,13 @@ erDiagram
   String socialNum
   Boolean useFlag "nullable"
 }
+"patientNote" {
+  Int id PK
+  String note
+  Boolean useFlag "nullable"
+  Int patientId FK
+  Int orderId FK
+}
 "item" {
   Int id PK
   String item
@@ -207,6 +214,8 @@ erDiagram
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
 "questionImg" }o--|| "question" : question
+"patientNote" }o--|| "patient" : patient
+"patientNote" }o--|| "order" : order
 "order" }o--|| "patient" : patient
 "friendRecommend" |o--|| "order" : order
 "friendRecommend" }o--|| "patient" : patient
@@ -288,6 +297,15 @@ erDiagram
   - `addr`: 환자 주소
   - `socialNum`: 환자 주민번호
   - `useFlag`: 
+
+### `patientNote`
+
+**Properties**
+  - `id`: index key
+  - `note`: 특이 사항
+  - `useFlag`: 사용 여부
+  - `patientId`: 
+  - `orderId`: 
 
 ### `item`
 

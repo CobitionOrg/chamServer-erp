@@ -1823,7 +1823,7 @@ export class ErpService {
                 });
 
                 if (orderBodyTypeData !== null) {
-                    console.log(orderBodyTypeData);
+                    
                     await tx.patientBodyType.update({
                         where: {
                             patientId: patientData.id

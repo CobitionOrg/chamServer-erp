@@ -126,7 +126,21 @@ model patient {
   friendRecommends friendRecommend[]
   orders           order[]
   tempOrders       tempOrder[]
+  patientNotes     patientNote[]
   patientBodyType patientBodyType?
+}
+
+model patientNote {
+  /// index key
+  id               Int               @id @default(autoincrement())
+  ///특이 사항
+  note String
+  ///사용 여부
+  useFlag Boolean? @default(true)
+  patientId Int
+  orderId Int
+  patient          patient          @relation(fields: [patientId], references: [id])
+  order            order             @relation(fields: [orderId], references: [id])
 }
 
 model item {
@@ -214,7 +228,7 @@ model order {
   orderBodyType    orderBodyType?
   orderItems       orderItem[]
   tempOrders       tempOrder[]
-
+  patientNotes     patientNote[] 
   @@index([patientId], map: "order_patientId_fkey")
 }
 

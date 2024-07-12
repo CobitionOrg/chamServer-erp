@@ -17,6 +17,7 @@ export class PatientController {
     private readonly logger = new Logger(PatientController.name);
 
     @ApiOperation({summary:'환자 데이터 리스트'})
+    @Public()
     @Get('/')
     async getPatientList(){
         this.logger.log('환자 데이터 리스트');

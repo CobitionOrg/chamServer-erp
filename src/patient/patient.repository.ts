@@ -47,6 +47,21 @@ export class PatientRepository {
                             pastDrug: true,
                             pastSurgery: true,
                         }
+                    },
+                    orders:{
+                        select: {
+                            id: true,
+                            orderItems: true,
+                            tempOrders:{
+                                select:{
+                                    sendList:{
+                                        select:{
+                                            title:true
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             });
