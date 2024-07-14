@@ -973,6 +973,34 @@ export class ErpService {
     }
 
     /**
+     * 유선 상담에서 입금 상담으로 이동
+     * @param callConsultingDto@returns { success: boolean, status: number}
+     */
+    async callToRec(callConsultingDto: CallConsultingDto) {
+        try {
+            await this.prisma.order.update({
+                where: {
+                    id: callConsultingDto.orderId,
+                    patientId: callConsultingDto.userId,
+                },
+                data: {
+                    consultingType: false,
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
      * 총 금액과 card, cash 결제액 합이 일치하는지
      */
     async checkPaymentAmount(id: number) {
