@@ -63,6 +63,7 @@ export class UserController {
 
     @ApiOperation({summary:'유저 정보 불러오기'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Get('/userData/:month')
     async userData(@Headers() header, @Param('month') month:number){
         this.logger.log('유저 정보 가져오기');
