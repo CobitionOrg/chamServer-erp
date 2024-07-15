@@ -223,18 +223,28 @@ export class PatientRepository {
         }
     }
 
-
+    /**
+     * 환자 정보 업데이트
+     * @param updatePatientDto 
+     * @returns {success:boolean}
+     */
     async updatePatient(updatePatientDto: UpdatePatientDto) {
         try{
             await this.prisma.$transaction(async (tx) => {
+                delete updatePatientDto.patient.socialNum;
+
                 await tx.patient.update({
                     where:{id:updatePatientDto.patientId},
                     data:updatePatientDto.patient,
                 });
 
-                await tx.patientBodyType.update({
-                    where:{id:updatePatientDto.patientId},
-                    data:updatePatientDto.patientBodyType,                })
+                if(updatePatientDto.patientBodyType != null) {
+                    await tx.patientBodyType.update({
+                        where:{id:updatePatientDto.patientId},
+                        data:updatePatientDto.patientBodyType,
+                    });
+                }
+               
             });
 
             return {success: true}

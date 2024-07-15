@@ -22,6 +22,7 @@ export class PatientService {
         const patientList = await this.patientRepository.getPatientList();
 
         for (let row of patientList) {
+            console.log(row);
             const decryptedAddr = this.crypto.decrypt(row.addr);
             const decryptedPhoneNum = this.crypto.decrypt(row.phoneNum);
             const decryptedSocialNum = this.crypto.decrypt(row.socialNum);
@@ -69,6 +70,14 @@ export class PatientService {
      * @returns {success:boolean, status:HttpStatus }
      */
     async updatePatient(updatePatientDto: UpdatePatientDto) {
+        const encryptedAddr = this.crypto.encrypt(updatePatientDto.patient.addr);
+        const encryptedPhoneNum = this.crypto.encrypt(updatePatientDto.patient.phoneNum);
+
+        updatePatientDto.patient.addr = encryptedAddr;
+        updatePatientDto.patient.phoneNum = encryptedPhoneNum;
+
+        console.log(updatePatientDto);
+        
         const res = await this.patientRepository.updatePatient(updatePatientDto);
 
         if(res.success) return {success:true, status:HttpStatus.CREATED};
