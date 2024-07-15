@@ -6,7 +6,7 @@ import { PatientNoteDto } from "./Dto/patientNote.dto";
 export class PatientRepository {
     constructor(
         private prisma: PrismaService
-    ){}
+    ) { }
 
     private readonly logger = new Logger(PatientRepository.name);
 
@@ -30,16 +30,16 @@ export class PatientRepository {
         }[]>
      */
     async getPatientList() {
-        try{
+        try {
             const res = await this.prisma.patient.findMany({
-                select:{
+                select: {
                     id: true,
                     name: true,
                     phoneNum: true,
                     addr: true,
                     socialNum: true,
-                    patientBodyType:{
-                        select:{
+                    patientBodyType: {
+                        select: {
                             tallWeight: true,
                             digestion: true,
                             sleep: true,
@@ -49,28 +49,29 @@ export class PatientRepository {
                             pastSurgery: true,
                         }
                     },
-                    patientNotes:{
-                        where:{useFlag:false},
-                        select:{
-                            note:true
+                    patientNotes: {
+                        where: { useFlag: true },
+                        select: {
+                            id: true,
+                            note: true
                         }
                     },
-                    orders:{
+                    orders: {
                         select: {
                             id: true,
                             orderItems: {
-                                select:{
-                                    id:true,
-                                    item:true,
-                                    type:true,
-                                    orderId:true
+                                select: {
+                                    id: true,
+                                    item: true,
+                                    type: true,
+                                    orderId: true
                                 }
                             },
-                            tempOrders:{
-                                select:{
-                                    sendList:{
-                                        select:{
-                                            title:true
+                            tempOrders: {
+                                select: {
+                                    sendList: {
+                                        select: {
+                                            title: true
                                         }
                                     }
                                 }
@@ -81,12 +82,12 @@ export class PatientRepository {
             });
 
             return res;
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부 서버 에러'
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
@@ -99,21 +100,21 @@ export class PatientRepository {
      * @returns {success:boolean}
      */
     async patientCreateNote(patientNoteDto: PatientNoteDto) {
-        try{
+        try {
             await this.prisma.patientNote.create({
-                data:{
-                    patientId:patientNoteDto.patientId,
+                data: {
+                    patientId: patientNoteDto.patientId,
                     note: patientNoteDto.note
                 }
             });
 
-            return {success:true};
-        }catch(err){
+            return { success: true };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부 서버 에러'
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
@@ -126,25 +127,95 @@ export class PatientRepository {
      * @returns {success:boolean}
      */
     async patientUpdateNote(patientNoteDto: PatientNoteDto) {
-        try{
+        try {
             await this.prisma.patientNote.update({
-                where:{id:patientNoteDto.id},
-                data:{note:patientNoteDto.note}
+                where: { id: patientNoteDto.id },
+                data: { note: patientNoteDto.note }
             });
 
-            return {success:true};
+            return { success: true };
 
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부 서버 에러'
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
+    }
+
+    /**
+     * 환자 검색
+     * @param patientConditions 
+     * @returns 
+     */
+    async search(patientConditions) {
+        const res = await this.prisma.patient.findMany({
+            where:{...patientConditions},
+            select: {
+                id: true,
+                name: true,
+                phoneNum: true,
+                addr: true,
+                socialNum: true,
+                patientBodyType: {
+                    select: {
+                        tallWeight: true,
+                        digestion: true,
+                        sleep: true,
+                        constipation: true,
+                        nowDrug: true,
+                        pastDrug: true,
+                        pastSurgery: true,
+                    }
+                },
+                patientNotes: {
+                    where: { useFlag: true },
+                    select: {
+                        id: true,
+                        note: true
+                    }
+                },
+                orders: {
+                    select: {
+                        id: true,
+                        orderItems: {
+                            select: {
+                                id: true,
+                                item: true,
+                                type: true,
+                                orderId: true
+                            }
+                        },
+                        tempOrders: {
+                            select: {
+                                sendList: {
+                                    select: {
+                                        title: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        return res;
+    } catch(err) {
+        this.logger.error(err);
+        throw new HttpException({
+            success: false,
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            msg: '내부 서버 에러'
+        },
+            HttpStatus.INTERNAL_SERVER_ERROR
+        );
+
     }
 
 }
