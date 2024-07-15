@@ -3,6 +3,7 @@ import { PatientRepository } from './patient.repository';
 import { Crypto } from 'src/util/crypto.util';
 import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { UpdatePatientDto } from './Dto/updatePatient.dto';
 
 @Injectable()
 export class PatientService {
@@ -63,6 +64,18 @@ export class PatientService {
     }
 
     /**
+     * 환자 정보 업데이트
+     * @param updatePatientDto 
+     * @returns {success:boolean, status:HttpStatus }
+     */
+    async updatePatient(updatePatientDto: UpdatePatientDto) {
+        const res = await this.patientRepository.updatePatient(updatePatientDto);
+
+        if(res.success) return {success:true, status:HttpStatus.CREATED};
+        else return {success:false, status: HttpStatus.INTERNAL_SERVER_ERROR};
+    }
+
+    /**
      * 환자 검색
      * @param getListDto 
      * @returns 
@@ -102,4 +115,6 @@ export class PatientService {
 
         return {success:true, list};
     }
+
+    
 }

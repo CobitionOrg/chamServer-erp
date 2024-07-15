@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
@@ -6,6 +6,8 @@ import { PatientService } from './patient.service';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { patientBodyType } from '@prisma/client';
+import { UpdatePatientDto } from './Dto/updatePatient.dto';
 
 @Controller('patient')
 @UseFilters(new HttpExceptionFilter())
@@ -19,7 +21,6 @@ export class PatientController {
     private readonly logger = new Logger(PatientController.name);
 
     @ApiOperation({summary:'환자 데이터 리스트'})
-    @Public()
     @Get('/')
     async getPatientList(){
         this.logger.log('환자 데이터 리스트');
@@ -37,6 +38,16 @@ export class PatientController {
         return res;
     }
 
+    @ApiOperation({summary:'환자 정보 수정'})
+    @Patch('/')
+    async updatePatient(@Body() updatePatientDto: UpdatePatientDto) {
+        this.logger.log('환자 정보 수정');
+        const res = await this.patientService.updatePatient(updatePatientDto);
+
+        return res;
+    } 
+
+
     @ApiOperation({summary:'환자 검색'})
     @Get('/search')
     async search(@Query() getListDto: GetListDto) {
@@ -46,6 +57,6 @@ export class PatientController {
         return res; 
     }
     
-
+    
 }
  

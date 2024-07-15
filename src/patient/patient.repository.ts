@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { PatientNoteDto } from "./Dto/patientNote.dto";
+import { UpdatePatientDto } from "./Dto/updatePatient.dto";
 
 @Injectable()
 export class PatientRepository {
@@ -154,68 +155,99 @@ export class PatientRepository {
      * @returns 
      */
     async search(patientConditions) {
-        const res = await this.prisma.patient.findMany({
-            where:{...patientConditions},
-            select: {
-                id: true,
-                name: true,
-                phoneNum: true,
-                addr: true,
-                socialNum: true,
-                patientBodyType: {
-                    select: {
-                        tallWeight: true,
-                        digestion: true,
-                        sleep: true,
-                        constipation: true,
-                        nowDrug: true,
-                        pastDrug: true,
-                        pastSurgery: true,
-                    }
-                },
-                patientNotes: {
-                    where: { useFlag: true },
-                    select: {
-                        id: true,
-                        note: true
-                    }
-                },
-                orders: {
-                    select: {
-                        id: true,
-                        orderItems: {
-                            select: {
-                                id: true,
-                                item: true,
-                                type: true,
-                                orderId: true
-                            }
-                        },
-                        tempOrders: {
-                            select: {
-                                sendList: {
-                                    select: {
-                                        title: true
+        try {
+
+            const res = await this.prisma.patient.findMany({
+                where: { ...patientConditions },
+                select: {
+                    id: true,
+                    name: true,
+                    phoneNum: true,
+                    addr: true,
+                    socialNum: true,
+                    patientBodyType: {
+                        select: {
+                            tallWeight: true,
+                            digestion: true,
+                            sleep: true,
+                            constipation: true,
+                            nowDrug: true,
+                            pastDrug: true,
+                            pastSurgery: true,
+                        }
+                    },
+                    patientNotes: {
+                        where: { useFlag: true },
+                        select: {
+                            id: true,
+                            note: true
+                        }
+                    },
+                    orders: {
+                        select: {
+                            id: true,
+                            orderItems: {
+                                select: {
+                                    id: true,
+                                    item: true,
+                                    type: true,
+                                    orderId: true
+                                }
+                            },
+                            tempOrders: {
+                                select: {
+                                    sendList: {
+                                        select: {
+                                            title: true
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        return res;
-    } catch(err) {
-        this.logger.error(err);
-        throw new HttpException({
-            success: false,
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            msg: '내부 서버 에러'
-        },
-            HttpStatus.INTERNAL_SERVER_ERROR
-        );
+            return res;
 
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+
+    async updatePatient(updatePatientDto: UpdatePatientDto) {
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                await tx.patient.update({
+                    where:{id:updatePatientDto.patientId},
+                    data:updatePatientDto.patient,
+                });
+
+                await tx.patientBodyType.update({
+                    where:{id:updatePatientDto.patientId},
+                    data:updatePatientDto.patientBodyType,                })
+            });
+
+            return {success: true}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
 }
