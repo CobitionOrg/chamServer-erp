@@ -2,6 +2,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PatientRepository } from './patient.repository';
 import { Crypto } from 'src/util/crypto.util';
 import { PatientNoteDto } from './Dto/patientNote.dto';
+import { GetListDto } from 'src/erp/Dto/getList.dto';
 
 @Injectable()
 export class PatientService {
@@ -31,7 +32,7 @@ export class PatientService {
 
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
-            row.socialNum = markedSocialNum;
+            row.socialNum = decryptedSocialNum;
         }
 
         return { success: true, list: patientList, status:HttpStatus.OK };
@@ -59,5 +60,36 @@ export class PatientService {
             return {success:false, status:500}
         }
 
+    }
+
+    /**
+     * 환자 검색
+     * @param getListDto 
+     * @returns 
+     */
+    async search(getListDto: GetListDto) {
+        let patientConditions = {};
+        
+        if(getListDto.searchKeyword !== ''){
+            patientConditions = {name: {contains:getListDto.searchKeyword}};
+        }
+
+        const list = await this.patientRepository.search(patientConditions);
+
+        for (let row of list) {
+            const decryptedAddr = this.crypto.decrypt(row.addr);
+            const decryptedPhoneNum = this.crypto.decrypt(row.phoneNum);
+            const decryptedSocialNum = this.crypto.decrypt(row.socialNum);
+
+            const birth = decryptedSocialNum.slice(0, 6);
+            const other = decryptedSocialNum.slice(6, 7);
+
+            const markedSocialNum = `${birth}-${other}******`
+
+            row.addr = decryptedAddr;
+            row.phoneNum = decryptedPhoneNum;
+            row.socialNum = markedSocialNum;
+        }
+        return {success:true, list};
     }
 }

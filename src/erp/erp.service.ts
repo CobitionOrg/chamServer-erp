@@ -475,6 +475,19 @@ export class ErpService {
                     })
                 }
 
+                const noteData = await tx.patientNote.findMany({
+                    where:{patientId:patient.patient.id,useFlag:true}
+                });
+
+                //특이 사항이 있을 시
+                if(noteData.length>0) {
+                    remark+=`${noteData[0].note}`;
+                    await tx.patientNote.update({
+                        where:{id:noteData[0].id},
+                        data:{useFlag:false}
+                    })
+                }
+
 
                 const order = await tx.order.create({
                     data: {
@@ -577,7 +590,9 @@ export class ErpService {
 
             for(const e of res) {
                 const checkSocialNum = this.crypto.decrypt(e.patient.socialNum);
+                console.log(checkSocialNum)
                 if(checkSocialNum.includes(socialNum)){
+                    console.log(e);
                     check = false;
                     break;
                 }

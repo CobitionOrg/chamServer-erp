@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Logger, Post, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { PatientService } from './patient.service';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { PatientNoteDto } from './Dto/patientNote.dto';
+import { GetListDto } from 'src/erp/Dto/getList.dto';
 
 @Controller('patient')
 @UseFilters(new HttpExceptionFilter())
@@ -35,6 +36,16 @@ export class PatientController {
 
         return res;
     }
+
+    @ApiOperation({summary:'환자 검색'})
+    @Get('/search')
+    async search(@Query() getListDto: GetListDto) {
+        this.logger.log('환자 검색');
+        const res = await this.patientService.search(getListDto);
+
+        return res; 
+    }
     
 
 }
+ 
