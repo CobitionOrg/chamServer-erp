@@ -22,7 +22,7 @@ export class PatientService {
         const patientList = await this.patientRepository.getPatientList();
 
         for (let row of patientList) {
-            console.log(row);
+            //console.log(row);
             const decryptedAddr = this.crypto.decrypt(row.addr);
             const decryptedPhoneNum = this.crypto.decrypt(row.phoneNum);
             const decryptedSocialNum = this.crypto.decrypt(row.socialNum);
@@ -83,6 +83,7 @@ export class PatientService {
         if(res.success) return {success:true, status:HttpStatus.CREATED};
         else return {success:false, status: HttpStatus.INTERNAL_SERVER_ERROR};
     }
+    
 
     /**
      * 환자 검색

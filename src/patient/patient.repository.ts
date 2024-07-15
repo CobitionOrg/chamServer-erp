@@ -230,6 +230,8 @@ export class PatientRepository {
      */
     async updatePatient(updatePatientDto: UpdatePatientDto) {
         try{
+            console.log(updatePatientDto);
+
             await this.prisma.$transaction(async (tx) => {
                 delete updatePatientDto.patient.socialNum;
 
@@ -239,10 +241,24 @@ export class PatientRepository {
                 });
 
                 if(updatePatientDto.patientBodyType != null) {
-                    await tx.patientBodyType.update({
-                        where:{id:updatePatientDto.patientId},
-                        data:updatePatientDto.patientBodyType,
+                    const patientBody = await tx.patientBodyType.findMany({
+                        where:{patientId:updatePatientDto.patientId},
                     });
+
+                    console.log(patientBody);
+
+                    if(patientBody.length !== 0 ) {
+                        await tx.patientBodyType.update({
+                            where:{patientId:updatePatientDto.patientId},
+                            data:updatePatientDto.patientBodyType,
+                        });
+                        
+                    }else{
+                        await tx.patientBodyType.create({
+                            data:{...updatePatientDto.patientBodyType,patientId:updatePatientDto.patientId},
+                        });
+                    }
+                  
                 }
                
             });
