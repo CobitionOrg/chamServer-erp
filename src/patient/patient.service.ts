@@ -32,7 +32,7 @@ export class PatientService {
 
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
-            row.socialNum = decryptedSocialNum;
+            row.socialNum = markedSocialNum;
         }
 
         return { success: true, list: patientList, status:HttpStatus.OK };
@@ -70,11 +70,15 @@ export class PatientService {
     async search(getListDto: GetListDto) {
         let patientConditions = {};
         
+        console.log(getListDto.searchCategory);
         if(getListDto.searchKeyword !== ''){
-            patientConditions = {name: {contains:getListDto.searchKeyword}};
+            if(getListDto.searchCategory === 'name') {
+                patientConditions = {name: {contains:getListDto.searchKeyword}};
+            }
         }
 
-        const list = await this.patientRepository.search(patientConditions);
+        let list = await this.patientRepository.search(patientConditions);
+        
 
         for (let row of list) {
             const decryptedAddr = this.crypto.decrypt(row.addr);
@@ -90,6 +94,12 @@ export class PatientService {
             row.phoneNum = decryptedPhoneNum;
             row.socialNum = markedSocialNum;
         }
+
+        //번호 검색
+        if(getListDto.searchCategory === 'num') {
+            list = list.filter(i => i.phoneNum.includes(getListDto.searchKeyword));
+        }
+
         return {success:true, list};
     }
 }
