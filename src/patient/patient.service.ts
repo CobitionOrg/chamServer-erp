@@ -3,6 +3,7 @@ import { PatientRepository } from './patient.repository';
 import { Crypto } from 'src/util/crypto.util';
 import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { UpdatePatientDto } from './Dto/updatePatient.dto';
 
 @Injectable()
 export class PatientService {
@@ -21,6 +22,7 @@ export class PatientService {
         const patientList = await this.patientRepository.getPatientList();
 
         for (let row of patientList) {
+            //console.log(row);
             const decryptedAddr = this.crypto.decrypt(row.addr);
             const decryptedPhoneNum = this.crypto.decrypt(row.phoneNum);
             const decryptedSocialNum = this.crypto.decrypt(row.socialNum);
@@ -32,7 +34,7 @@ export class PatientService {
 
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
-            row.socialNum = decryptedSocialNum;
+            row.socialNum = markedSocialNum;
         }
 
         return { success: true, list: patientList, status:HttpStatus.OK };
@@ -63,6 +65,27 @@ export class PatientService {
     }
 
     /**
+     * 환자 정보 업데이트
+     * @param updatePatientDto 
+     * @returns {success:boolean, status:HttpStatus }
+     */
+    async updatePatient(updatePatientDto: UpdatePatientDto) {
+        const encryptedAddr = this.crypto.encrypt(updatePatientDto.patient.addr);
+        const encryptedPhoneNum = this.crypto.encrypt(updatePatientDto.patient.phoneNum);
+
+        updatePatientDto.patient.addr = encryptedAddr;
+        updatePatientDto.patient.phoneNum = encryptedPhoneNum;
+
+        console.log(updatePatientDto);
+        
+        const res = await this.patientRepository.updatePatient(updatePatientDto);
+
+        if(res.success) return {success:true, status:HttpStatus.CREATED};
+        else return {success:false, status: HttpStatus.INTERNAL_SERVER_ERROR};
+    }
+    
+
+    /**
      * 환자 검색
      * @param getListDto 
      * @returns 
@@ -70,11 +93,15 @@ export class PatientService {
     async search(getListDto: GetListDto) {
         let patientConditions = {};
         
+        console.log(getListDto.searchCategory);
         if(getListDto.searchKeyword !== ''){
-            patientConditions = {name: {contains:getListDto.searchKeyword}};
+            if(getListDto.searchCategory === 'name') {
+                patientConditions = {name: {contains:getListDto.searchKeyword}};
+            }
         }
 
-        const list = await this.patientRepository.search(patientConditions);
+        let list = await this.patientRepository.search(patientConditions);
+        
 
         for (let row of list) {
             const decryptedAddr = this.crypto.decrypt(row.addr);
@@ -90,6 +117,14 @@ export class PatientService {
             row.phoneNum = decryptedPhoneNum;
             row.socialNum = markedSocialNum;
         }
+
+        //번호 검색
+        if(getListDto.searchCategory === 'num') {
+            list = list.filter(i => i.phoneNum.includes(getListDto.searchKeyword));
+        }
+
         return {success:true, list};
     }
+
+    
 }
