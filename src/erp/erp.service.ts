@@ -130,6 +130,13 @@ export class ErpService {
                         socialNum: encryptedSocialNum
                     }
                 });
+
+                let remark = '';
+
+                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
+                    remark = '파주맘'
+                }
+
                 const order = await tx.order.create({
                     data: {
                         route: objOrder.route,
@@ -145,7 +152,8 @@ export class ErpService {
                         patientId: patient.id,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
-                        addr: encryptedAddr
+                        addr: encryptedAddr,
+                        remark: remark,
                     }
                 });
 
@@ -481,11 +489,16 @@ export class ErpService {
 
                 //특이 사항이 있을 시
                 if(noteData.length>0) {
-                    remark+=`${noteData[0].note}`;
+                    remark+=` ${noteData[0].note}`;
                     await tx.patientNote.update({
                         where:{id:noteData[0].id},
                         data:{useFlag:false}
                     })
+                }
+
+
+                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
+                    remark += ' 파주맘';
                 }
 
 
