@@ -2436,7 +2436,7 @@ export class ErpService {
                     ...orderConditions,
                     ...patientConditions,
                     consultingType: false,
-                    isComplete: false,
+                    // isComplete: false,
                 },
                 select: {
                     id: true,
@@ -2472,6 +2472,16 @@ export class ErpService {
                             item: true,
                             type: true,
                         }
+                    },
+                    tempOrders: {
+                        select: {
+                            sendList:{
+                                select:{
+                                    id: true,
+                                    title: true,
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -2487,6 +2497,12 @@ export class ErpService {
             }
 
             const outageList = getOutage(sortedList);
+            
+            outageList.sort((a, b) => {
+                const aId = a.tempOrders.length > 0 ? a.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
+                const bId = b.tempOrders.length > 0 ? b.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
+                return aId - bId;
+            });
             return { success: true, list: outageList };
         } catch (err) {
             this.logger.error(err);
