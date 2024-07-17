@@ -397,6 +397,7 @@ export class UserService {
     async isWorking(header) {
         try {
             const token = await this.jwtService.decode(header);
+            console.log(token);
             const userId = token.sub;
 
             const attendanceData = await this.prisma.attendance.findFirst({
