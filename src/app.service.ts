@@ -71,79 +71,79 @@ page.on('console', msg => {
       await page.click('a.msg_link8');
 
 
-      const filePath = path.resolve(__dirname, '/home/jeon/바탕화면/jeon/한의원 엑셀/재진발송알림톡6_18 (사본).xlsx');
-      const fileInputSelector = 'input[name="address_file"]';
+      // const filePath = path.resolve(__dirname, '/home/jeon/바탕화면/jeon/한의원 엑셀/재진발송알림톡6_18 (사본).xlsx');
+      // const fileInputSelector = 'input[name="address_file"]';
 
-      console.log(filePath);
-      // 파일 입력 요소에 파일 경로 설정
-      await page.waitForSelector(fileInputSelector);
-      const inputUploadHandle = await page.$(fileInputSelector);
+      // console.log(filePath);
+      // // 파일 입력 요소에 파일 경로 설정
+      // await page.waitForSelector(fileInputSelector);
+      // const inputUploadHandle = await page.$(fileInputSelector);
 
-      await inputUploadHandle.uploadFile(filePath);
+      // await inputUploadHandle.uploadFile(filePath);
 
-      await page.waitForSelector('a.msg_link15', { visible: true })
-      await page.click('a.msg_link15');
+      // await page.waitForSelector('a.msg_link15', { visible: true })
+      // await page.click('a.msg_link15');
 
-      const elementSelector = 'div#id_lock.msg_lock';
+      // const elementSelector = 'div#id_lock.msg_lock';
 
-      await page.evaluate((selector) => {
-        console.log(selector);
-        const element = document.querySelector(selector) as HTMLElement;
-        console.log(element);
-        if (element) {
-          element.style.display = 'none';
-        } else {
-          console.error(`Element not found: ${selector}`);
-        }
-      }, elementSelector)
-      //await page.click('div#id_lock.msg_lock');
-      // 체크할 체크박스의 셀렉터
-      const checkboxSelector1 = '#failed_yn'; // 실제 셀렉터로 변경
+      // await page.evaluate((selector) => {
+      //   console.log(selector);
+      //   const element = document.querySelector(selector) as HTMLElement;
+      //   console.log(element);
+      //   if (element) {
+      //     element.style.display = 'none';
+      //   } else {
+      //     console.error(`Element not found: ${selector}`);
+      //   }
+      // }, elementSelector)
+      // //await page.click('div#id_lock.msg_lock');
+      // // 체크할 체크박스의 셀렉터
+      // const checkboxSelector1 = '#failed_yn'; // 실제 셀렉터로 변경
 
-      // 체크박스를 체크하는 JavaScript 코드 실행
-      await page.evaluate((selector) => {
-        const checkbox = document.querySelector(selector) as HTMLElement | null;
-        if (checkbox) {
-          (checkbox as HTMLInputElement).checked = true;
-        } else {
-          console.error(`Checkbox not found: ${selector}`);
-        }
-      }, checkboxSelector1);
+      // // 체크박스를 체크하는 JavaScript 코드 실행
+      // await page.evaluate((selector) => {
+      //   const checkbox = document.querySelector(selector) as HTMLElement | null;
+      //   if (checkbox) {
+      //     (checkbox as HTMLInputElement).checked = true;
+      //   } else {
+      //     console.error(`Checkbox not found: ${selector}`);
+      //   }
+      // }, checkboxSelector1);
 
-      const checkboxSelector2 = '#failed_same_yn';
+      // const checkboxSelector2 = '#failed_same_yn';
 
-      await page.evaluate((selector) => {
-        const checkbox = document.querySelector(selector) as HTMLElement | null;
-        if (checkbox) {
-          (checkbox as HTMLInputElement).checked = true;
-        } else {
-          console.error(`Checkbox not found: ${selector}`);
-        }
-      }, checkboxSelector2);
-      const textareaSelector = 'template_content_final';
-      const templateContent = await page.evaluate((selector) => {
-        const textarea = document.getElementById(selector) as HTMLTextAreaElement; // 템플릿 내용이 있는 readonly 텍스트 영역
-        console.log(textarea);
-        return textarea.value;
-      },textareaSelector);
-      await page.type('textarea#failed_content', templateContent);
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      const sendButton = '.msg_link10';
-      await page.evaluate((selector) => {
-        const button = document.querySelector(selector) as HTMLElement | null;
-        if (button) {
-          (button as HTMLInputElement).click();
-          //window.confirm = () => true;
+      // await page.evaluate((selector) => {
+      //   const checkbox = document.querySelector(selector) as HTMLElement | null;
+      //   if (checkbox) {
+      //     (checkbox as HTMLInputElement).checked = true;
+      //   } else {
+      //     console.error(`Checkbox not found: ${selector}`);
+      //   }
+      // }, checkboxSelector2);
+      // const textareaSelector = 'template_content_final';
+      // const templateContent = await page.evaluate((selector) => {
+      //   const textarea = document.getElementById(selector) as HTMLTextAreaElement; // 템플릿 내용이 있는 readonly 텍스트 영역
+      //   console.log(textarea);
+      //   return textarea.value;
+      // },textareaSelector);
+      // await page.type('textarea#failed_content', templateContent);
+      // await new Promise(resolve => setTimeout(resolve, 3000));
+      // const sendButton = '.msg_link10';
+      // await page.evaluate((selector) => {
+      //   const button = document.querySelector(selector) as HTMLElement | null;
+      //   if (button) {
+      //     (button as HTMLInputElement).click();
+      //     //window.confirm = () => true;
 
-        } else {
-          console.error(`Checkbox not found: ${selector}`);
-        }
-      }, sendButton);
-      await page.waitForSelector('a.msg_link10', { visible: true })
-      await page.click('a.msg_link10');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      await page.keyboard.press('Enter');
-      await page.keyboard.press('Enter');
+      //   } else {
+      //     console.error(`Checkbox not found: ${selector}`);
+      //   }
+      // }, sendButton);
+      // await page.waitForSelector('a.msg_link10', { visible: true })
+      // await page.click('a.msg_link10');
+      // await new Promise(resolve => setTimeout(resolve, 3000));
+      // await page.keyboard.press('Enter');
+      // await page.keyboard.press('Enter');
     } catch (err) {
       console.log(err);
     }
