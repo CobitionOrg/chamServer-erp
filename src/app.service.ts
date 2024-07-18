@@ -18,8 +18,8 @@ export class AppService {
     try {
       // 브라우저 실행
       const browser = await puppeteer.launch({
-        headless: false,
-        // args: ['--no-sandbox', '--disable-setuid-sandbox']
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       }); // headless: false는 브라우저 UI를 표시합니다.
       const page = await browser.newPage();
       page.on('console', msg => {
