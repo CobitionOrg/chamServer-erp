@@ -5,8 +5,8 @@ import { TalkService } from './talk.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 /*
-인쇄번역
 ★ 접수확인알림톡 (초/재진 한번에)
 -접수확인알림톡(리뉴얼)
 - 9시/ 12시/3시
@@ -26,6 +26,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 ★ 발송알림톡
 - 발송(재진)/ 발송(초진)
 - 월, 화, 목, 금 오전 11시 */
+
+
 @Controller('talk')
 @UseFilters(new HttpExceptionFilter())
 @ApiTags('카톡 발송 관련 엑셀 api')
@@ -100,6 +102,18 @@ export class TalkController {
         }
 
         return {success:true,status:res.status};
+    }
+
+
+    /////////////////////////////////////////
+
+    @ApiOperation({summary:'구매 후기'})
+    @Get('/payReview')
+    async payReview() {
+        this.logger.log('구매 후기 용');
+        const res = await this.talkService.payReview();
+
+        return res;
     }
 
     @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})

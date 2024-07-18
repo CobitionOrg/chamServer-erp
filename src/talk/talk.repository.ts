@@ -33,16 +33,26 @@ export class TalkRepositoy {
      */
     async orderInsertTalk(getListDto: GetListDto) {
         try {
-            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
-            let orderConditions = {
-                date: {
-                    gte: startDate,
-                    lt: endDate,
+            let orderConditions = {}
+
+            if (getListDto.date === undefined) {
+                //날짜 조건이 없을 시에
+                //접수 알람톡이 전송 안된 사람들 리스트 전부
+                orderConditions = {orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true}
+            }else {
+                // 지정 된 날짜의 접수 알람톡 전송 안된 사람들 리스트
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                orderConditions = {
+                    orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
                 }
             }
-            console.log(startDate, endDate);
+           
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true },
+                where: { ...orderConditions },
                 select: {
                     id: true,
                     patient: { select: { name: true, phoneNum: true }, }
@@ -170,6 +180,77 @@ export class TalkRepositoy {
             );
         }
     }
+
+    /**
+     * 구매 후기 요청용 데이터
+     * @param startDate 
+     * @param endDate 
+     * @returns 
+     */
+    async payReview(startDate: Date, endDate: Date) {
+        try{
+            const res = await this.prisma.sendList.findMany({
+                where:{
+                    date:{ 
+                        gte:startDate, //일요일부터
+                        lte:endDate // 금요일까지
+                    },
+                    tempOrders : {
+                        some: {
+                            order: {
+                                isFirst: true //초진만
+                            }
+                        }
+                    }
+                },
+                select:{
+                    tempOrders:{
+                        select:{
+                            order:{
+                                select:{
+                                    isFirst: true,
+                                    patient:{
+                                        select:{
+                                            name:true,
+                                            phoneNum: true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const filteredRes = res.map(sendList => ({
+                ...sendList,
+                tempOrders: sendList.tempOrders.filter(tempOrder => tempOrder.order.isFirst === true)
+              }));
+
+            const list = filteredRes[0].tempOrders
+
+            for(let row of list) {
+                console.log(row);
+                const decryptedPhoneNum = this.crypto.decrypt(row.order.patient.phoneNum);
+                row.order.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            console.log(list);
+
+           
+            return {success: true, list};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+    ///////////////////////////////////////////////////////////////
 
 
     /**
