@@ -94,6 +94,7 @@ export class TalkService {
         const headerWidths = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
         const headerRow = sheet.addRow(headers);
         let filePath;
+        
         headerRow.eachCell((cell, colNum) => {
             sheet.getColumn(colNum).width = headerWidths[colNum - 1];
         });
