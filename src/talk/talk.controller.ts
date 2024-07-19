@@ -151,31 +151,32 @@ export class TalkController {
     /////////////////////////////////////////
 
    
-    @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
-    @Get('/notConsulting')
-    async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
-        this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
-        const res = await this.talkService.notConsulting(getListDto);
-        if (res.status != 200) {
-            throw new HttpException({
-                success: false,
-                status: res.status,
-                msg: res.msg
-            },
-                res.status
-            );
-        }
+    // @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
+    // @Get('/notConsulting')
+    // async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
+    //     this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
+    //     const res = await this.talkService.notConsulting(getListDto);
+    //     if (res.status != 200) {
+    //         throw new HttpException({
+    //             success: false,
+    //             status: res.status,
+    //             msg: res.msg
+    //         },
+    //             res.status
+    //         );
+    //     }
 
-        return {success:true,status:res.status,url:res.url};
+    //     return {success:true,status:res.status,url:res.url};
 
-    }
-    @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
-    //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
-    async notConsultingCron(){
-        this.logger.log('상담 연결 안된 사람들 카톡 발송');
+    // }
+
+    // @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
+    // //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
+    // async notConsultingCron(){
+    //     this.logger.log('상담 연결 안된 사람들 카톡 발송');
        
-        const res = await this.talkService.notConsultingCron();
-    }
+    //     const res = await this.talkService.notConsultingCron();
+    // }
 
 
     @ApiOperation({summary:'미입금 된 인원 엑셀 데이터'})
@@ -196,7 +197,7 @@ export class TalkController {
         return {success:true,status:res.status,url:res.url};
     }
 
-       @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
+    @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
     //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
     @Get('/test')
     async completeTalkCron(){

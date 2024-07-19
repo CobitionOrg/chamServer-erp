@@ -51,7 +51,7 @@ export class TalkService {
         //console.log(url);     
         return { successs: true, status: HttpStatus.OK, url, checkUrl };
     }
- 
+
     /**
      * 접수 알람톡 용 엑셀 파일 만들기
      * @param list 
@@ -288,7 +288,6 @@ export class TalkService {
         return { success: true, status: HttpStatus.OK, firstUrl, returnUrl };
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * 발송 알림톡 발송
@@ -385,6 +384,41 @@ export class TalkService {
         }
     }
 
+    /**
+ * 미입금 된 인원 엑셀 데이터
+ * @param getListDto 
+ * @returns romise<{
+        success: boolean;
+        status: HttpStatus;
+        msg: string;
+        successs?: undefined;
+        url?: undefined;
+    } | {
+        successs: boolean;
+        status: HttpStatus;
+        url: Promise<any>;
+        success?: undefined;
+        msg?: undefined;
+    }>
+ */
+    async notPay(getListDto: GetListDto) {
+        const today = new Date();
+
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate()-1);
+
+        //4주 전 날짜
+        const fourWeeksAgo = new Date(yesterday);
+        fourWeeksAgo.setDate(yesterday.getDate() - 28);
+
+        const res = await this.talkRepository.notPay(yesterday, fourWeeksAgo);
+        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+        const url = await this.getTalkExcel(res.list,'미입금');
+        return { successs: true, status: HttpStatus.OK, url };
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////
 
 
     /**
@@ -395,28 +429,28 @@ export class TalkService {
            msg?:string
        }>
     */
-    async notConsultingCron() {
-        const dateVar = new Date();
+    // async notConsultingCron() {
+    //     const dateVar = new Date();
 
-        const getListDto: GetListDto = {
-            date: dateVar.toISOString(),
-            searchCategory: "",
-            searchKeyword: ""
-        }
+    //     const getListDto: GetListDto = {
+    //         date: dateVar.toISOString(),
+    //         searchCategory: "",
+    //         searchKeyword: ""
+    //     }
 
-        const res = await this.talkRepository.notConsulting(getListDto);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     const res = await this.talkRepository.notConsulting(getListDto);
+    //     if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-        const url = await this.getTalkExcel(res.list, getListDto.date);
-        if (!url) { return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' }; }
+    //     const url = await this.getTalkExcel(res.list, getListDto.date);
+    //     if (!url) { return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' }; }
 
-        const rt = await this.sendTalk(url, '유선상담 후 연결안되는 경우');
-        if (rt.success) {
-            return { successs: true, status: HttpStatus.OK };
-        }
-        return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     const rt = await this.sendTalk(url, '유선상담 후 연결안되는 경우');
+    //     if (rt.success) {
+    //         return { successs: true, status: HttpStatus.OK };
+    //     }
+    //     return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-    }
+    // }
 
     /**
      * 상담 연결 안 된 사람들 엑셀 데이터
@@ -435,12 +469,12 @@ export class TalkService {
             msg?: undefined;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
-        const res = await this.talkRepository.notConsulting(getListDto);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        const url = await this.getTalkExcel(res.list);
-        return { successs: true, status: HttpStatus.OK, url };
-    }
+    // async notConsulting(getListDto: GetListDto) {
+    //     const res = await this.talkRepository.notConsulting(getListDto);
+    //     if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     const url = await this.getTalkExcel(res.list);
+    //     return { successs: true, status: HttpStatus.OK, url };
+    // }
 
     /**
      * 미입금 된 인원 카톡 자동전송
@@ -451,17 +485,19 @@ export class TalkService {
         }>
      */
     async notPayCron() {
-        const dateVar = new Date();
-        const getListDto: GetListDto = {
-            date: dateVar.toISOString(),
-            searchCategory: "",
-            searchKeyword: ""
-        }
+        const today = new Date();
+
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate()-1);
+
+        //4주 전 날짜
+        const fourWeeksAgo = new Date(yesterday);
+        fourWeeksAgo.setDate(yesterday.getDate() - 28);
         //당일 리스트 가져오기
-        const res = await this.talkRepository.notPay(getListDto);
+        const res = await this.talkRepository.notPay(yesterday, fourWeeksAgo);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-        const url = await this.getTalkExcel(res.list, getListDto.date);//엑셀파일 저장.
+        const url = await this.getTalkExcel(res.list, '미입금');//엑셀파일 저장.
         const sendRes = await this.sendTalk(url, '미결제 발송지연');//해당 엑셀파일을 가지고 카톡발송.
         if (sendRes.success) {
             return { successs: true, status: HttpStatus.OK, url };
@@ -469,29 +505,6 @@ export class TalkService {
         else {
             return { successs: false, status: HttpStatus.INTERNAL_SERVER_ERROR, url };
         }
-    }
-    /**
-     * 미입금 된 인원 엑셀 데이터
-     * @param getListDto 
-     * @returns romise<{
-            success: boolean;
-            status: HttpStatus;
-            msg: string;
-            successs?: undefined;
-            url?: undefined;
-        } | {
-            successs: boolean;
-            status: HttpStatus;
-            url: Promise<any>;
-            success?: undefined;
-            msg?: undefined;
-        }>
-     */
-    async notPay(getListDto: GetListDto) {
-        const res = await this.talkRepository.notPay(getListDto);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        const url = await this.getTalkExcel(res.list);
-        return { successs: true, status: HttpStatus.OK, url };
     }
 
 
