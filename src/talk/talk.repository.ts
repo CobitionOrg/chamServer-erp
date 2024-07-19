@@ -425,7 +425,6 @@ export class TalkRepositoy {
             const cid = await this.prisma.sendList.findFirst({
                 where: {
                     title: date,
-                    useFlag: false
                 },
                 select: {
                     id: true,

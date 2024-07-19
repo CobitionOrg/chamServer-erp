@@ -19,15 +19,17 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 - 유선상담 후 연결안되는경우
 - 금요일 오전 10시
 
+
+★ 발송알림톡
+- 발송(재진)/ 발송(초진)
+- 월, 화, 목, 금 오전 11시 
 ///////////////////////////////
 
 ★ 미결제
 - 미결제발송지연
 - 금요일 오전 10시
+*/
 
-★ 발송알림톡
-- 발송(재진)/ 발송(초진)
-- 월, 화, 목, 금 오전 11시 */
 
 
 @Controller('talk')
@@ -125,6 +127,27 @@ export class TalkController {
 
         return res;
     }
+
+    @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
+    @Get('/completeTalk/:id')
+    async completeTalk(@Param('id') id: number) {
+        this.logger.log('발송 알림 톡 엑셀 데이터');
+        const res = await this.talkService.completeSendTalk(id);
+
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status
+            );
+        }
+
+        return {success:true, status:res.status, firstUrl:res.firstUrl, returnUrl: res.returnUrl};
+    }
+
+
     /////////////////////////////////////////
 
    
@@ -173,8 +196,15 @@ export class TalkController {
         return {success:true,status:res.status,url:res.url};
     }
 
-
-
+       @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
+    //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
+    @Get('/test')
+    async completeTalkCron(){
+        this.logger.log('발송 알림톡 자동 발송 처리');
+        const res = await this.talkService.completeSendTalkCron();
+    }
+ 
+ 
 //     @ApiOperation({summary:'미입금 자동 발송 처리'})
 // //    @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
 //     async notPayCron(){
@@ -182,24 +212,7 @@ export class TalkController {
 //         const res = await this.talkService.notPayCron();
 //     }
 
-    @ApiOperation({summary:'발송 알림 톡 엑셀 데이터'})
-    @Get('/completeTalk/:id')
-    async completeTalk(@Param('id') id: number) {
-        this.logger.log('발송 알림 톡 엑셀 데이터');
-        const res = await this.talkService.completeSendTalk(id);
 
-        if (res.status != 200) {
-            throw new HttpException({
-                success: false,
-                status: res.status,
-                msg: res.msg
-            },
-                res.status
-            );
-        }
-
-        return {success:true, status:res.status, firstUrl:res.firstUrl, returnUrl: res.returnUrl};
-    }
     // @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
     // //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
     // async completeTalkCron(){
