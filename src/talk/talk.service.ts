@@ -9,6 +9,7 @@ import { Crypto } from 'src/util/crypto.util';
 import { getDateString } from 'src/util/date.util';
 const fs = require('fs');
 import puppeteer, { Browser, Dialog } from 'puppeteer';
+import { createExcelFile } from 'src/util/createFile';
 const path = require('path');
 const constants = require('fs').constants;
 
@@ -50,7 +51,7 @@ export class TalkService {
         //console.log(url);     
         return { successs: true, status: HttpStatus.OK, url, checkUrl };
     }
-
+ 
     /**
      * 접수 알람톡 용 엑셀 파일 만들기
      * @param list 
@@ -80,28 +81,8 @@ export class TalkService {
 
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
-            // 파일 이름이 인자로 전달 되었을 때 (자동 발송)
-            filePath = `./src/files/${fileName}.xlsx`;
-            //저장할 디렉토리 존재 확인
-            try {
-                await fs.access(path.resolve('../files'))
-            }
-            catch (err) {
-                if (err.code === 'ENOENT') {
-                    //없을시 생성
-                    await fs.mkdir(path.resolve('../files'), (err) => {
-                        this.logger.error(err);
-                    });
-                }
-            }
-            fs.writeFile(filePath, fileData, (err) => {
-                if (err) {
-                    console.error('파일 저장 중 에러 발생:', err);
-                    return '';
-                } else {
-                    console.log('엑셀 파일이 성공적으로 저장되었습니다.');
-                }
-            })
+            filePath = await createExcelFile(fileData, fileName);
+
             return filePath;
         } else {
             //파일 이름이 전달 되지 않아 수동으로 발송할 때(url을 클라이언트로 리턴)
@@ -234,41 +215,9 @@ export class TalkService {
 
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
-            // 파일 이름이 인자로 전달 되었을 때 (자동 발송)
-            filePath = `./src/files/${fileName}.xlsx`;
-            console.log(filePath);
-            //저장할 디렉토리 존재 확인
-            try {
-                await fs.access(path.resolve('../files'))
-            }
-            catch (err) {
-                if (err.code === 'ENOENT') {
-                    //없을시 생성
-                    await fs.mkdir(path.resolve('../files'), (err) => {
-                        this.logger.error(err);
-                    });
-                }
-            }
-            fs.writeFile(filePath, fileData, (err) => {
-                if (err) {
-                    console.error('파일 저장 중 에러 발생:', err);
-                    return '';
-                } else {
-                    console.log('엑셀 파일이 성공적으로 저장되었습니다.');
-                }
-            })
+            filePath = await createExcelFile(fileData, fileName);
             return filePath;
         } else {
-            //파일 이름이 전달 되지 않아 수동으로 발송할 때(url을 클라이언트로 리턴)
-            // filePath = `./src/files/test.xlsx`;
-            // fs.writeFile(filePath, fileData, (err) => {
-            //     if (err) {
-            //         console.error('파일 저장 중 에러 발생:', err);
-            //     } else {
-            //         console.log('엑셀 파일이 성공적으로 저장되었습니다.');
-            //     }
-            // })
-
             const url = await this.erpService.uploadFile(fileData);
 
             return url;
@@ -425,28 +374,7 @@ export class TalkService {
 
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
-            // 파일 이름이 인자로 전달 되었을 때 (자동 발송)
-            filePath = `./src/files/${fileName}.xlsx`;
-            //저장할 디렉토리 존재 확인
-            try {
-                await fs.access(path.resolve('../files'))
-            }
-            catch (err) {
-                if (err.code === 'ENOENT') {
-                    //없을시 생성
-                    await fs.mkdir(path.resolve('../files'), (err) => {
-                        this.logger.error(err);
-                    });
-                }
-            }
-            fs.writeFile(filePath, fileData, (err) => {
-                if (err) {
-                    console.error('파일 저장 중 에러 발생:', err);
-                    return '';
-                } else {
-                    console.log('엑셀 파일이 성공적으로 저장되었습니다.');
-                }
-            })
+            filePath = await createExcelFile(fileData, fileName);
             return filePath;
         } else {
 
