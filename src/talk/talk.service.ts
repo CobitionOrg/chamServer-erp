@@ -117,7 +117,7 @@ export class TalkService {
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
             // 파일 이름이 인자로 전달 되었을 때 (자동 발송)
-            filePath = `../files/${fileName}.xlsx`;
+            filePath = `./src/files/${fileName}.xlsx`;
             //저장할 디렉토리 존재 확인
             try {
                 await fs.access(path.resolve('../files'))
@@ -317,6 +317,26 @@ export class TalkService {
             return url;
         }
        
+    }
+
+    /**
+     * 유선 상담 연결 안 될 시
+     * @returns 
+     */
+    async notCall() {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+
+        //2주 전 날짜
+        const twoWeeksAgo = new Date(yesterday);
+        twoWeeksAgo.setDate(yesterday.getDate() - 14);
+
+        const res = await this.talkRepository.notCall(yesterday, twoWeeksAgo);
+        const url = await this.getTalkExcel(res.list, 'notcall');
+
+        return {success:true, status:HttpStatus.OK, url}; 
+
     }
 
     ////////////////////////////////////////////////////////////////////////////////////

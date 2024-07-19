@@ -250,6 +250,47 @@ export class TalkRepositoy {
             );
         }
     }
+
+    /**
+     * 유선 상담 미연결 데이터
+     * @returns 
+     */
+    async notCall(yesterday: Date, twoWeeksAgo: Date) {
+        try{
+            const res = await this.prisma.order.findMany({
+                where:{
+                    date:{
+                        gte: twoWeeksAgo,
+                        lte: yesterday
+                    },
+                    notCall:true
+                },
+                select:{
+                    patient:{
+                        select:{
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
+                }
+            });
+
+            for(let row of res) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return {success: true, list:res};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
     ///////////////////////////////////////////////////////////////
 
 

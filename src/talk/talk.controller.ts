@@ -11,16 +11,18 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 -접수확인알림톡(리뉴얼)
 - 9시/ 12시/3시
 
-★ 미결제
-- 미결제발송지연
-- 금요일 오전 10시
-
 ★ 구매후기 (당주 월-금 초진만)
 - 구매확정요청
 - 토요일 9시
 
 ★ 유선상담연결안될시
 - 유선상담 후 연결안되는경우
+- 금요일 오전 10시
+
+///////////////////////////////
+
+★ 미결제
+- 미결제발송지연
 - 금요일 오전 10시
 
 ★ 발송알림톡
@@ -105,8 +107,6 @@ export class TalkController {
     }
 
 
-    /////////////////////////////////////////
-
     @ApiOperation({summary:'구매 후기'})
     @Get('/payReview')
     async payReview() {
@@ -116,6 +116,18 @@ export class TalkController {
         return res;
     }
 
+
+    @ApiOperation({summary:'유선 상담 연결 안 될 시'})
+    @Get('/notCall')
+    async notCall() {
+        this.logger.log('유선 상담 연결이 되지 않을 때 데이터');
+        const res = await this.talkService.notCall();
+
+        return res;
+    }
+    /////////////////////////////////////////
+
+   
     @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
     @Get('/notConsulting')
     async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
