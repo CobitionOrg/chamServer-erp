@@ -33,16 +33,26 @@ export class TalkRepositoy {
      */
     async orderInsertTalk(getListDto: GetListDto) {
         try {
-            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
-            let orderConditions = {
-                date: {
-                    gte: startDate,
-                    lt: endDate,
+            let orderConditions = {}
+
+            if (getListDto.date === undefined) {
+                //날짜 조건이 없을 시에
+                //접수 알람톡이 전송 안된 사람들 리스트 전부
+                orderConditions = {orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true}
+            }else {
+                // 지정 된 날짜의 접수 알람톡 전송 안된 사람들 리스트
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                orderConditions = {
+                    orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
                 }
             }
-            console.log(startDate, endDate);
+           
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true },
+                where: { ...orderConditions },
                 select: {
                     id: true,
                     patient: { select: { name: true, phoneNum: true }, }
@@ -171,6 +181,216 @@ export class TalkRepositoy {
         }
     }
 
+    /**
+     * 구매 후기 요청용 데이터
+     * @param startDate 
+     * @param endDate 
+     * @returns 
+     */
+    async payReview(startDate: Date, endDate: Date) {
+        try{
+            const res = await this.prisma.sendList.findMany({
+                where:{
+                    date:{ 
+                        gte:startDate, //일요일부터
+                        lte:endDate // 금요일까지
+                    },
+                    tempOrders : {
+                        some: {
+                            order: {
+                                isFirst: true //초진만
+                            }
+                        }
+                    }
+                },
+                select:{
+                    tempOrders:{
+                        select:{
+                            order:{
+                                select:{
+                                    isFirst: true,
+                                    patient:{
+                                        select:{
+                                            name:true,
+                                            phoneNum: true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const filteredRes = res.map(sendList => ({
+                ...sendList,
+                tempOrders: sendList.tempOrders.filter(tempOrder => tempOrder.order.isFirst === true)
+              }));
+
+            const list = filteredRes[0].tempOrders
+
+            for(let row of list) {
+                console.log(row);
+                const decryptedPhoneNum = this.crypto.decrypt(row.order.patient.phoneNum);
+                row.order.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            console.log(list);
+
+           
+            return {success: true, list};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 유선 상담 미연결 데이터
+     * @returns 
+     */
+    async notCall(yesterday: Date, twoWeeksAgo: Date) {
+        try{
+            const res = await this.prisma.order.findMany({
+                where:{
+                    date:{
+                        gte: twoWeeksAgo,
+                        lte: yesterday
+                    },
+                    notCall:true
+                },
+                select:{
+                    patient:{
+                        select:{
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
+                }
+            });
+
+            for(let row of res) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return {success: true, list:res};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+     /**
+     * 미입금 된 인원 엑셀 데이터
+     * @param getListDto 
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                patient: {
+                    name: string;
+                    phoneNum: string;
+                };
+            }[];
+            status: HttpStatus;
+        }>
+     */
+        async notPay(yesterday: Date, fourWeeksAgo: Date) {
+            try {
+                let orderConditions = {
+                    date: {
+                        gte: fourWeeksAgo,
+                        lte: yesterday,
+                    }
+                };
+    
+                //초진 - 상담 연결되고 입금 안된 애들
+                const firstList = await this.prisma.order.findMany({
+                    where: { 
+                        ...orderConditions, 
+                        orderSortNum: { gte: 0 }, 
+                        talkFlag: true, 
+                        consultingFlag: true, 
+                        useFlag: true,
+                        isFirst:true,
+                        payFlag:0, 
+
+                     },
+                    select: {
+                        id: true,
+                        patient: { select: { name: true, phoneNum: true }, },
+                        price: true,
+                        cash: true,
+                        card: true,
+                    }
+                });
+    
+                //console.log(data);
+    
+                const list = firstList.filter(i => i.price != (i.cash + i.card));
+                const resFisrt = list.map(item => ({
+                    id: item.id,
+                    patient:
+                    {
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+
+                //재진 - 상담 연결 안되도 입금 안되면 다 보내기
+                const returnList = await this.prisma.order.findMany({
+                    where: { 
+                        ...orderConditions, 
+                        orderSortNum: { gte: 0 }, 
+                        consultingFlag: false, 
+                        useFlag: true, 
+                        payFlag:0, 
+                        isFirst:false
+                    },
+                    select: {
+                        id: true,
+                        patient: { select: { name: true, phoneNum: true }, }
+                    }
+                });
+    
+                const resReturn = returnList.map(item => ({
+                    id: item.id,
+                    patient:
+                    {
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }));
+    
+                let res = [...resFisrt, ...resReturn];
+                console.log(res);
+                return { success: true, list: res, status: HttpStatus.OK };
+    
+            } catch (err) {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+    ///////////////////////////////////////////////////////////////
+
 
     /**
      * 상담 연결 안 된 사람들 엑셀 데이터
@@ -187,98 +407,70 @@ export class TalkRepositoy {
             status: HttpStatus;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
+    async notConsulting(yesterday: Date, fourWeeksAgo: Date) {
         try {
-            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
             let orderConditions = {
                 date: {
-                    gte: startDate,
-                    lt: endDate,
+                    gte: fourWeeksAgo,
+                    lte: yesterday,
                 }
             };
 
-            const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: true, consultingFlag: false, useFlag: true },
+            //초진 - 상담 연결되고 입금 안된 애들
+            const firstList = await this.prisma.order.findMany({
+                where: { 
+                    ...orderConditions, 
+                    orderSortNum: { gte: 0 }, 
+                    talkFlag: true, 
+                    consultingFlag: false, 
+                    useFlag: true, 
+                    payFlag:0, 
+                    isFirst:true
+                },
                 select: {
                     id: true,
                     patient: { select: { name: true, phoneNum: true }, }
                 }
             });
-            const res = list.map(item => (
+
+            const resFisrt = firstList.map(item => ({
+                id: item.id,
+                patient:
                 {
-                    id: item.id,
-                    patient:
-                    {
-                        name: item.patient.name,
-                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
-                    }
-                }))
-            console.log(res);
-            return { success: true, list: res, status: HttpStatus.OK };
-
-
-        } catch (err) {
-            this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-
-    /**
-     * 미입금 된 인원 엑셀 데이터
-     * @param getListDto 
-     * @returns Promise<{
-            success: boolean;
-            list: {
-                id: number;
-                patient: {
-                    name: string;
-                    phoneNum: string;
-                };
-            }[];
-            status: HttpStatus;
-        }>
-     */
-    async notPay(getListDto: GetListDto) {
-        try {
-            const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
-            let orderConditions = {
-                date: {
-                    gte: startDate,
-                    lt: endDate,
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                 }
-            };
+            }));
 
-            const data = await this.prisma.order.findMany({
-                where: { ...orderConditions, orderSortNum: { gte: 0 }, talkFlag: true, consultingFlag: true, useFlag: true },
+            //재진 - 상담 연결 안되도 입금 안되면 다 보내기
+            const returnList = await this.prisma.order.findMany({
+                where: { 
+                    ...orderConditions, 
+                    orderSortNum: { gte: 0 }, 
+                    consultingFlag: false, 
+                    useFlag: true, 
+                    payFlag:0, 
+                    isFirst:false
+                },
                 select: {
                     id: true,
-                    patient: { select: { name: true, phoneNum: true }, },
-                    price: true,
-                    cash: true,
-                    card: true,
+                    patient: { select: { name: true, phoneNum: true }, }
                 }
             });
 
-            //console.log(data);
-
-            const list = data.filter(i => i.price != (i.cash + i.card));
-            const res = list.map(item => (
+            const resReturn = returnList.map(item => ({
+                id: item.id,
+                patient:
                 {
-                    id: item.id,
-                    patient:
-                    {
-                        name: item.patient.name,
-                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
-                    }
-                }))
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                }
+            }));
+
+            let res = [...resFisrt, ...resReturn];
             console.log(res);
             return { success: true, list: res, status: HttpStatus.OK };
+
 
         } catch (err) {
             this.logger.error(err);
@@ -290,6 +482,9 @@ export class TalkRepositoy {
             );
         }
     }
+
+
+   
 
     /**
      * 발송 알림 톡 id추출
@@ -303,7 +498,6 @@ export class TalkRepositoy {
             const cid = await this.prisma.sendList.findFirst({
                 where: {
                     title: date,
-                    useFlag: false
                 },
                 select: {
                     id: true,
