@@ -47,4 +47,26 @@ export const getCurrentMonth = () => {
   const kstDate = new Date(gmtDate.getTime() + offset);
 
   return kstDate.getUTCMonth() + 1;
-}
+};
+
+/**
+ * 이번주의 월요일 시작, 금요일 끝 반환
+ */
+
+export const getCurrentWeeksOfMondayStartAndFridayEnd = () => {
+  const currentDate = getCurrentDateAndTime();
+
+  const currentDay = currentDate.getDay();
+
+  const mondayBasedDay = (currentDay === 0 ? 7 : currentDay) - 2;
+
+  const mondayStart = new Date(currentDate);
+  mondayStart.setDate(currentDate.getDate() - mondayBasedDay);
+  mondayStart.setUTCHours(0, 0, 0, 0);
+
+  const fridayEnd = new Date(mondayStart);
+  fridayEnd.setDate(mondayStart.getDate() + 4);
+  fridayEnd.setUTCHours(23, 59, 59, 999);
+
+  return { mondayStart, fridayEnd };
+};
