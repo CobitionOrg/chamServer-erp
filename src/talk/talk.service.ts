@@ -10,6 +10,7 @@ import { getDateString } from 'src/util/date.util';
 const fs = require('fs');
 import puppeteer, { Browser, Dialog } from 'puppeteer';
 import { createExcelFile } from 'src/util/createFile';
+import { getCurrentWeeksOfMondayStartAndFridayEnd } from 'src/util/kstDate.util';
 const path = require('path');
 const constants = require('fs').constants;
 
@@ -162,22 +163,24 @@ export class TalkService {
      * 구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
      */
     async payReview() {
-        const date = new Date();
-        const dayOfWeek = date.getDay();
+        // const date = new Date();
+        // const dayOfWeek = date.getDay();
 
-        //해당 주의 월요일 계산
-        const diffToSunday = 1 - dayOfWeek;
-        const monday = new Date(date);
-        monday.setDate(date.getDate() + diffToSunday);
-        monday.setHours(0, 0, 0, 0);
+        // //해당 주의 월요일 계산
+        // const diffToSunday = 1 - dayOfWeek;
+        // const monday = new Date(date);
+        // monday.setDate(date.getDate() + diffToSunday);
+        // monday.setHours(0, 0, 0, 0);
 
-        //해당 주의 금요일 계산
-        const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(date);
-        friday.setDate(date.getDate() + diffToFriday);
-        friday.setHours(23, 59, 59, 999);
+        // //해당 주의 금요일 계산
+        // const diffToFriday = 5 - dayOfWeek;
+        // const friday = new Date(date);
+        // friday.setDate(date.getDate() + diffToFriday);
+        // friday.setHours(23, 59, 59, 999);
 
-        const list = await this.talkRepository.payReview(monday, friday);
+        const { mondayStart, fridayEnd } = getCurrentWeeksOfMondayStartAndFridayEnd();
+
+        const list = await this.talkRepository.payReview(mondayStart, fridayEnd);
         const url = await this.payReviewExcel(list.list, 'hiyo');
 
         console.log(list.list);
