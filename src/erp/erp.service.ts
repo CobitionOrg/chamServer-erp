@@ -2830,7 +2830,9 @@ export class ErpService {
                             select:{remark:true}
                         });
 
-                        let remark = '지인 10포/' + order.remark ?? '';
+                        let remark = '지인 10포' + (order.remark == null ? '' : `/${order.remark}`);
+                        console.log('//////////////////////////////');
+                        console.log(remark);
 
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
