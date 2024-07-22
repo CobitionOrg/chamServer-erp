@@ -84,4 +84,9 @@ export class TasksService {
         );
         await this.tasksRepository.leaveWorkAt(15);
     }
+
+    @Cron('10 * * * * *')
+    async test(){
+        console.log('cron test!!');
+    }
 }

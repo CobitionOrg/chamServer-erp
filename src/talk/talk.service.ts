@@ -484,67 +484,67 @@ export class TalkService {
             msg?: string;
         }>
      */
-    async notPayCron() {
-        const today = new Date();
+    // async notPayCron() {
+    //     const today = new Date();
 
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate()-1);
+    //     const yesterday = new Date(today);
+    //     yesterday.setDate(today.getDate()-1);
 
-        //4주 전 날짜
-        const fourWeeksAgo = new Date(yesterday);
-        fourWeeksAgo.setDate(yesterday.getDate() - 28);
-        //당일 리스트 가져오기
-        const res = await this.talkRepository.notPay(yesterday, fourWeeksAgo);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     //4주 전 날짜
+    //     const fourWeeksAgo = new Date(yesterday);
+    //     fourWeeksAgo.setDate(yesterday.getDate() - 28);
+    //     //당일 리스트 가져오기
+    //     const res = await this.talkRepository.notPay(yesterday, fourWeeksAgo);
+    //     if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-        const url = await this.getTalkExcel(res.list, '미입금');//엑셀파일 저장.
-        const sendRes = await this.sendTalk(url, '미결제 발송지연');//해당 엑셀파일을 가지고 카톡발송.
-        if (sendRes.success) {
-            return { successs: true, status: HttpStatus.OK, url };
-        }
-        else {
-            return { successs: false, status: HttpStatus.INTERNAL_SERVER_ERROR, url };
-        }
-    }
+    //     const url = await this.getTalkExcel(res.list, '미입금');//엑셀파일 저장.
+    //     const sendRes = await this.sendTalk(url, '미결제 발송지연');//해당 엑셀파일을 가지고 카톡발송.
+    //     if (sendRes.success) {
+    //         return { successs: true, status: HttpStatus.OK, url };
+    //     }
+    //     else {
+    //         return { successs: false, status: HttpStatus.INTERNAL_SERVER_ERROR, url };
+    //     }
+    // }
 
 
-    /**
-     * 접수 알림 톡 자동화
-     * @returns Promise<{
-             success: boolean;
-           status:HttpStatus;
-           msg?:string
-        } 
-        }>
-     */
-    async orderInsertCron() {
-        const dateVar = new Date();
-        const request: GetListDto =
-        {
-            date: dateVar.toISOString(),
-            searchCategory: "",
-            searchKeyword: ""
-        }
-        //목록 가져오기
-        const res = await this.talkRepository.orderInsertTalk(request);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 다운로드후 저장경로 반환
-        const url = await this.getTalkExcel(res.list, request.date);
-        //카톡 전송
-        const sendRes = await this.sendTalk(url, '접수확인알림톡(리뉴얼)');
-        if (sendRes.success) {
-            const orderInsertList = res.list.map(item => ({
-                id: item.id,
-                name: item.patient.name,
-            }));
-            const InsertRes = await this.talkRepository.completeInsertTalk(orderInsertList);
-            if (InsertRes.success) {
-                return { successs: true };
-            }
-            return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '접수 알림톡 레포지토리 오류발생' };
-        }
-        return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '접수 알림톡 카톡전송 오류발생' };
-    }
+    // /**
+    //  * 접수 알림 톡 자동화
+    //  * @returns Promise<{
+    //          success: boolean;
+    //        status:HttpStatus;
+    //        msg?:string
+    //     } 
+    //     }>
+    //  */
+    // async orderInsertCron() {
+    //     const dateVar = new Date();
+    //     const request: GetListDto =
+    //     {
+    //         date: dateVar.toISOString(),
+    //         searchCategory: "",
+    //         searchKeyword: ""
+    //     }
+    //     //목록 가져오기
+    //     const res = await this.talkRepository.orderInsertTalk(request);
+    //     if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     //엑셀 다운로드후 저장경로 반환
+    //     const url = await this.getTalkExcel(res.list, request.date);
+    //     //카톡 전송
+    //     const sendRes = await this.sendTalk(url, '접수확인알림톡(리뉴얼)');
+    //     if (sendRes.success) {
+    //         const orderInsertList = res.list.map(item => ({
+    //             id: item.id,
+    //             name: item.patient.name,
+    //         }));
+    //         const InsertRes = await this.talkRepository.completeInsertTalk(orderInsertList);
+    //         if (InsertRes.success) {
+    //             return { successs: true };
+    //         }
+    //         return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '접수 알림톡 레포지토리 오류발생' };
+    //     }
+    //     return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '접수 알림톡 카톡전송 오류발생' };
+    // }
 
 
 
