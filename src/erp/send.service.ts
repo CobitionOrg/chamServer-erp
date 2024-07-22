@@ -1136,14 +1136,18 @@ export class SendService {
     async updateSendTitle(updateTitleDto: UpdateTitleDto) {
         try {
             let check = await this.checkSendTitle(updateTitleDto.title);
-
+            const date = new Date(updateTitleDto.date)
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+            console.log(kstDate);
+            
             if (check.success) {
                 await this.prisma.sendList.update({
                     where: {
                         id: updateTitleDto.id
                     },
                     data: {
-                        title: updateTitleDto.title
+                        title: updateTitleDto.title,
+                        date: kstDate
                     }
                 });
 

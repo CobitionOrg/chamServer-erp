@@ -87,10 +87,10 @@ export class TasksService {
 
     @Cron('10 * * * * *',{timeZone:"Asia/Seoul"})
     async test(){
-        console.log('cron test!!');
-        this.logger.log('cron test!!');
-        this.logger.debug('cron test!!');
-        this.logger.error('cron test!!');
-        this.logger.log(new Date);
+        // console.log('cron test!!');
+        // this.logger.log('cron test!!');
+        // this.logger.debug('cron test!!');
+        // this.logger.error('cron test!!');
+        // this.logger.log(new Date);
     }
 }
