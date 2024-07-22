@@ -115,7 +115,6 @@ export class TalkController {
                 res.status
             );
         }
-
         return {success:true,status:res.status,url:res.url};
 
     }
