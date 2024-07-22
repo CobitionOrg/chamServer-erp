@@ -88,5 +88,6 @@ export class TasksService {
     @Cron('10 * * * * *')
     async test(){
         console.log('cron test!!');
+        this.logger.log('cron test!!');
     }
 }
