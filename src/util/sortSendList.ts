@@ -167,7 +167,7 @@ export const getSortedList = (orders: Array<any>): Array<any> => {
 
   const sorted6Map = groupBy(
     orders.filter((item) => item.orderSortNum === 6),
-    (item) => item.addr,
+    (item) => item.order.combineNum,
   );
 
   const sorted6 = Array.from(sorted6Map.values())
