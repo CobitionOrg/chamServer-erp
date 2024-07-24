@@ -1879,60 +1879,60 @@ export class SendService {
         }
     }
 
-    /**
-     * 입금/상담 목록에서 합배송 처리를 위한 완료 안 된 발송 목록(tempOrder) 조회
-     * 입금/상담 목록에서 데이터 타입을 맞추기 위해 order 테이블 기준으로 조회
-     */
-    async getNotCompletedTempOrderList() {
-        try {
-            const list = await this.prisma.order.findMany({
-                where: {
-                    tempOrders: {
-                        some: {
-                            sendList: {
-                                useFlag: true,
-                            }
-                        }
-                    }
-                },
-                include: {
-                    patient: {
-                        select: {
-                            id: true,
-                            name: true,
-                            phoneNum: true,
-                            addr: true,
-                        }
-                    },
-                    tempOrders: {
-                        include: {
-                            sendList: true,
-                        }
-                    }
-                }
-            });
+    // /**
+    //  * 입금/상담 목록에서 합배송 처리를 위한 완료 안 된 발송 목록(tempOrder) 조회
+    //  * 입금/상담 목록에서 데이터 타입을 맞추기 위해 order 테이블 기준으로 조회
+    //  */
+    // async getNotCompletedTempOrderList() {
+    //     try {
+    //         const list = await this.prisma.order.findMany({
+    //             where: {
+    //                 tempOrders: {
+    //                     some: {
+    //                         sendList: {
+    //                             useFlag: true,
+    //                         }
+    //                     }
+    //                 }
+    //             },
+    //             include: {
+    //                 patient: {
+    //                     select: {
+    //                         id: true,
+    //                         name: true,
+    //                         phoneNum: true,
+    //                         addr: true,
+    //                     }
+    //                 },
+    //                 tempOrders: {
+    //                     include: {
+    //                         sendList: true,
+    //                     }
+    //                 }
+    //             }
+    //         });
 
-            for (let row of list) {
-                const decryptedAddr = this.crypto.decrypt(row.addr);
-                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
-                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedTempAddr = this.crypto.decrypt(row.tempOrders[0].addr);
-                row.addr = decryptedAddr;
-                row.patient.phoneNum = decryptedPhoneNum;
-                row.patient.addr = decryptedPatientAddr;
-                row.tempOrders[0].addr = decryptedTempAddr;
-            }
+    //         for (let row of list) {
+    //             const decryptedAddr = this.crypto.decrypt(row.addr);
+    //             const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+    //             const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+    //             const decryptedTempAddr = this.crypto.decrypt(row.tempOrders[0].addr);
+    //             row.addr = decryptedAddr;
+    //             row.patient.phoneNum = decryptedPhoneNum;
+    //             row.patient.addr = decryptedPatientAddr;
+    //             row.tempOrders[0].addr = decryptedTempAddr;
+    //         }
 
-            return { success: true, status: HttpStatus.OK, list };
-        } catch (err) {
-            this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
+    //         return { success: true, status: HttpStatus.OK, list };
+    //     } catch (err) {
+    //         this.logger.error(err);
+    //         throw new HttpException({
+    //             success: false,
+    //             status: HttpStatus.INTERNAL_SERVER_ERROR
+    //         },
+    //             HttpStatus.INTERNAL_SERVER_ERROR
+    //         );
+    //     }
+    // }
 
 }
