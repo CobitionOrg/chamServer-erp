@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Query, UseFilters,Headers, HttpException, Body, Post, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Logger, Query, UseFilters,Headers, HttpException, Body, Post, Patch, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { TalkService } from './talk.service';
@@ -6,6 +6,7 @@ import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as moment from 'moment-timezone';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 /*
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -36,6 +37,7 @@ import * as moment from 'moment-timezone';
 @Controller('talk')
 @UseFilters(new HttpExceptionFilter())
 @ApiTags('카톡 발송 관련 엑셀 api')
+@UseGuards(AuthGuard)
 export class TalkController {
     constructor(
         private readonly talkService: TalkService
