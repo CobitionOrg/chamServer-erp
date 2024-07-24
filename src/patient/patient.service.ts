@@ -48,15 +48,15 @@ export class PatientService {
      * @returns {success:boolean, status:HttpStatus }
      */
     async patientNote(patientNoteDto: PatientNoteDto) {
-        let res;
+        let res = await this.patientRepository.patientCreateNote(patientNoteDto);;
 
-        if(patientNoteDto.id == undefined) {
-            //특이사항이 없을 때
-            res = await this.patientRepository.patientCreateNote(patientNoteDto);
-        }else{
-            //특이 사항이 있을 때
-            res = await this.patientRepository.patientUpdateNote(patientNoteDto);
-        }
+        // if(patientNoteDto.id == undefined) {
+        //     //특이사항이 없을 때
+        //     res = await this.patientRepository.patientCreateNote(patientNoteDto);
+        // }else{
+        //     //특이 사항이 있을 때
+        //     res = await this.patientRepository.patientUpdateNote(patientNoteDto);
+        // }
 
         if(res.success){
             return {success:true, status:HttpStatus.CREATED};

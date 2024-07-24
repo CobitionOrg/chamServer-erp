@@ -53,7 +53,8 @@ export class PatientRepository {
                     patientNotes: {
                         select: {
                             id: true,
-                            note: true
+                            note: true,
+                            useFlag: true,
                         }
                     },
                     orders: {
