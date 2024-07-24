@@ -5,6 +5,7 @@ import { TalkService } from './talk.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import * as moment from 'moment-timezone';
 
 /*
 ★ 접수확인알림톡 (초/재진 한번에)
@@ -42,6 +43,13 @@ export class TalkController {
 
     private readonly logger = new Logger(TalkController.name);
 
+    @Get('/')
+    test() {
+        const currentTime = moment().tz('Asia/Seoul').format();
+        this.logger.debug(`Current time in Seoul: ${currentTime}`);
+        return currentTime;
+    }
+        
     @ApiOperation({summary:'접수 알림톡 엑셀 데이터 출력'})
     @Get('/orderInsertTalk')
     async orderInsertTalk(@Query() getListDto: GetListDto, @Headers() header) {

@@ -8,7 +8,6 @@ import { createExcelFile } from 'src/util/createFile';
 import * as Excel from 'exceljs'
 import { getDateString } from 'src/util/date.util';
 import { Crypto } from 'src/util/crypto.util';
-
 const fs = require('fs');
 const path = require('path');
 
@@ -92,8 +91,22 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('0 * 1,4,6  * * *', { timeZone: "Asia/Seoul" })
+    @Cron('0 58 0,4,6 * * *')
     async test() {
+        await this.mailerService.sendMail({
+            to: 'qudqud97@naver.com',
+            from: 'noreply@gmail.com',
+            subject: '메일 테스트',
+            text: '텍스트'
+        }).then((result) => {
+            this.logger.log(result);
+        });
+
+    }
+
+    @Cron('0 0,3,6 14 * * *')
+    async test1() {
+        
         await this.mailerService.sendMail({
             to: 'qudqud97@naver.com',
             from: 'noreply@gmail.com',
