@@ -82,12 +82,7 @@ export class TalkController {
 
     }
 
-//     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
-// //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
-//     async orderInsertCron(){
-//         this.logger.log('접수 알림톡 자동 발송 처리');
-//         const res = await this.talkService.orderInsertCron();
-//     }
+
 
     @ApiOperation({summary:'상담 연결 처리'})
     @Patch('/consultingFlag/:id')
@@ -148,37 +143,6 @@ export class TalkController {
     }
 
 
-    /////////////////////////////////////////
-
-   
-    // @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
-    // @Get('/notConsulting')
-    // async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
-    //     this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
-    //     const res = await this.talkService.notConsulting(getListDto);
-    //     if (res.status != 200) {
-    //         throw new HttpException({
-    //             success: false,
-    //             status: res.status,
-    //             msg: res.msg
-    //         },
-    //             res.status
-    //         );
-    //     }
-
-    //     return {success:true,status:res.status,url:res.url};
-
-    // }
-
-    // @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
-    // //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
-    // async notConsultingCron(){
-    //     this.logger.log('상담 연결 안된 사람들 카톡 발송');
-       
-    //     const res = await this.talkService.notConsultingCron();
-    // }
-
-
     @ApiOperation({summary:'미입금 된 인원 엑셀 데이터'})
     @Get('/notPay')
     async notPay(@Query() getListDto: GetListDto, @Headers() header){
@@ -204,7 +168,41 @@ export class TalkController {
         this.logger.log('발송 알림톡 자동 발송 처리');
         const res = await this.talkService.completeSendTalkCron();
     }
- 
+  
+
+    //     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
+    // //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
+    //     async orderInsertCron(){
+    //         this.logger.log('접수 알림톡 자동 발송 처리');
+    //         const res = await this.talkService.orderInsertCron();
+    //     }
+
+    // @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
+    // @Get('/notConsulting')
+    // async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
+    //     this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
+    //     const res = await this.talkService.notConsulting(getListDto);
+    //     if (res.status != 200) {
+    //         throw new HttpException({
+    //             success: false,
+    //             status: res.status,
+    //             msg: res.msg
+    //         },
+    //             res.status 
+    //         );
+    //     }
+
+    //     return {success:true,status:res.status,url:res.url};
+
+    // }
+
+    // @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
+    // //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})
+    // async notConsultingCron(){
+    //     this.logger.log('상담 연결 안된 사람들 카톡 발송');
+       
+    //     const res = await this.talkService.notConsultingCron();
+    // }
  
 //     @ApiOperation({summary:'미입금 자동 발송 처리'})
 // //    @Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})

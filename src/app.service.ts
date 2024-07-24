@@ -4,14 +4,31 @@ import puppeteer from 'puppeteer';
 const path = require('path');
 const fs = require('fs');
 import * as Excel from 'exceljs'
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AppService {
+  constructor(
+    private readonly mailerService: MailerService,
 
+  ){}
   private readonly logger = new Logger(AppService.name);
 
   getHello(): string {
     return 'Hello Github action!!';
+  }
+
+  async mailTest() {
+    await this.mailerService.sendMail({
+      to: 'qudqud97@naver.com',
+      from: 'noreply@gmail.com',
+      subject:'메일 테스트',
+      text:'텍스트'
+    }).then((result) => {
+      this.logger.log(result);
+    });
+
+    return true;
   }
 
   async test() {

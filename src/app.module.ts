@@ -16,6 +16,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { TalkModule } from './talk/talk.module';
 import { VisitModule } from './visit/visit.module';
 import { PatientModule } from './patient/patient.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
 
   imports: [
@@ -32,7 +33,17 @@ import { PatientModule } from './patient/patient.module';
     TasksModule,
     TalkModule,
     VisitModule,
-    PatientModule
+    PatientModule,
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        auth: {
+          user: process.env.MAILER_USER,
+          pass: process.env.MAILER_PASS,
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -43,6 +54,7 @@ import { PatientModule } from './patient/patient.module';
       useClass: HttpExceptionFilter,
     },   
   ],
+  
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

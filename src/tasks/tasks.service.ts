@@ -2,12 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TasksRepository } from './tasks.repository';
 import { LogService } from 'src/log/log.service';
+import { MailerService } from '@nestjs-modules/mailer';
+import { TalkService } from 'src/talk/talk.service';
 
 @Injectable()
 export class TasksService {
     constructor(
         private readonly tasksRepository: TasksRepository,
         private readonly logService : LogService,
+        private readonly mailerService: MailerService,
     ){}
 
     private readonly logger = new Logger(TasksService.name);
@@ -85,12 +88,16 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('10 * * * * *',{timeZone:"Asia/Seoul"})
+    @Cron('0 1,3,6 * * * *',{timeZone:"Asia/Seoul"})
     async test(){
-        // console.log('cron test!!');
-        // this.logger.log('cron test!!');
-        // this.logger.debug('cron test!!');
-        // this.logger.error('cron test!!');
-        // this.logger.log(new Date);
+        await this.mailerService.sendMail({
+            to: 'qudqud97@naver.com',
+            from: 'noreply@gmail.com',
+            subject:'메일 테스트',
+            text:'텍스트'
+          }).then((result) => {
+            this.logger.log(result);
+          });
+       
     }
 }
