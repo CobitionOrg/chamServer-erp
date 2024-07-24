@@ -59,8 +59,7 @@ export class TalkRepositoy {
                 }
             });
 
-            const res = list.map(item => (
-                {
+            const res = list.map(item => ({
                     id: item.id,
                     patient:
                     {
