@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Head, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -107,10 +107,16 @@ export class ErpController {
 
     @ApiOperation({summary:'유선 상담 미연결 처리'})
     @Patch('/notCall/:id')
-    async notCall(@Param("id") id: number) {
+    async notCall(@Param("id") id: number,@Headers() header) {
         this.logger.log('유선 상담 미연결 처리');
         const res = await this.erpService.notCall(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 유선 상담 미연결 처리`,
+                '유선상담목록',
+                header
+            );
+        }
         return res;
     }
 
@@ -329,10 +335,14 @@ export class ErpController {
 
     @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
     @Delete('/cancelSendOrder/:id')
-    async cancelSendOrder(@Param("id") id: number){
+    async cancelSendOrder(@Param("id") id: number,@Headers() header){
         this.logger.log('발송 목록에서 주문 취소 처리');
         const res = await this.sendService.cancelSendOrderFlag(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 발송 목록에서 주문 취소 처리`,'발송목록',header
+            )
+        }
         return res;
     }
 
@@ -364,10 +374,14 @@ export class ErpController {
 
     @ApiOperation({summary:'발송목록에서 금액만 수정'})
     @Patch('/updateSendPrice')
-    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto){
+    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto,@Headers() header){
         this.logger.log('발송목록에서 금액만 수정');
         const res = await this.sendService.updateSendPrice(updateSendPriceDto);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${updateSendPriceDto.id}번 발송목록에서 금액만 수정`,'발송목록',header
+            )
+        }
         return res;
     }
     
