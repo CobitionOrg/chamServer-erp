@@ -667,47 +667,67 @@ export class ErpController {
 
     @ApiOperation({summary:'데스크에서 업데이트 내역 체크'})
     @Patch('/checkUpdateAtDesk/:id')
-    async checkUpdateAtDesk(@Param("id") id: number) {
+    async checkUpdateAtDesk(@Param("id") id: number,@Headers() header) {
         this.logger.log('데스크에서 업데이트 내역 체크');
         const res = await this.sendService.checkUpdateAtDesk(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 데스크에서 업데이트 내역 체크`,'발송목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'지인 확인 할인 여부 체크'})
     @Post('/checkDiscount')
-    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto){
+    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto,@Headers() header){
         this.logger.log('지인 확인 할인 여부 체크');
         const res = await this.erpService.checkDiscount(checkDiscountDto);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${checkDiscountDto.orderId}번 지인 확인 할인 여부 체크`,'입금상담목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'지인 할인 취소'})
     @Patch('/cancelDiscount/:id')
-    async cancelDiscount(@Param("id") id: number) {
+    async cancelDiscount(@Param("id") id: number,@Headers() header) {
         this.logger.log('지인 할인 취소');
         const res = await this.erpService.cancelDiscount(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 지인 할인 취소`,'입금상담목록',header
+            )
+        }
         return res;
     }
 
 
     @ApiOperation({summary:'후기 대상 목록에서 비고 수정'})
     @Patch('/updateNote')
-    async updateNote(@Body() updateNoteDto: UpdateNoteDto) {
+    async updateNote(@Body() updateNoteDto: UpdateNoteDto,@Headers() header) {
         this.logger.log('후기 대상 목록에서 비고 수정');
         const res = await this.erpService.updateNote(updateNoteDto);
-
+       if(res.success){
+            await this.logService.createLog(
+                `${updateNoteDto.orderId}번 후기 대상 목록에서 비고 수정`,'후기대상목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'후기 대상 목록에서 후기 유무 체크'})
     @Patch('/updateReviewFlag/:id')
-    async updateReviewFlag(@Param('id') id: number) {
+    async updateReviewFlag(@Param('id') id: number,@Headers() header) {
         this.logger.log('후기 대상 목록에서 후기 유무 체크');
         const res = await this.erpService.updateReviewFlag(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 후기 대상 목록에서 후기 유무 체크`,'후기대상목록',header
+            )
+        }
         return res;
 
     }
