@@ -92,7 +92,7 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('0 1,3,6 * * * *', { timeZone: "Asia/Seoul" })
+    @Cron('0 * 1,4,6  * * *', { timeZone: "Asia/Seoul" })
     async test() {
         await this.mailerService.sendMail({
             to: 'qudqud97@naver.com',
@@ -106,7 +106,7 @@ export class TasksService {
     }
 
     //접수 확인 알람톡
-    @Cron('0 0,3,6 * * * *')
+    @Cron('0 * 0,3,6 * * *')
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
