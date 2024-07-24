@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Head, Headers, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ErpService } from './erp.service';
@@ -107,10 +107,16 @@ export class ErpController {
 
     @ApiOperation({summary:'유선 상담 미연결 처리'})
     @Patch('/notCall/:id')
-    async notCall(@Param("id") id: number) {
+    async notCall(@Param("id") id: number,@Headers() header) {
         this.logger.log('유선 상담 미연결 처리');
         const res = await this.erpService.notCall(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 유선 상담 미연결 처리`,
+                '유선상담목록',
+                header
+            );
+        }
         return res;
     }
 
@@ -329,10 +335,14 @@ export class ErpController {
 
     @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
     @Delete('/cancelSendOrder/:id')
-    async cancelSendOrder(@Param("id") id: number){
+    async cancelSendOrder(@Param("id") id: number,@Headers() header){
         this.logger.log('발송 목록에서 주문 취소 처리');
         const res = await this.sendService.cancelSendOrderFlag(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 발송 목록에서 주문 취소 처리`,'발송목록',header
+            )
+        }
         return res;
     }
 
@@ -364,10 +374,14 @@ export class ErpController {
 
     @ApiOperation({summary:'발송목록에서 금액만 수정'})
     @Patch('/updateSendPrice')
-    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto){
+    async updateSendPrice(@Body() updateSendPriceDto: UpdateSendPriceDto,@Headers() header){
         this.logger.log('발송목록에서 금액만 수정');
         const res = await this.sendService.updateSendPrice(updateSendPriceDto);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${updateSendPriceDto.id}번 발송목록에서 금액만 수정`,'발송목록',header
+            )
+        }
         return res;
     }
     
@@ -667,47 +681,67 @@ export class ErpController {
 
     @ApiOperation({summary:'데스크에서 업데이트 내역 체크'})
     @Patch('/checkUpdateAtDesk/:id')
-    async checkUpdateAtDesk(@Param("id") id: number) {
+    async checkUpdateAtDesk(@Param("id") id: number,@Headers() header) {
         this.logger.log('데스크에서 업데이트 내역 체크');
         const res = await this.sendService.checkUpdateAtDesk(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 데스크에서 업데이트 내역 체크`,'발송목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'지인 확인 할인 여부 체크'})
     @Post('/checkDiscount')
-    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto){
+    async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto,@Headers() header){
         this.logger.log('지인 확인 할인 여부 체크');
         const res = await this.erpService.checkDiscount(checkDiscountDto);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${checkDiscountDto.orderId}번 지인 확인 할인 여부 체크`,'입금상담목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'지인 할인 취소'})
     @Patch('/cancelDiscount/:id')
-    async cancelDiscount(@Param("id") id: number) {
+    async cancelDiscount(@Param("id") id: number,@Headers() header) {
         this.logger.log('지인 할인 취소');
         const res = await this.erpService.cancelDiscount(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 지인 할인 취소`,'입금상담목록',header
+            )
+        }
         return res;
     }
 
 
     @ApiOperation({summary:'후기 대상 목록에서 비고 수정'})
     @Patch('/updateNote')
-    async updateNote(@Body() updateNoteDto: UpdateNoteDto) {
+    async updateNote(@Body() updateNoteDto: UpdateNoteDto,@Headers() header) {
         this.logger.log('후기 대상 목록에서 비고 수정');
         const res = await this.erpService.updateNote(updateNoteDto);
-
+       if(res.success){
+            await this.logService.createLog(
+                `${updateNoteDto.orderId}번 후기 대상 목록에서 비고 수정`,'후기대상목록',header
+            )
+        }
         return res;
     }
 
     @ApiOperation({summary:'후기 대상 목록에서 후기 유무 체크'})
     @Patch('/updateReviewFlag/:id')
-    async updateReviewFlag(@Param('id') id: number) {
+    async updateReviewFlag(@Param('id') id: number,@Headers() header) {
         this.logger.log('후기 대상 목록에서 후기 유무 체크');
         const res = await this.erpService.updateReviewFlag(id);
-
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 후기 대상 목록에서 후기 유무 체크`,'후기대상목록',header
+            )
+        }
         return res;
 
     }
