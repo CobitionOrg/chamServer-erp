@@ -2497,7 +2497,7 @@ export class ErpService {
             }
 
             const outageList = getOutage(sortedList);
-            
+
             outageList.sort((a, b) => {
                 const aId = a.tempOrders.length > 0 ? a.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
                 const bId = b.tempOrders.length > 0 ? b.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;

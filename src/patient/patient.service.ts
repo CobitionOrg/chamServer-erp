@@ -35,6 +35,8 @@ export class PatientService {
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
             row.socialNum = markedSocialNum;
+
+            row.patientNotes.reverse(); 
         }
 
         return { success: true, list: patientList, status:HttpStatus.OK };
@@ -83,7 +85,7 @@ export class PatientService {
         if(res.success) return {success:true, status:HttpStatus.CREATED};
         else return {success:false, status: HttpStatus.INTERNAL_SERVER_ERROR};
     }
-    
+
 
     /**
      * 환자 검색

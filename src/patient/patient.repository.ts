@@ -51,7 +51,6 @@ export class PatientRepository {
                         }
                     },
                     patientNotes: {
-                        where: { useFlag: true },
                         select: {
                             id: true,
                             note: true
