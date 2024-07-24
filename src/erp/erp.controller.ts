@@ -132,6 +132,23 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary: "유선 상담에서 입금 목록으로 이동"})
+    @Post('/callToRec')
+    async callToRec(@Body() callConsultingDto: CallConsultingDto, @Headers() header) {
+        this.logger.log('유선 상담 목록에서 입금 상담 목록으로 이동');
+        const res = await this.erpService.callToRec(callConsultingDto);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${callConsultingDto.orderId}번 설문 유선 상담 목록에서 입금 상담 목록으로 이동`,
+                `유선상담목록`,
+                header
+            )
+        }
+
+        return res;
+    }
+
     @ApiOperation({summary:'발송 목록으로 이동 처리'})
     @Post('/completeConsulting/:id')
     async completeConsulting(@Param('id') id: number, @Headers() header){
@@ -222,6 +239,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary: 'outage 있는 환자 리스트 반환'})
+    @Public()
     @Get('/getOutageList')
     async getOutageList(@Query() getOutageListDto: GetListDto) {
         this.logger.log('outage 환자 목록 조회');
@@ -237,7 +255,7 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 조회'})
-    @Get('/sendList/:id')
+    @Get('/sendList/:id') 
     async getSendOne(@Param("id") id:number, @Headers() header){
         this.logger.log('발송 목록 리스트');
         const res = await this.sendService.getOrderTemp(id);

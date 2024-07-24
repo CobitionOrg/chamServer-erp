@@ -6,12 +6,18 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  async getHello() {
+    return await this.appService.getTalkExcel();
   }
 
-  @Get('/test')
-  async test() {
-    return await this.appService.test();
+  // @Get('/test')
+  // async test() {
+  //   return await this.appService.test();
+  // }
+
+  @Get('/mail')
+  async mailTest() {
+    return await this.appService.mailTest();
   }
+
 }

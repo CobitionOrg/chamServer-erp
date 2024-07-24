@@ -10,6 +10,7 @@ import { AttendanceDto } from './Dto/attendance.dto';
 import { getToken } from 'src/util/token';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { ChangePwDto } from './Dto/changePw.dto';
 
 @Controller('user')
 @UseFilters(new HttpExceptionFilter())
@@ -62,6 +63,7 @@ export class UserController {
 
     @ApiOperation({summary:'유저 정보 불러오기'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Get('/userData/:month')
     async userData(@Headers() header, @Param('month') month:number){
         this.logger.log('유저 정보 가져오기');
@@ -70,6 +72,7 @@ export class UserController {
 
     @ApiOperation({summary:'유저 권한 허용'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Patch('/updUser/:id')
     async updUser(@Headers() header,@Param('id') id:number){
         this.logger.log('유저 권한 허용하기');
@@ -78,6 +81,7 @@ export class UserController {
 
     @ApiOperation({ summary: '출근 여부 확인'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Get('/isWorking')
     async isWorking(@Headers() header) {
         this.logger.log('출근 여부 확인');
@@ -86,10 +90,20 @@ export class UserController {
 
     @ApiOperation({ summary: '로그인 상태에서 출근'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Post('/justAttendance')
     async justAttendance(@Headers() header) {
         this.logger.log('로그인 상태에서 출근');
         return await this.userService.justAttendance(getToken(header));
+    }
+
+    @ApiOperation({summary:'비밀번호 변경'})
+    @UseGuards(AuthGuard)
+    @Patch('/changePw')
+    async changPw(@Body() changePwDto: ChangePwDto,@Headers() header) {
+        this.logger.log('비밀번호 변경');
+        const res = await this.userService.changePw(changePwDto, getToken(header));
+        return res;
     }
 
     @Get('/test')

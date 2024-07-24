@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 import { IS_ORDERUPD_KEY } from './decorators/order.decorator';
+import { CustomUnauthorizedException } from './CustomUnauthorizedException';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -34,7 +35,7 @@ export class AuthGuard implements CanActivate {
             const request = context.switchToHttp().getRequest();
             const token = this.extractTokenFromHeader(request);
             if (!token) {
-                throw new UnauthorizedException();
+                throw new UnauthorizedException({success:false,status:401});
             }
 
             try {
@@ -51,7 +52,7 @@ export class AuthGuard implements CanActivate {
             } catch (err){
                 console.log(err);
     
-                throw new UnauthorizedException();
+                throw new UnauthorizedException({success:false,status:401});
             }
             return true;
         }
@@ -59,7 +60,7 @@ export class AuthGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
-            throw new UnauthorizedException();
+            throw new CustomUnauthorizedException({success:false,status:401});
         }
 
         try {
@@ -76,7 +77,7 @@ export class AuthGuard implements CanActivate {
         } catch (err){
             console.log(err);
 
-            throw new UnauthorizedException();
+            throw new CustomUnauthorizedException({success:false,status:401});
         }
         return true;
     }

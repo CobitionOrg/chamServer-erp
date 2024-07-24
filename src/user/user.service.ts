@@ -9,6 +9,7 @@ import { AttendanceDto } from './Dto/attendance.dto';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { getMonth } from 'src/util/getMonth';
 import { getCurrentDateAndTime, getStartOfToday, checkTardy } from 'src/util/kstDate.util';
+import { ChangePwDto } from './Dto/changePw.dto';
 
 @Injectable()
 export class UserService {
@@ -396,6 +397,7 @@ export class UserService {
     async isWorking(header) {
         try {
             const token = await this.jwtService.decode(header);
+            console.log(token);
             const userId = token.sub;
 
             const attendanceData = await this.prisma.attendance.findFirst({
@@ -504,6 +506,52 @@ export class UserService {
 
             console.log(data);
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 비밀번호 변경
+     * @param changePwDto 
+     * @param header 
+     * @returns {success:boolean, status: HttpStatus}
+     */
+    async changePw(changePwDto: ChangePwDto, header: string) {
+        try{
+            const token = await this.jwtService.decode(header);
+            const userData = await this.prisma.user.findUnique({
+                where: {
+                    id: token.sub,
+                    useFlag: true
+                },
+            });
+
+            if (userData?.userId == null || userData.userPw == null) {
+                return { success: false, status: 404 }
+            }
+
+            const check = await this.bcryptClass.checkLogin(changePwDto.userPw, userData.userPw);
+
+            if (!check) { //비밀번호 일치하지 않을 시
+                throw new UnauthorizedException();
+            } else {
+                const newPassWord = await this.bcryptClass.hashing(changePwDto.newPw);
+                await this.prisma.user.update({
+                    where:{id:userData.id},
+                    data:{userPw:newPassWord}
+                });
+            }
+
+            return { success:true, status:HttpStatus.CREATED }
+
+        }catch(err){
             this.logger.error(err);
             throw new HttpException({
                 success: false,

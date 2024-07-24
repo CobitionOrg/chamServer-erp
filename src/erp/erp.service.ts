@@ -130,6 +130,13 @@ export class ErpService {
                         socialNum: encryptedSocialNum
                     }
                 });
+
+                let remark = '';
+
+                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
+                    remark = '파주맘'
+                }
+
                 const order = await tx.order.create({
                     data: {
                         route: objOrder.route,
@@ -145,7 +152,8 @@ export class ErpService {
                         patientId: patient.id,
                         date: kstDate,
                         orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
-                        addr: encryptedAddr
+                        addr: encryptedAddr,
+                        remark: remark,
                     }
                 });
 
@@ -161,6 +169,19 @@ export class ErpService {
                         orderId: order.id,
                     }
                 });
+
+                const patientBodyType = await tx.patientBodyType.create({
+                    data: {
+                        tallWeight: objOrderBodyType.tallWeight,
+                        digestion: objOrderBodyType.digestion.join('/'),
+                        sleep: objOrderBodyType.sleep.join('/'),
+                        constipation: objOrderBodyType.constipation.join('/'),
+                        nowDrug: objOrderBodyType.nowDrug.join('/'),
+                        pastDrug: objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
+                        patientId: patient.id,
+                    }
+                })
 
                 console.log(objOrderItem);
                 console.log('--------------------');
@@ -286,24 +307,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
@@ -479,6 +483,24 @@ export class ErpService {
                     })
                 }
 
+                const noteData = await tx.patientNote.findMany({
+                    where:{patientId:patient.patient.id,useFlag:true}
+                });
+
+                //특이 사항이 있을 시
+                if(noteData.length>0) {
+                    remark+=` ${noteData[0].note}`;
+                    await tx.patientNote.update({
+                        where:{id:noteData[0].id},
+                        data:{useFlag:false}
+                    })
+                }
+
+
+                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
+                    remark += ' 파주맘';
+                }
+
 
                 const order = await tx.order.create({
                     data: {
@@ -581,7 +603,9 @@ export class ErpService {
 
             for(const e of res) {
                 const checkSocialNum = this.crypto.decrypt(e.patient.socialNum);
+                console.log(checkSocialNum)
                 if(checkSocialNum.includes(socialNum)){
+                    console.log(e);
                     check = false;
                     break;
                 }
@@ -790,6 +814,7 @@ export class ErpService {
                 },
                 data: {
                     consultingType: true,
+                    consultingFlag: true,
                 }
             });
 
@@ -813,8 +838,8 @@ export class ErpService {
         try {
             console.log(getListDto);
             //등급 조회
-            const checkAdmin = await this.adminService.checkAdmin(header);
-            if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
+            // const checkAdmin = await this.adminService.checkAdmin(header);
+            // if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN, msg: '권한이 없습니다' };
 
             console.log(getListDto);
 
@@ -841,24 +866,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions },
@@ -886,6 +894,17 @@ export class ErpService {
                             name: true,
                             addr: true,
                             phoneNum: true,
+                            patientBodyType: {
+                                select: {
+                                    tallWeight: true,
+                                    digestion: true,
+                                    sleep: true,
+                                    constipation: true,
+                                    nowDrug: true,
+                                    pastDrug: true,
+                                    pastSurgery: true,
+                                }
+                            }
                         }
                     },
                     orderItems: {
@@ -894,17 +913,7 @@ export class ErpService {
                             type: true,
                         }
                     },
-                    orderBodyType: {
-                        select: {
-                            tallWeight: true,
-                            digestion: true,
-                            sleep: true,
-                            constipation: true,
-                            nowDrug: true,
-                            pastDrug: true,
-                            pastSurgery: true,
-                        }
-                    }
+                  
                 }
             });
 
@@ -964,8 +973,8 @@ export class ErpService {
      */
     async callComplete(callConsultingDto: CallConsultingDto, header: string) {
         try {
-            const checkAdmin = await this.adminService.checkAdmin(header);
-            if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN }; //일반 유저 거르기
+            // const checkAdmin = await this.adminService.checkAdmin(header);
+            // if (!checkAdmin.success) return { success: false, status: HttpStatus.FORBIDDEN }; //일반 유저 거르기
 
             //유선 상담 완료 처리
             await this.prisma.order.update({
@@ -976,6 +985,34 @@ export class ErpService {
                 data: {
                     consultingType: false,
                     phoneConsulting: true,
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 유선 상담에서 입금 상담으로 이동
+     * @param callConsultingDto@returns { success: boolean, status: number}
+     */
+    async callToRec(callConsultingDto: CallConsultingDto) {
+        try {
+            await this.prisma.order.update({
+                where: {
+                    id: callConsultingDto.orderId,
+                    patientId: callConsultingDto.userId,
+                },
+                data: {
+                    consultingType: false,
                 }
             });
 
@@ -1085,7 +1122,8 @@ export class ErpService {
                             isComplete: true,
                             card: order.payType =='카드결제' ? order.price : 0,
                             cash: order.payType =='계좌이체' ? order.price : 0,
-                            payFlag: 1
+                            payFlag: 1,
+                            consultingFlag: true
                         }
                     });
 
@@ -1398,7 +1436,10 @@ export class ErpService {
             await this.prisma.$transaction(async (tx) => {
                 const sendOne = await tx.order.update({
                     where: { id: orderId },
-                    data: { isComplete: true }
+                    data: { 
+                        isComplete: true,
+                        consultingFlag: true 
+                    }
                 });
 
                 // //발송 주소 가져오기
@@ -1692,7 +1733,13 @@ export class ErpService {
             }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
-            const orderData = { ...updateSurveyDto, price: price, orderSortNum: orderSortNum, addr: encryptedAddr };
+            const orderData = { 
+                ...updateSurveyDto, 
+                price: price, 
+                orderSortNum: orderSortNum,
+                addr: encryptedAddr,
+                consultingFlag:true,
+            };
 
             console.log('====================');
             
@@ -1788,6 +1835,8 @@ export class ErpService {
                     data: orderData
                 });
 
+                delete patientData.patientBodyType;
+
                 const patient = await tx.patient.update({
                     where: {
                         id: patientData.id
@@ -1796,12 +1845,21 @@ export class ErpService {
                 });
 
                 if (orderBodyTypeData !== null) {
-                    const orderBodyType = await tx.orderBodyType.update({
+                    
+                    await tx.patientBodyType.update({
                         where: {
-                            orderId: id
+                            patientId: patientData.id
                         },
-                        data: orderBodyTypeData
-                    });
+                        data: {
+                            tallWeight: orderBodyTypeData.tallWeight ?? '',
+                            digestion: orderBodyTypeData.digestion ?? '',
+                            sleep: orderBodyTypeData.sleep ?? '',
+                            constipation: orderBodyTypeData.constipation ?? '',
+                            nowDrug: orderBodyTypeData.nowDrug ?? '',
+                            pastDrug: orderBodyTypeData.pastDrug ?? '',
+                            pastSurgery: orderBodyTypeData.pastSurgery ?? '',
+                        }
+                    })
                 }
 
                 const deleteItems = await tx.orderItem.deleteMany({
@@ -2368,24 +2426,7 @@ export class ErpService {
             let patientConditions = {};
             if (getOutageListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getOutageListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getOutageListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getOutageListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getOutageListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getOutageListDto.searchKeyword } }
-                    }
-                }
-                else if (getOutageListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getOutageListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getOutageListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: {
@@ -2395,7 +2436,7 @@ export class ErpService {
                     ...orderConditions,
                     ...patientConditions,
                     consultingType: false,
-                    isComplete: false,
+                    // isComplete: false,
                 },
                 select: {
                     id: true,
@@ -2431,6 +2472,16 @@ export class ErpService {
                             item: true,
                             type: true,
                         }
+                    },
+                    tempOrders: {
+                        select: {
+                            sendList:{
+                                select:{
+                                    id: true,
+                                    title: true,
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -2446,6 +2497,12 @@ export class ErpService {
             }
 
             const outageList = getOutage(sortedList);
+            
+            outageList.sort((a, b) => {
+                const aId = a.tempOrders.length > 0 ? a.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
+                const bId = b.tempOrders.length > 0 ? b.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
+                return aId - bId;
+            });
             return { success: true, list: outageList };
         } catch (err) {
             this.logger.error(err);
@@ -2483,24 +2540,7 @@ export class ErpService {
             let patientConditions = {};
             if (getListDto.searchKeyword !== "") {
                 //검색어 O
-                if (getListDto.searchCategory === "all") {
-                    patientConditions = {
-                        OR: [
-                            { patient: { name: { contains: getListDto.searchKeyword } } },
-                            { patient: { phoneNum: { contains: getListDto.searchKeyword } } },
-                        ]
-                    }
-                }
-                else if (getListDto.searchCategory === "name") {
-                    patientConditions = {
-                        patient: { name: { contains: getListDto.searchKeyword } }
-                    }
-                }
-                else if (getListDto.searchCategory === "num") {
-                    patientConditions = {
-                        patient: { phoneNum: { contains: getListDto.searchKeyword } }
-                    }
-                }
+                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
             }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
@@ -2790,7 +2830,9 @@ export class ErpService {
                             select:{remark:true}
                         });
 
-                        let remark = '지인 10포/' + order.remark ?? '';
+                        let remark = '지인 10포' + (order.remark == null ? '' : `/${order.remark}`);
+                        console.log('//////////////////////////////');
+                        console.log(remark);
 
                         await tx.order.update({
                             where:{id:checkDiscountDto.orderId},
@@ -3195,6 +3237,7 @@ export class ErpService {
             );
         }
     }
+
 
 
 

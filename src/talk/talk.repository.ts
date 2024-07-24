@@ -8,11 +8,11 @@ import { dateType } from "aws-sdk/clients/iam";
 import { getDayStartAndEnd } from "src/util/kstDate.util";
 
 @Injectable()
-export class TalkRepositoy{
+export class TalkRepositoy {
     constructor(
         private prisma: PrismaService,
         private crypto: Crypto,
-    ){}
+    ) { }
 
     private readonly logger = new Logger(TalkRepositoy.name);
 
@@ -32,36 +32,45 @@ export class TalkRepositoy{
         }>
      */
     async orderInsertTalk(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
-            let orderConditions = {
-                date: {
-                    gte: startDate,
-                    lt: endDate,
+        try {
+            let orderConditions = {}
+
+            if (getListDto.date === undefined) {
+                //날짜 조건이 없을 시에
+                //접수 알람톡이 전송 안된 사람들 리스트 전부
+                orderConditions = {orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true}
+            }else {
+                // 지정 된 날짜의 접수 알람톡 전송 안된 사람들 리스트
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                orderConditions = {
+                    orderSortNum: { gte: 0 }, talkFlag: false, useFlag: true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
                 }
             }
-            console.log(startDate,endDate);
+           
             const list = await this.prisma.order.findMany({
-                where: {...orderConditions, orderSortNum:{gte:0},talkFlag:false},
+                where: { ...orderConditions },
                 select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},}
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
                 }
             });
 
-            const res=list.map(item=>(
-                {
-                    id:item.id,
+            const res = list.map(item => ({
+                    id: item.id,
                     patient:
                     {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                     }
                 }))
 
 
-            return {success:true, list:res, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, list: res, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -71,7 +80,7 @@ export class TalkRepositoy{
             );
         }
     }
-    
+
     /**
      * 접수 알림톡 발송 완료 처리
      * @param list 
@@ -80,14 +89,14 @@ export class TalkRepositoy{
             status: HttpStatus;
         }>
      */
-    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>){
-        try{   
+    async completeInsertTalk(orderInsertDto: Array<OrderInsertTalk>) {
+        try {
             const qryArr = [];
 
-            for(const e of orderInsertDto) {
+            for (const e of orderInsertDto) {
                 const qry = this.prisma.order.update({
-                    where:{id:e.id},
-                    data:{talkFlag:true},
+                    where: { id: e.id },
+                    data: { talkFlag: true },
                 });
 
                 qryArr.push(qry);
@@ -100,9 +109,9 @@ export class TalkRepositoy{
                 this.logger.error(err);
                 return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
             });
-            
-            return {success:true,status:HttpStatus.OK}
-        }catch(err){
+
+            return { success: true, status: HttpStatus.OK }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -115,20 +124,20 @@ export class TalkRepositoy{
 
 
     async getExOrder(id: number) {
-        try{
+        try {
             const res = await this.prisma.order.findUnique({
-                where:{
-                    id:id
+                where: {
+                    id: id
                 },
-                select:{
-                    message:true,
-                    date:true,
-                    route:true,
+                select: {
+                    message: true,
+                    date: true,
+                    route: true,
                 }
             });
 
             return res;
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -148,18 +157,88 @@ export class TalkRepositoy{
         }>
      */
     async consultingFlag(id: number) {
-        try{
+        try {
             console.log(id);
             await this.prisma.order.updateMany({
-                where:{
-                    id:id,talkFlag:true
+                where: {
+                    id: id, talkFlag: true
                 },
-                data:{
+                data: {
                     consultingFlag: true
                 }
             });
 
-            return {success:true,status:HttpStatus.OK};
+            return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 구매 후기 요청용 데이터
+     * @param startDate 
+     * @param endDate 
+     * @returns 
+     */
+    async payReview(startDate: Date, endDate: Date) {
+        try{
+            const res = await this.prisma.sendList.findMany({
+                where:{
+                    date:{ 
+                        gte:startDate, //일요일부터
+                        lte:endDate // 금요일까지
+                    },
+                    tempOrders : {
+                        some: {
+                            order: {
+                                isFirst: true //초진만
+                            }
+                        }
+                    }
+                },
+                select:{
+                    tempOrders:{
+                        select:{
+                            order:{
+                                select:{
+                                    isFirst: true,
+                                    patient:{
+                                        select:{
+                                            name:true,
+                                            phoneNum: true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const filteredRes = res.map(sendList => ({
+                ...sendList,
+                tempOrders: sendList.tempOrders.filter(tempOrder => tempOrder.order.isFirst === true)
+              }));
+
+            const list = filteredRes[0].tempOrders
+
+            for(let row of list) {
+                console.log(row);
+                const decryptedPhoneNum = this.crypto.decrypt(row.order.patient.phoneNum);
+                row.order.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            console.log(list);
+
+           
+            return {success: true, list};
+
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
@@ -170,6 +249,146 @@ export class TalkRepositoy{
             );
         }
     }
+
+    /**
+     * 유선 상담 미연결 데이터
+     * @returns 
+     */
+    async notCall(yesterday: Date, twoWeeksAgo: Date) {
+        try{
+            const res = await this.prisma.order.findMany({
+                where:{
+                    date:{
+                        gte: twoWeeksAgo,
+                        lte: yesterday
+                    },
+                    notCall:true
+                },
+                select:{
+                    patient:{
+                        select:{
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
+                }
+            });
+
+            for(let row of res) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+
+            return {success: true, list:res};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+     /**
+     * 미입금 된 인원 엑셀 데이터
+     * @param getListDto 
+     * @returns Promise<{
+            success: boolean;
+            list: {
+                id: number;
+                patient: {
+                    name: string;
+                    phoneNum: string;
+                };
+            }[];
+            status: HttpStatus;
+        }>
+     */
+        async notPay(yesterday: Date, fourWeeksAgo: Date) {
+            try {
+                let orderConditions = {
+                    date: {
+                        gte: fourWeeksAgo,
+                        lte: yesterday,
+                    }
+                };
+    
+                //초진 - 상담 연결되고 입금 안된 애들
+                const firstList = await this.prisma.order.findMany({
+                    where: { 
+                        ...orderConditions, 
+                        orderSortNum: { gte: 0 }, 
+                        talkFlag: true, 
+                        consultingFlag: true, 
+                        useFlag: true,
+                        isFirst:true,
+                        payFlag:0, 
+
+                     },
+                    select: {
+                        id: true,
+                        patient: { select: { name: true, phoneNum: true }, },
+                        price: true,
+                        cash: true,
+                        card: true,
+                    }
+                });
+    
+                //console.log(data);
+    
+                const list = firstList.filter(i => i.price != (i.cash + i.card));
+                const resFisrt = list.map(item => ({
+                    id: item.id,
+                    patient:
+                    {
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }))
+
+                //재진 - 상담 연결 안되도 입금 안되면 다 보내기
+                const returnList = await this.prisma.order.findMany({
+                    where: { 
+                        ...orderConditions, 
+                        orderSortNum: { gte: 0 }, 
+                        consultingFlag: false, 
+                        useFlag: true, 
+                        payFlag:0, 
+                        isFirst:false
+                    },
+                    select: {
+                        id: true,
+                        patient: { select: { name: true, phoneNum: true }, }
+                    }
+                });
+    
+                const resReturn = returnList.map(item => ({
+                    id: item.id,
+                    patient:
+                    {
+                        name: item.patient.name,
+                        phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                    }
+                }));
+    
+                let res = [...resFisrt, ...resReturn];
+                console.log(res);
+                return { success: true, list: res, status: HttpStatus.OK };
+    
+            } catch (err) {
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+    ///////////////////////////////////////////////////////////////
 
 
     /**
@@ -187,37 +406,72 @@ export class TalkRepositoy{
             status: HttpStatus;
         }>
      */
-    async notConsulting(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
+    async notConsulting(yesterday: Date, fourWeeksAgo: Date) {
+        try {
             let orderConditions = {
                 date: {
-                    gte: startDate,
-                    lt: endDate,
+                    gte: fourWeeksAgo,
+                    lte: yesterday,
                 }
             };
 
-            const list = await this.prisma.order.findMany({
-                where: {...orderConditions, orderSortNum:{gte:0},talkFlag:true,consultingFlag:false},
+            //초진 - 상담 연결되고 입금 안된 애들
+            const firstList = await this.prisma.order.findMany({
+                where: { 
+                    ...orderConditions, 
+                    orderSortNum: { gte: 0 }, 
+                    talkFlag: true, 
+                    consultingFlag: false, 
+                    useFlag: true, 
+                    payFlag:0, 
+                    isFirst:true
+                },
                 select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},}
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
                 }
             });
-            const res=list.map(item=>(
+
+            const resFisrt = firstList.map(item => ({
+                id: item.id,
+                patient:
                 {
-                    id:item.id,
-                    patient:
-                    {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
-                    }
-                }))
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                }
+            }));
+
+            //재진 - 상담 연결 안되도 입금 안되면 다 보내기
+            const returnList = await this.prisma.order.findMany({
+                where: { 
+                    ...orderConditions, 
+                    orderSortNum: { gte: 0 }, 
+                    consultingFlag: false, 
+                    useFlag: true, 
+                    payFlag:0, 
+                    isFirst:false
+                },
+                select: {
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
+                }
+            });
+
+            const resReturn = returnList.map(item => ({
+                id: item.id,
+                patient:
+                {
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                }
+            }));
+
+            let res = [...resFisrt, ...resReturn];
             console.log(res);
-            return {success:true, list:res, status:HttpStatus.OK};
+            return { success: true, list: res, status: HttpStatus.OK };
 
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -229,68 +483,7 @@ export class TalkRepositoy{
     }
 
 
-    /**
-     * 미입금 된 인원 엑셀 데이터
-     * @param getListDto 
-     * @returns Promise<{
-            success: boolean;
-            list: {
-                id: number;
-                patient: {
-                    name: string;
-                    phoneNum: string;
-                };
-            }[];
-            status: HttpStatus;
-        }>
-     */
-    async notPay(getListDto: GetListDto) {
-        try{
-            const {startDate, endDate} = getDayStartAndEnd(getListDto.date);
-            let orderConditions = {
-                date: {
-                    gte: startDate,
-                    lt: endDate,
-                }
-            };
-
-            const data = await this.prisma.order.findMany({
-                where:{...orderConditions,orderSortNum:{gte:0},talkFlag:true,consultingFlag:true},
-                select: {
-                    id:true,
-                    patient:{select:{name:true,phoneNum:true},},
-                    price:true,
-                    cash:true,
-                    card:true,
-                }
-            });
-
-            //console.log(data);
-
-            const list = data.filter(i => i.price != (i.cash + i.card) );
-            const res=list.map(item=>(
-                {
-                    id:item.id,
-                    patient:
-                    {
-                        name:item.patient.name,
-                        phoneNum:this.crypto.decrypt(item.patient.phoneNum)
-                    }
-                }))
-            console.log(res);
-            return {success:true, list:res, status:HttpStatus.OK};
-
-
-        }catch(err){
-            this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
+   
 
     /**
      * 발송 알림 톡 id추출
@@ -299,30 +492,28 @@ export class TalkRepositoy{
             id:number
         }>
      */
-        async completeSendTalkGetList(date:string){
-            try{
-                const cid= await this.prisma.sendList.findFirst({
-                    where: {
-                       title:date,
-                       useFlag:false
-                    },
-                    select: {
-                        id: true,
-                    }
-                });
-                return {success:true,cid};
-            }
-            catch(err)
-            {
-                this.logger.error(err);
-                throw new HttpException({
-                    success: false,
-                    status: HttpStatus.INTERNAL_SERVER_ERROR
+    async completeSendTalkGetList(date: string) {
+        try {
+            const cid = await this.prisma.sendList.findFirst({
+                where: {
+                    title: date,
                 },
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                );
-            }
+                select: {
+                    id: true,
+                }
+            });
+            return { success: true, cid };
         }
+        catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
     /**
      * 발송 알림 톡 초진(수정 예정)
      * @param id 
@@ -331,8 +522,8 @@ export class TalkRepositoy{
             list: any[];
         }>
      */
-    async completeSendTalkFirst(id: number){
-        try{
+    async completeSendTalkFirst(id: number) {
+        try {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
@@ -361,17 +552,17 @@ export class TalkRepositoy{
                             message: true,
                             cachReceipt: true,
                             price: true,
-                            orderSortNum:true,
-                            isFirst:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            isFirst: true,
+                            combineNum: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -385,7 +576,7 @@ export class TalkRepositoy{
             const sortedList = list;
 
             return { success: true, list: sortedList };
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -405,8 +596,8 @@ export class TalkRepositoy{
             list: any[];
         }>
      */
-    async completeSendTalkReturn(id: number){
-        try{
+    async completeSendTalkReturn(id: number) {
+        try {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
@@ -435,17 +626,17 @@ export class TalkRepositoy{
                             message: true,
                             cachReceipt: true,
                             price: true,
-                            orderSortNum:true,
-                            isFirst:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            isFirst: true,
+                            combineNum: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -459,7 +650,7 @@ export class TalkRepositoy{
             const sortedList = list;
 
             return { success: true, list: sortedList };
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
