@@ -489,7 +489,7 @@ export class ErpService {
 
                 //특이 사항이 있을 시
                 if(noteData.length>0) {
-                    remark+=` ${noteData[0].note}`;
+                    remark+=noteData.join(" ");
                     await tx.patientNote.update({
                         where:{id:noteData[0].id},
                         data:{useFlag:false}
@@ -2497,7 +2497,7 @@ export class ErpService {
             }
 
             const outageList = getOutage(sortedList);
-            
+
             outageList.sort((a, b) => {
                 const aId = a.tempOrders.length > 0 ? a.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;
                 const bId = b.tempOrders.length > 0 ? b.tempOrders[0].sendList.id : Number.MAX_SAFE_INTEGER;

@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import { UpdateSurveyDto } from "./Dto/updateSurvey.dto";
 import { error } from "winston";
 import * as Excel from 'exceljs'
-import { styleHeaderCell ,styleCell,setColor} from "src/util/excelUtil";
+import { styleHeaderCell, styleCell, setColor } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
 import { getItem, getItemAtAccount, getServiceItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
@@ -141,18 +141,18 @@ export class SendService {
     }
 
     async getOrderTemp(id: number) {
-        try{
+        try {
             const sendList = await this.prisma.sendList.findUnique({
-                where:{id:id},
-                select:{fixFlag:true}
+                where: { id: id },
+                select: { fixFlag: true }
             });
 
-            if(sendList.fixFlag) {
+            if (sendList.fixFlag) {
                 return await this.getFixOrderTempList(id);
-            }else {
+            } else {
                 return await this.getOrderTempList(id);
             }
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -169,7 +169,7 @@ export class SendService {
      * @param id 
      */
     async getFixOrderTempList(id: number) {
-        try{
+        try {
             console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
@@ -207,17 +207,17 @@ export class SendService {
                             price: true,
                             cash: true,
                             card: true,
-                            orderSortNum:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            combineNum: true,
                             payFlag: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -239,7 +239,7 @@ export class SendService {
 
             return { success: true, list: list };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -294,17 +294,17 @@ export class SendService {
                             price: true,
                             cash: true,
                             card: true,
-                            orderSortNum:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            combineNum: true,
                             payFlag: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -447,22 +447,22 @@ export class SendService {
                 }
             });
 
-           
+
             await this.prisma.$transaction(async (tx) => {
                 const exTempOrder = await tx.tempOrder.findMany({
-                    where:{orderId:orderId},
-                    select:{
-                        orderSortNum:true,
-                        tempOrderItems:{
-                            select:{
-                                id:true,
-                                sendTax:true
+                    where: { orderId: orderId },
+                    select: {
+                        orderSortNum: true,
+                        tempOrderItems: {
+                            select: {
+                                id: true,
+                                sendTax: true
                             }
                         },
-                        order:{
-                            select:{
-                                price:true,
-                                orderItems:true,
+                        order: {
+                            select: {
+                                price: true,
+                                orderItems: true,
                                 payFlag: true,
                                 combineNum: true,
                             }
@@ -474,18 +474,18 @@ export class SendService {
                 const itemList = await this.erpService.getItems();
                 const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
 
-                if(exTempOrder[0].orderSortNum<6){ 
+                if (exTempOrder[0].orderSortNum < 6) {
                     //합배송, 분리 배송이 아닐 시
                     price = getOrderPrice.getPrice();
-                }else if(exTempOrder[0].orderSortNum == 6) {
+                } else if (exTempOrder[0].orderSortNum == 6) {
                     console.log('합배송일 시')
 
                     const combineOrders = await tx.order.findMany({
-                        where:{
-                            combineNum : exTempOrder[0].order.combineNum
+                        where: {
+                            combineNum: exTempOrder[0].order.combineNum
                         },
-                        select:{
-                            orderItems:true,
+                        select: {
+                            orderItems: true,
                             price: true,
                             id: true
                         }
@@ -498,69 +498,69 @@ export class SendService {
                     anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
 
                     let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
-                    console.log('sendTaxFlag : '+sendTaxFlag);
-                    if(sendTaxFlag){
+                    console.log('sendTaxFlag : ' + sendTaxFlag);
+                    if (sendTaxFlag) {
                         //택배비 부과 주문일 시
-                        price = getOnlyPrice(objOrderItem,itemList);
+                        price = getOnlyPrice(objOrderItem, itemList);
                         let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
 
-                        price > anotherPrice ? anotherPrice+=3500 : price+=3500; //일단 가격이 적은 쪽으로 택배비 책정
-                        
-                        console.log('-------------'+anotherPrice);
-                        console.log('///////////////'+price);
+                        price > anotherPrice ? anotherPrice += 3500 : price += 3500; //일단 가격이 적은 쪽으로 택배비 책정
+
+                        console.log('-------------' + anotherPrice);
+                        console.log('///////////////' + price);
                         await tx.order.update({
-                            where:{id:anotherOrder[0].id},
-                            data:{price:anotherPrice}
+                            where: { id: anotherOrder[0].id },
+                            data: { price: anotherPrice }
                         });
 
-                    }else{
+                    } else {
                         //택배비 부과 주문이 아닐 시
-                        price = getOnlyPrice(objOrderItem,itemList); //수정된 주문의 가격만 책정
+                        price = getOnlyPrice(objOrderItem, itemList); //수정된 주문의 가격만 책정
 
                         //택배비 부과 주문이 아니기 때문에 같이 묶인 합배송도 해당 가격만 책정해서 업데이트
                         let anotherPrice = getOnlyPrice(anotherOrder[0].orderItems, itemList);
-                    
+
                         await tx.order.update({
-                            where:{id:anotherOrder[0].id},
-                            data:{price:anotherPrice}
+                            where: { id: anotherOrder[0].id },
+                            data: { price: anotherPrice }
                         })
                     }
 
-                
-                
-                }else if(exTempOrder[0].orderSortNum == 7){
-                    //분리배송 일시
-                    price = getOnlyPrice(objOrderItem,itemList);//수정된 주문의 제품 가격만 합산
 
-                    if(surveyDto.separateOrder !== undefined) {
-                        if(surveyDto.separateOrder.sendTax) price+=3500;
+
+                } else if (exTempOrder[0].orderSortNum == 7) {
+                    //분리배송 일시
+                    price = getOnlyPrice(objOrderItem, itemList);//수정된 주문의 제품 가격만 합산
+
+                    if (surveyDto.separateOrder !== undefined) {
+                        if (surveyDto.separateOrder.sendTax) price += 3500;
 
                         exTempOrder.forEach((e) => {
                             console.log(e);
-                            if(e.tempOrderItems.id !== surveyDto.separateOrder.id && e.tempOrderItems.sendTax){
+                            if (e.tempOrderItems.id !== surveyDto.separateOrder.id && e.tempOrderItems.sendTax) {
                                 //각 분리 배송 데이터가 택배비를 받아야 할 때
-                                price+=3500; //제품 가격에 택배비 합산
+                                price += 3500; //제품 가격에 택배비 합산
                             }
                         });
                     }
-                    
+
                 }
 
                 const checkDiscount = await tx.order.findUnique({
-                    where:{id:orderId},
-                    select:{friendDiscount:true}
+                    where: { id: orderId },
+                    select: { friendDiscount: true }
                 });
 
                 //지인 할인 여부 확인 시 10퍼센트 할인 처리
-                if(checkDiscount.friendDiscount){
-                    price=price*0.9;
+                if (checkDiscount.friendDiscount) {
+                    price = price * 0.9;
                 }
 
-                console.log('---------------'+price+'-----------------')
+                console.log('---------------' + price + '-----------------')
 
                 const encryptedAddr = this.crypto.encrypt(objPatient.addr);
                 const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
-                
+
                 const patient = await tx.patient.update({
                     where: {
                         id: patientId
@@ -581,7 +581,7 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         remark: objOrder.remark,
                         addr: encryptedAddr,
-                        message : objOrder.message,
+                        message: objOrder.message,
                         payType: objOrder.payType,
                         card: parseInt(objOrder.card),
                         cash: parseInt(objOrder.cash),
@@ -591,8 +591,8 @@ export class SendService {
                 });
 
                 await tx.tempOrder.updateMany({
-                    where:{orderId:orderId},
-                    data:{ 
+                    where: { orderId: orderId },
+                    data: {
                         cachReceipt: objOrder.cashReceipt,
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
@@ -642,12 +642,12 @@ export class SendService {
                 });
 
                 //분리 배송 시 업데이트
-                if(surveyDto.separateOrder !== undefined) {
+                if (surveyDto.separateOrder !== undefined) {
                     await tx.tempOrderItem.update({
-                        where:{
+                        where: {
                             id: surveyDto.separateOrder.id
                         },
-                        data:{
+                        data: {
                             item: surveyDto.separateOrder.orderItem,
                             sendTax: surveyDto.separateOrder.sendTax
                         }
@@ -657,12 +657,12 @@ export class SendService {
 
 
                     await tx.tempOrder.updateMany({
-                        where:{orderId:orderId},
-                        data:{ 
+                        where: { orderId: orderId },
+                        data: {
                             addr: encryptedAddr
                         }
                     })
-    
+
                 }
             });
 
@@ -685,17 +685,17 @@ export class SendService {
      * @returns {success:boolean, status:HttpStatus, msg: string}
      */
     async updateSendPrice(updateSendPriceDto: UpdateSendPriceDto) {
-        try{
+        try {
             const orderId = updateSendPriceDto.id;
             const price = updateSendPriceDto.price;
 
             await this.prisma.order.update({
-                where:{id:orderId},
-                data:{price:price}
+                where: { id: orderId },
+                data: { price: price }
             });
 
-            return {success:true, status:HttpStatus.CREATED, msg:'업데이트 완료'}
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED, msg: '업데이트 완료' }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -712,15 +712,15 @@ export class SendService {
      * @returns {success:boolean, status:HttpStatus}
      */
     async notPay(id: number) {
-        try{
+        try {
             await this.prisma.order.update({
-                where:{id:id},
-                data:{payFlag:0}
+                where: { id: id },
+                data: { payFlag: 0 }
             });
 
             return { success: true, status: 201 };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -736,16 +736,16 @@ export class SendService {
      * @param id orderId
      * @returns {success:boolean, status:HttpStatus}
      */
-    async requestPay(id: number){
-        try{
+    async requestPay(id: number) {
+        try {
             await this.prisma.order.update({
-                where:{id:id},
-                data:{payFlag:2}
+                where: { id: id },
+                data: { payFlag: 2 }
             });
 
             return { success: true, status: 201 };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -762,14 +762,14 @@ export class SendService {
      * @returns {success:boolean, status:HttpStatus}
      */
     async completePay(id: number) {
-        try{
+        try {
             await this.prisma.order.update({
-                where:{id:id},
-                data:{payFlag:1}
+                where: { id: id },
+                data: { payFlag: 1 }
             });
 
             return { success: true, status: 201 };
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -819,17 +819,17 @@ export class SendService {
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
                         const { onlyItem, serviceItem } = getServiceItem(item);
-                        service+=parseInt(serviceItem);
+                        service += parseInt(serviceItem);
                         if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
                         else orderStr += `${onlyItem}+`
                     }
                 }
 
-                if(service != 0){
+                if (service != 0) {
                     orderStr += ` s(${service})`
                 }
 
-                if(orderStr == '감1개월+쎈1개월'){
+                if (orderStr == '감1개월+쎈1개월') {
                     orderStr += ` s(10)`;
                 }
 
@@ -967,7 +967,7 @@ export class SendService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
-    } 
+    }
 
     /**
      * 발송목록 완료 처리
@@ -990,11 +990,11 @@ export class SendService {
                 });
 
                 const list = await tx.tempOrder.findMany({
-                    where:{sendListId: id},
-                    select:{
-                        order:{
-                            select:{
-                                id:true
+                    where: { sendListId: id },
+                    select: {
+                        order: {
+                            select: {
+                                id: true
                             }
                         }
                     }
@@ -1002,13 +1002,13 @@ export class SendService {
 
                 const qryArr = list.map(async (e) => {
                     return tx.order.update({
-                        where:{id:e.order.id},
-                        data:{useFlag:false}
+                        where: { id: e.order.id },
+                        data: { useFlag: false }
                     });
                 });
 
                 await Promise.all([...qryArr]).then((value) => {
-                    return {success:true, status:HttpStatus.CREATED};
+                    return { success: true, status: HttpStatus.CREATED };
                 }).catch((err) => {
                     this.logger.error(err);
                     throw new HttpException({
@@ -1020,7 +1020,7 @@ export class SendService {
                 });
 
             })
-            
+
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
@@ -1054,8 +1054,8 @@ export class SendService {
                     }
                 });
 
-                await this.fixSortNum(id,tx);
-    
+                await this.fixSortNum(id, tx);
+
             });
 
             return { success: true, status: HttpStatus.OK };
@@ -1070,23 +1070,23 @@ export class SendService {
         }
     }
 
-    async fixSortNum(id: number ,tx: any) {
-        try{
+    async fixSortNum(id: number, tx: any) {
+        try {
             const sendData = await this.getOrderTempList(id);
 
             const list = sendData.list; //발송목록 tempOrder list;
 
             // console.log(list);
-            for(let i = 0; i<list.length; i++) {
+            for (let i = 0; i < list.length; i++) {
                 console.log(list[i]);
                 await tx.tempOrder.update({
-                    where:{id:list[i].id},
-                    data:{sortFixNum:i+1}
+                    where: { id: list[i].id },
+                    data: { sortFixNum: i + 1 }
                 });
             }
 
-            return {success:true}
-        }catch(err){
+            return { success: true }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1139,7 +1139,7 @@ export class SendService {
             const date = new Date(updateTitleDto.date)
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
             console.log(kstDate);
-            
+
             if (check.success) {
                 await this.prisma.sendList.update({
                     where: {
@@ -1270,7 +1270,7 @@ export class SendService {
     * 챠팅 용 엑셀
     * @returns {success:true,status:HttpStatus.OK,url};
     */
-    async chatingExcel(id:number) {
+    async chatingExcel(id: number) {
         try {
             // 차팅 : 핸드폰번호 주문수량 결제방식 
 
@@ -1295,10 +1295,10 @@ export class SendService {
 
             let sepearteId = 0;
             list.forEach((e) => {
-                if(e.orderSortNum == 7){
-                    if(sepearteId == e.order.id){
+                if (e.orderSortNum == 7) {
+                    if (sepearteId == e.order.id) {
                         return;
-                    }else{
+                    } else {
                         sepearteId = e.order.id
                     }
                 }
@@ -1339,27 +1339,27 @@ export class SendService {
      * @param addSendDto 
      * @returns {success:boolean,status:HttpStatus};
      */
-    async addSend(addSendDto: AddSendDto){
-        try{
+    async addSend(addSendDto: AddSendDto) {
+        try {
             const data = await this.prisma.addSend.findMany({
-                where:{tempOrderId:addSendDto.tempOrderId}
+                where: { tempOrderId: addSendDto.tempOrderId }
             });
 
-            if(data.length>0){ //이미 addSend 처리 되있을 경우 기존 데이터 삭제
+            if (data.length > 0) { //이미 addSend 처리 되있을 경우 기존 데이터 삭제
                 await this.prisma.addSend.deleteMany({
-                    where:{tempOrderId:addSendDto.tempOrderId}
+                    where: { tempOrderId: addSendDto.tempOrderId }
                 });
             }
 
             await this.prisma.addSend.create({
-                data:{
+                data: {
                     tempOrderId: addSendDto.tempOrderId,
                     sendListId: addSendDto.sendListId
                 }
             });
 
-            return {success:true, status:HttpStatus.CREATED};
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1381,19 +1381,19 @@ export class SendService {
             info: string;
         }[];
      */
-    async getUpdateInfo(id: number){
-        try{
+    async getUpdateInfo(id: number) {
+        try {
             console.log(id);
             const list = await this.prisma.updateInfo.findMany();
 
             const checked = await this.prisma.orderUpdateInfo.findMany({
-                where:{tempOrderId:id}
+                where: { tempOrderId: id }
             });
 
             console.log(checked);
 
-            return {success:true, status:HttpStatus.OK, list, checked}
-        }catch(err){
+            return { success: true, status: HttpStatus.OK, list, checked }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1409,34 +1409,34 @@ export class SendService {
      * @param insertUpdateInfoDto 
      * @returns {success:boolean,status:HttpStatus};
      */
-    async insertUpdateInfo(insertUpdateInfoDto: InsertUpdateInfoDto){
-        try{
+    async insertUpdateInfo(insertUpdateInfoDto: InsertUpdateInfoDto) {
+        try {
             await this.prisma.$transaction(async (tx) => {
                 await tx.orderUpdateInfo.deleteMany({
-                    where:{
-                        tempOrderId:insertUpdateInfoDto.tempOrderId
+                    where: {
+                        tempOrderId: insertUpdateInfoDto.tempOrderId
                     }
                 });
 
                 await tx.tempOrder.update({
-                    where:{id:insertUpdateInfoDto.tempOrderId},
-                    data:{updateInfoCheck:false}
+                    where: { id: insertUpdateInfoDto.tempOrderId },
+                    data: { updateInfoCheck: false }
                 });
                 const qryArr = insertUpdateInfoDto.infoData.map(async e => {
                     console.log('------------------');
                     console.log(e);
                     return tx.orderUpdateInfo.create({
-                        data:{
-                            info:e.info,
+                        data: {
+                            info: e.info,
                             updateInfoId: e.id,
-                            tempOrderId:insertUpdateInfoDto.tempOrderId
+                            tempOrderId: insertUpdateInfoDto.tempOrderId
                         }
                     });
-    
+
                 });
-    
+
                 await Promise.all([...qryArr]).then((value) => {
-                    return {success:true, status:HttpStatus.CREATED};
+                    return { success: true, status: HttpStatus.CREATED };
                 }).catch((err) => {
                     this.logger.error(err);
                     throw new HttpException({
@@ -1445,14 +1445,14 @@ export class SendService {
                     },
                         HttpStatus.INTERNAL_SERVER_ERROR
                     );
-                }); 
+                });
             })
-            
-           
-            return {success:true, status:HttpStatus.CREATED};
 
 
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+
+
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1472,9 +1472,9 @@ export class SendService {
             msg: string;
         }>
      */
-    async cancelSendOrder(cancelOrderDto: CancelSendOrderDto){
-        try{
-            if(cancelOrderDto.isFirst){
+    async cancelSendOrder(cancelOrderDto: CancelSendOrderDto) {
+        try {
+            if (cancelOrderDto.isFirst) {
                 //초진 일 시 환자 데이터까지 삭제
                 const tempOrderId = cancelOrderDto.tempOrderId;
                 const orderId = cancelOrderDto.orderId;
@@ -1483,48 +1483,48 @@ export class SendService {
                 await this.prisma.$transaction(async (tx) => {
                     //orderBodyType 삭제
                     await tx.orderBodyType.delete({
-                        where:{orderId:orderId}
+                        where: { orderId: orderId }
                     });
 
                     //addSend 삭제
                     await tx.addSend.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     });
 
                     //temp orderItem 삭제
                     await tx.tempOrderItem.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     });
 
                     //orderItem 삭제
                     await tx.orderItem.deleteMany({
-                        where:{orderId:orderId}
+                        where: { orderId: orderId }
                     });
 
                     //orderUpdateInfo 삭제
                     await tx.orderUpdateInfo.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     })
 
                     //tempOrder 삭제
                     await tx.tempOrder.delete({
-                        where:{id:tempOrderId}
+                        where: { id: tempOrderId }
                     });
 
                     //order 삭제
                     await tx.order.delete({
-                        where:{id:orderId}
+                        where: { id: orderId }
                     });
 
                     //patient 삭제
                     await tx.patient.delete({
-                        where:{id:patientId}
+                        where: { id: patientId }
                     });
 
                 });
 
-                return {success:true, status:HttpStatus.OK, msg:'초진 삭제'}
-            }else{
+                return { success: true, status: HttpStatus.OK, msg: '초진 삭제' }
+            } else {
                 //재진 일 시 
                 const tempOrderId = cancelOrderDto.tempOrderId;
                 const orderId = cancelOrderDto.orderId;
@@ -1532,35 +1532,35 @@ export class SendService {
                 await this.prisma.$transaction(async (tx) => {
                     //addSend 삭제
                     await tx.addSend.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     });
-    
+
                     //temp orderItem 삭제
                     await tx.tempOrderItem.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     });
-    
+
                     //orderUpdateInfo 삭제
                     await tx.orderUpdateInfo.deleteMany({
-                        where:{tempOrderId:tempOrderId}
+                        where: { tempOrderId: tempOrderId }
                     })
 
                     //tempOrder 삭제
                     await tx.tempOrder.delete({
-                        where:{id:tempOrderId}
+                        where: { id: tempOrderId }
                     });
 
                     //오더만 isComplete를 true로 변경
                     await tx.order.update({
-                        where:{id:orderId},
-                        data:{isComplete:true}
+                        where: { id: orderId },
+                        data: { isComplete: true }
                     });
                 });
-               
 
-                return {success:true, status:HttpStatus.OK, msg:'재진 삭제'}
+
+                return { success: true, status: HttpStatus.OK, msg: '재진 삭제' }
             }
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1578,40 +1578,40 @@ export class SendService {
      * @returns {success:boolean, status: HttpStatus, msg:string}
      */
     async cancelSendOrderFlag(id: number) {
-        try{
+        try {
             await this.prisma.tempOrder.update({
-                where:{id:id},
-                data:{cancelFlag:true}
+                where: { id: id },
+                data: { cancelFlag: true }
             });
 
             const exOrder = await this.prisma.tempOrder.findUnique({
-                where:{id:id},
-                select:{
-                    order:{
-                        select:{
-                            friendDiscount:true,
+                where: { id: id },
+                select: {
+                    order: {
+                        select: {
+                            friendDiscount: true,
                         }
                     },
-                    patient:{
-                        select:{
-                            id:true
+                    patient: {
+                        select: {
+                            id: true
                         }
                     },
-                    
+
                 }
             });
 
             //지인 10퍼 할인 주문일 시 주문 체크 원 상태로 복구
-            if(exOrder.order.friendDiscount){
+            if (exOrder.order.friendDiscount) {
                 await this.prisma.friendRecommend.updateMany({
-                    where:{patientId:exOrder.patient.id},
-                    data:{useFlag:true}
+                    where: { patientId: exOrder.patient.id },
+                    data: { useFlag: true }
                 });
             }
 
-            return {success:true, status:HttpStatus.OK, msg:'주문 취소'}
+            return { success: true, status: HttpStatus.OK, msg: '주문 취소' }
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1628,16 +1628,16 @@ export class SendService {
      * @param id 
      * @returns {success:boolean, status: HttpStatus}
      */
-    async checkUpdateAtDesk(id: number){
-        try{
+    async checkUpdateAtDesk(id: number) {
+        try {
             await this.prisma.tempOrder.update({
-                where:{id:id},
-                data:{updateInfoCheck:true}
+                where: { id: id },
+                data: { updateInfoCheck: true }
             });
 
-            return {success:true, status:HttpStatus.OK, msg:'확인 완료'}
+            return { success: true, status: HttpStatus.OK, msg: '확인 완료' }
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1655,24 +1655,24 @@ export class SendService {
             success: boolean;
             status: HttpStatus;
             url: any;
-        }>
+        }> 
      */
-    async accountBook(id:number){
-        try{
+    async accountBook(id: number) {
+        try {
             const sendList = await this.prisma.sendList.findFirst({
-                where:{id:id},
-                select:{
-                    id:true,
-                    title:true,
-                    amount:true,
-                    tempOrders:{
-                        where:{
-                            NOT:{
-                                orderSortNum:-4 //환불 데이터 제외
+                where: { id: id },
+                select: {
+                    id: true,
+                    title: true,
+                    amount: true,
+                    tempOrders: {
+                        where: {
+                            NOT: {
+                                orderSortNum: -4 //환불 데이터 제외
                             }
                         },
-                        orderBy:{orderSortNum:'asc'},
-                        select:{
+                        orderBy: { orderSortNum: 'asc' },
+                        select: {
                             id: true,
                             isFirst: true,
                             orderSortNum: true,
@@ -1686,12 +1686,12 @@ export class SendService {
                                 select: {
                                     id: true,
                                     message: true,
-                                    payType:true,
+                                    payType: true,
                                     cachReceipt: true,
                                     price: true,
                                     card: true,
                                     cash: true,
-                                    remark:true,
+                                    remark: true,
                                     orderItems: {
                                         select: { item: true, type: true }
                                     }
@@ -1704,10 +1704,10 @@ export class SendService {
                             }
                         }
                     },
-                    addSends:{
-                        select:{
-                            tempOrder:{
-                                select:{
+                    addSends: {
+                        select: {
+                            tempOrder: {
+                                select: {
                                     id: true,
                                     isFirst: true,
                                     orderSortNum: true,
@@ -1721,12 +1721,12 @@ export class SendService {
                                         select: {
                                             id: true,
                                             message: true,
-                                            payType:true,
+                                            payType: true,
                                             cachReceipt: true,
                                             price: true,
                                             card: true,
                                             cash: true,
-                                            remark:true,
+                                            remark: true,
                                             orderItems: {
                                                 select: { item: true, type: true }
                                             }
@@ -1745,7 +1745,7 @@ export class SendService {
             });
 
             //console.log(sendList);
-            
+
             const tempOrderList = sendList.tempOrders;
 
             const wb = new Excel.Workbook();
@@ -1753,16 +1753,16 @@ export class SendService {
             styleHeaderCell(wb);
             //헤더 부분
             sheet.mergeCells('A1:K1');
-            sheet.getCell('G1').value = sendList.title+' 감비환 장부'
-            sheet.getCell('A1').font={size:24,bold:true};
-            sheet.getCell('A1').alignment={
+            sheet.getCell('G1').value = sendList.title + ' 감비환 장부'
+            sheet.getCell('A1').font = { size: 24, bold: true };
+            sheet.getCell('A1').alignment = {
                 vertical: "middle",
                 horizontal: "center",
                 wrapText: true,
-              };
+            };
             //주문 내역 부분
-            const headers = ["","설문지번호","초/재","이름","감&쎈","요요","입금","카드","별도구매","특이사항","현금영수증"];
-            const headerWidths = [5,16,9,16,15,10,16,16,12,25,18];
+            const headers = ["", "설문지번호", "초/재", "이름", "감&쎈", "요요", "입금", "카드", "별도구매", "특이사항", "현금영수증"];
+            const headerWidths = [5, 16, 9, 16, 15, 10, 16, 16, 12, 25, 18];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;
@@ -1772,60 +1772,59 @@ export class SendService {
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
 
-            
+
             let isSeparteId = 0;
 
-            tempOrderList.forEach((e,i) => {
+            tempOrderList.forEach((e, i) => {
                 // 현금 영수증 관련
                 let cashReceipt = e.order.cachReceipt;
                 // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
-                if(e.order.payType === "계좌이체"
+                if (e.order.payType === "계좌이체"
                     && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
                     && e.order.cash < 100000) {
-                        cashReceipt = 'x';
-                    }
+                    cashReceipt = 'x';
+                }
                 // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 이상이면 빈 칸으로
-                if(e.order.payType === "계좌이체"
+                if (e.order.payType === "계좌이체"
                     && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
                     && e.order.cash >= 100000
                 ) {
                     cashReceipt = '';
                 }
-                if(e.orderSortNum != 7) { //분리 배송이 아닐 때
+                if (e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
                     const name = e.patient.name;
-                    const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
+                    const { common, yoyo, assistant } = getItemAtAccount(e.order.orderItems);
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
-                    const card = e.order.card == 0? '' : e.order.card;
-                    const message =(e.order.remark ? e.order.remark + '/' : '')+  e.order.message;
-               
-                    const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
-    
+                    const card = e.order.card == 0 ? '' : e.order.card;
+                    const message = (e.order.remark ? e.order.remark + '/' : '') + e.order.message;
+
+                    const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
+
                     const appendRow = sheet.addRow(rowDatas);
                     appendRow.eachCell((cell, colNum) => {
                         styleCell(cell);
                     });
-                    if(e.orderSortNum>1 && e.orderSortNum<6)
-                        {
-                            setColor(appendRow,e.orderSortNum);
-                        }
-                }else if(e.orderSortNum == 7) { //분래 배송일 시
-                    if(isSeparteId == e.order.id){
+                    if (e.orderSortNum > 1 && e.orderSortNum < 6) {
+                        setColor(appendRow, e.orderSortNum);
+                    }
+                } else if (e.orderSortNum == 7) { //분래 배송일 시
+                    if (isSeparteId == e.order.id) {
                         console.log('already insert data');
-                    }else {
+                    } else {
                         isSeparteId = e.order.id;
 
                         const orderId = e.order.id;
                         const isFirst = e.isFirst ? '초진' : '재진';
                         const name = e.patient.name;
-                        const {common, yoyo, assistant} = getItemAtAccount(e.order.orderItems);
+                        const { common, yoyo, assistant } = getItemAtAccount(e.order.orderItems);
                         const cash = e.order.cash == 0 ? '' : e.order.cash;
-                        const card = e.order.card == 0? '' : e.order.card;
-                        const message = e.order.remark ?? '' + '/' +  e.order.message; 
-                   
-                        const rowDatas = [i+1,orderId,isFirst,name,common,yoyo,cash,card,assistant,message,cashReceipt];
-        
+                        const card = e.order.card == 0 ? '' : e.order.card;
+                        const message = e.order.remark ?? '' + '/' + e.order.message;
+
+                        const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
+
                         const appendRow = sheet.addRow(rowDatas);
                         appendRow.eachCell((cell, colNum) => {
                             styleCell(cell);
@@ -1833,14 +1832,14 @@ export class SendService {
                     }
 
                 }
-                
+
             });
 
             //footer 부분
-            const footer = ['','로젠','총인원','총갯수','세부','현금','카드','비고'];
+            const footer = ['', '로젠', '총인원', '총갯수', '세부', '현금', '카드', '비고'];
             // const footerWidths = [5,25,9,16,15,10,16,16,12,25,18];
 
-            const {logen, orderCount, fullCount, detail, card, cash, note } = getFooter(tempOrderList,sendList.addSends);
+            const { logen, orderCount, fullCount, detail, card, cash, note } = getFooter(tempOrderList, sendList.addSends);
             const rowDatas = [
                 '',
                 logen,
@@ -1861,16 +1860,15 @@ export class SendService {
             });
 
             const appendRow = sheet.addRow(rowDatas);
-            appendRow.eachCell((cell,colNum)=>
-                {
-                    styleCell(cell);
-                })
+            appendRow.eachCell((cell, colNum) => {
+                styleCell(cell);
+            })
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
 
-            return {success:true, status: HttpStatus.OK, url};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK, url };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,

@@ -35,6 +35,8 @@ export class PatientService {
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
             row.socialNum = markedSocialNum;
+
+            row.patientNotes.reverse(); 
         }
 
         return { success: true, list: patientList, status:HttpStatus.OK };
@@ -46,15 +48,15 @@ export class PatientService {
      * @returns {success:boolean, status:HttpStatus }
      */
     async patientNote(patientNoteDto: PatientNoteDto) {
-        let res;
+        let res = await this.patientRepository.patientCreateNote(patientNoteDto);;
 
-        if(patientNoteDto.id == undefined) {
-            //특이사항이 없을 때
-            res = await this.patientRepository.patientCreateNote(patientNoteDto);
-        }else{
-            //특이 사항이 있을 때
-            res = await this.patientRepository.patientUpdateNote(patientNoteDto);
-        }
+        // if(patientNoteDto.id == undefined) {
+        //     //특이사항이 없을 때
+        //     res = await this.patientRepository.patientCreateNote(patientNoteDto);
+        // }else{
+        //     //특이 사항이 있을 때
+        //     res = await this.patientRepository.patientUpdateNote(patientNoteDto);
+        // }
 
         if(res.success){
             return {success:true, status:HttpStatus.CREATED};
@@ -83,7 +85,7 @@ export class PatientService {
         if(res.success) return {success:true, status:HttpStatus.CREATED};
         else return {success:false, status: HttpStatus.INTERNAL_SERVER_ERROR};
     }
-    
+
 
     /**
      * 환자 검색
