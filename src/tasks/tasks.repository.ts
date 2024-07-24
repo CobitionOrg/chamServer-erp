@@ -529,4 +529,102 @@ export class TasksRepository {
             );
         }
     }
+
+
+    /**
+    * 미입금 된 인원 엑셀 데이터
+    * @param getListDto 
+    * @returns Promise<{
+           success: boolean;
+           list: {
+               id: number;
+               patient: {
+                   name: string;
+                   phoneNum: string;
+               };
+           }[];
+           status: HttpStatus;
+       }>
+    */
+    async notPay(yesterday: Date, fourWeeksAgo: Date) {
+        try {
+            let orderConditions = {
+                date: {
+                    gte: fourWeeksAgo,
+                    lte: yesterday,
+                }
+            };
+
+            //초진 - 상담 연결되고 입금 안된 애들
+            const firstList = await this.prisma.order.findMany({
+                where: {
+                    ...orderConditions,
+                    orderSortNum: { gte: 0 },
+                    talkFlag: true,
+                    consultingFlag: true,
+                    useFlag: true,
+                    isFirst: true,
+                    payFlag: 0,
+
+                },
+                select: {
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, },
+                    price: true,
+                    cash: true,
+                    card: true,
+                }
+            });
+
+            //console.log(data);
+
+            const list = firstList.filter(i => i.price != (i.cash + i.card));
+            const resFisrt = list.map(item => ({
+                id: item.id,
+                patient:
+                {
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                }
+            }))
+
+            //재진 - 상담 연결 안되도 입금 안되면 다 보내기
+            const returnList = await this.prisma.order.findMany({
+                where: {
+                    ...orderConditions,
+                    orderSortNum: { gte: 0 },
+                    consultingFlag: false,
+                    useFlag: true,
+                    payFlag: 0,
+                    isFirst: false
+                },
+                select: {
+                    id: true,
+                    patient: { select: { name: true, phoneNum: true }, }
+                }
+            });
+
+            const resReturn = returnList.map(item => ({
+                id: item.id,
+                patient:
+                {
+                    name: item.patient.name,
+                    phoneNum: this.crypto.decrypt(item.patient.phoneNum)
+                }
+            }));
+
+            let res = [...resFisrt, ...resReturn];
+            console.log(res);
+            return { success: true, list: res, status: HttpStatus.OK };
+
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

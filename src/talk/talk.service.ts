@@ -2,7 +2,6 @@ import { HttpStatus, Injectable, InternalServerErrorException, Logger } from '@n
 import { TalkRepositoy } from './talk.repository';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import * as Excel from 'exceljs'
-import { styleHeaderCell } from 'src/util/excelUtil';
 import { ErpService } from 'src/erp/erp.service';
 import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Crypto } from 'src/util/crypto.util';
