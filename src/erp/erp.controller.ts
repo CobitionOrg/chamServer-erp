@@ -756,6 +756,16 @@ export class ErpController {
         return res;
     }
 
+    @Public()
+    @ApiOperation({summary: '입금/상담 목록에서 합배송 시 발송 목록 조회'})
+    @Get('/not-completed')
+    async getNotFixedTempOrderList() {
+        this.logger.log('입금/상담 목록에서 합배송 시 발송 목록 조회');
+        const res = await this.sendService.getNotCompletedTempOrderList();
+
+        return res;
+    }
+
 
     @Get('/ffff')
     async ffff(){

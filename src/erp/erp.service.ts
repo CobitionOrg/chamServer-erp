@@ -2098,7 +2098,8 @@ export class ErpService {
                         id: {
                             in: [...combineOrderDto.orderIdArr]
                         },
-                        isComplete: false
+                        // 발송 목록도 합배송 처리를 위해 주석 처리
+                        // isComplete: false
                     },
                     data: {
                         combineNum: newCombineNum,
@@ -2175,6 +2176,28 @@ export class ErpService {
                 const encryptedAddr = this.crypto.encrypt(combineOrderDto.addr);
 
                 for(let i = 0; i<orders.length; i++){
+                    const check = await this.isInTempOrder(orders[i].id);
+                    if(check) {
+                    // 발송 목록에 있는 항목이면 update
+                        const tempOrder = await tx.tempOrder.updateMany({
+                            where: {
+                                orderId: orders[i].id
+                            },
+                            data: {
+                                orderSortNum: 6,
+                            }
+                        });
+
+                        const order = await tx.order.update({
+                            where: {
+                                id: orders[i].id
+                            },
+                            data: {
+                                combineNum: newCombineNum
+                            }
+                        });
+                    } else {
+                    // 아니면 create
                     const res = await tx.tempOrder.create({
                         data: {
                             route: orders[i].route,
@@ -2203,7 +2226,7 @@ export class ErpService {
                             }
                         }
                     });
-
+                    }
                 }
                 // await tx.tempOrder.updateMany({
                 //     where: {
@@ -2240,6 +2263,31 @@ export class ErpService {
             });
 
             return { success: true, status: HttpStatus.OK };
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 합배송 시 발송 목록에 있는 항목인지 체크
+     */
+    async isInTempOrder(orderId: number) {
+        try {
+            const res = await this.prisma.tempOrder.findFirst({
+                where: {
+                    orderId: orderId
+                }
+            });
+
+            console.log(res);
+
+            return res === null ? false : true;
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
