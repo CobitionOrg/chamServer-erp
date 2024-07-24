@@ -227,6 +227,27 @@ export class TasksService {
     }
 
 
+    @Cron('0 0 1 * * 5')
+    async notPay() {
+        const today = new Date();
+
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate()-1);
+
+        //4주 전 날짜
+        const fourWeeksAgo = new Date(yesterday);
+        fourWeeksAgo.setDate(yesterday.getDate() - 28);
+
+        const res = await this.tasksRepository.notPay(yesterday, fourWeeksAgo);
+        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    
+        const fileName = 'notPay';
+        const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
+
+        //발송 알람톡 ㄱㄱ
+
+    }
+
     /**
     * 접수 알람톡 용 엑셀 파일 만들기
     * @param list 
