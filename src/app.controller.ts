@@ -14,4 +14,10 @@ export class AppController {
   // async test() {
   //   return await this.appService.test();
   // }
+
+  @Get('/mail')
+  async mailTest() {
+    return await this.appService.mailTest();
+  }
+
 }
