@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Patch, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
@@ -8,6 +8,7 @@ import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { patientBodyType } from '@prisma/client';
 import { UpdatePatientDto } from './Dto/updatePatient.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
 
 @Controller('patient')
 @UseFilters(new HttpExceptionFilter())
@@ -55,6 +56,16 @@ export class PatientController {
         const res = await this.patientService.search(getListDto);
 
         return res; 
+    }
+
+
+    @ApiOperation({summary:'처리 미처리 여부 수정'})
+    @Patch('/note')
+    async updateNote(@Body() updateNoteDto: UpdateNoteDto) {
+        this.logger.log('처리 미처리 여부 수정');
+        const res = await this.patientService.updateNote(updateNoteDto);
+
+        return res;
     }
     
     
