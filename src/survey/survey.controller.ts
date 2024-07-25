@@ -42,11 +42,11 @@ export class SurveyController {
         this.myCache.set('/new-patient',response);
         return response;
     }
-    else throw new HttpException('초진 설문 오류', response.status);
+    else throw new HttpException('초진 설문 오류', response.status); 
   }
 
   @ApiOperation({ summary: '재진 설문' })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)  
   @Get('/returning-patient')
   async getReturningQuestion() {
     this.logger.log('재진 설문');

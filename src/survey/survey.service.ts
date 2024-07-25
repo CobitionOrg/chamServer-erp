@@ -43,6 +43,7 @@ export class SurveyService {
           note: true,
           questionCode: true,
           orderType: true,
+          sortNum: true,
           answers: {
             select: {
               id: true,
@@ -86,6 +87,7 @@ export class SurveyService {
           note: true,
           questionCode: true,
           orderType: true,
+          sortNum: true,
           answers: {
             select: {
               id: true,
