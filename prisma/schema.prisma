@@ -123,22 +123,26 @@ model patient {
   /// 환자 주민번호
   socialNum        String
   useFlag          Boolean?          @default(true)
+  /// 최근 주문 날짜
+  orderDate        DateTime?         @db.DateTime(0)
   friendRecommends friendRecommend[]
   orders           order[]
-  tempOrders       tempOrder[]
+  patientBodyType  patientBodyType?
   patientNotes     patientNote[]
-  patientBodyType patientBodyType?
+  tempOrders       tempOrder[]
 }
 
 model patientNote {
   /// index key
-  id               Int               @id @default(autoincrement())
-  ///특이 사항
-  note String
-  ///사용 여부
-  useFlag Boolean? @default(true)
+  id        Int      @id @default(autoincrement())
+  /// 특이 사항
+  note      String
+  /// 사용 여부
+  useFlag   Boolean? @default(true)
   patientId Int
-  patient          patient          @relation(fields: [patientId], references: [id])
+  patient   patient  @relation(fields: [patientId], references: [id])
+
+  @@index([patientId], map: "patientNote_patientId_fkey")
 }
 
 model item {
@@ -226,6 +230,7 @@ model order {
   orderBodyType    orderBodyType?
   orderItems       orderItem[]
   tempOrders       tempOrder[]
+
   @@index([patientId], map: "order_patientId_fkey")
 }
 
@@ -372,10 +377,10 @@ model orderBodyType {
   pastDrug     String
   /// 과거에 수술하신 경우
   pastSurgery  String
-  /// 사용 여부
-  useFlag      Boolean? @default(true)
   /// 해당 주문 오더 key
   orderId      Int      @unique
+  /// 사용 여부
+  useFlag      Boolean? @default(true)
   order        order    @relation(fields: [orderId], references: [id])
 }
 
@@ -399,8 +404,8 @@ model patientBodyType {
   /// 해당 주문 오더 key
   /// 사용 여부
   useFlag      Boolean? @default(true)
-  patientId Int @unique
-  patient patient @relation(fields:[patientId], references:[id])
+  patientId    Int      @unique
+  patient      patient  @relation(fields: [patientId], references: [id])
 }
 
 model orderItem {

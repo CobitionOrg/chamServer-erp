@@ -57,6 +57,7 @@ erDiagram
   String addr "nullable"
   String socialNum
   Boolean useFlag "nullable"
+  DateTime orderDate "nullable"
 }
 "patientNote" {
   Int id PK
@@ -172,8 +173,8 @@ erDiagram
   String nowDrug
   String pastDrug
   String pastSurgery
-  Boolean useFlag "nullable"
   Int orderId FK
+  Boolean useFlag "nullable"
 }
 "patientBodyType" {
   Int id PK
@@ -295,6 +296,7 @@ erDiagram
   - `addr`: 환자 주소
   - `socialNum`: 환자 주민번호
   - `useFlag`: 
+  - `orderDate`: 
 
 ### `patientNote`
 
@@ -428,8 +430,8 @@ erDiagram
   - `nowDrug`: 현재 복용 중인 약
   - `pastDrug`: 과거 다이어트 약 복용
   - `pastSurgery`: 과거에 수술하신 경우
-  - `useFlag`: 사용 여부
   - `orderId`: 해당 주문 오더 key
+  - `useFlag`: 사용 여부
 
 ### `patientBodyType`
 

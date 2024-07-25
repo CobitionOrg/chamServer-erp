@@ -127,7 +127,8 @@ export class ErpService {
                         name: objPatient.name,
                         phoneNum: encryptedPhoneNum,
                         addr: encryptedAddr,
-                        socialNum: encryptedSocialNum
+                        socialNum: encryptedSocialNum,
+                        orderDate: kstDate,
                     }
                 });
 
@@ -463,6 +464,7 @@ export class ErpService {
                     data: {
                         addr: encryptedAddr,
                         phoneNum: encryptedPhoneNum,
+                        orderDate: kstDate
                     }
                 });
 
