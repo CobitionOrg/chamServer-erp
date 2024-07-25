@@ -35,15 +35,13 @@ export class SurveyController {
   async getFirstVisitQuestion() {
     this.logger.log('초진 설문');
     const res =this.myCache.get('/new-patient');
-    if(res)
-      {return res;}
+    if(res) {return res;}
     const response=await this.surveyService.getFirstVisitQuestion();
     
-    if (response.success)
-      {
+    if (response.success){
         this.myCache.set('/new-patient',response);
         return response;
-      }
+    }
     else throw new HttpException('초진 설문 오류', response.status);
   }
 
@@ -55,11 +53,11 @@ export class SurveyController {
     const res = this.myCache.get('/returning-patient');
     if(res)return res;
     const response=await this.surveyService.getReturningQuestion();
-    if (response.success)
-      {
+    
+    if (response.success){
         this.myCache.set('/returning-patient',response);
         return response;
-      }
+    }
     else throw new HttpException('재진 설문 오류', response.status);
   }
 
