@@ -4,6 +4,7 @@ import { Crypto } from 'src/util/crypto.util';
 import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { UpdatePatientDto } from './Dto/updatePatient.dto';
+import { UpdateNoteDto } from './Dto/updateNote.dto';
 
 @Injectable()
 export class PatientService {
@@ -128,5 +129,15 @@ export class PatientService {
         return {success:true, list};
     }
 
+
+    /**
+     * 처리 미처리 여부 수정
+     * @param updateNoteDto 
+     * @returns {success:boolean}
+     */
+    async updateNote(updateNoteDto: UpdateNoteDto) {
+        const res = await this.patientRepository.updateNote(updateNoteDto);
+        return res;
+    }
     
 }
