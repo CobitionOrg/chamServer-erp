@@ -68,7 +68,7 @@ model question {
   /// index key
   id           Int           @id @default(autoincrement())
   /// 질문 내용
-  question     String        @db.VarChar(500)
+  question     String        @db.VarChar(1500)
   /// 초진 or 재진 타입 
   type         Visit
   /// 선택형 or 서술형 or 멀티 선택형 
@@ -81,6 +81,8 @@ model question {
   useFlag      Int?          @default(0) @db.TinyInt
   /// 어떤 질문인지 타입 (주문관련, 주문 아이템, 환자 정보 등)
   orderType    String?       @db.VarChar(45)
+  /// 질문 정렬 번호
+  sortNum      Int?
   answers      answer[]
   questionImgs questionImg[]
 }

@@ -28,6 +28,9 @@ export class SurveyService {
   async getFirstVisitQuestion() {
     try {
       const res = await this.prisma.question.findMany({
+        orderBy:{
+          sortNum:'asc'
+        },
         where: {
           type: 'first',
           useFlag: 1
@@ -68,6 +71,9 @@ export class SurveyService {
   async getReturningQuestion() {
     try {
       const res = await this.prisma.question.findMany({
+        orderBy:{
+          sortNum:'asc'
+        },
         where: {
           type: 'return',
           useFlag: 1

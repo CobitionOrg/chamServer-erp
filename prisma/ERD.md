@@ -38,6 +38,7 @@ erDiagram
   String questionCode "nullable"
   Int useFlag "nullable"
   String orderType "nullable"
+  Int sortNum "nullable"
 }
 "answer" {
   Int id PK
@@ -271,6 +272,7 @@ erDiagram
   - `questionCode`: 어떤 질문인지 코드 값(order table에 매칭)
   - `useFlag`: 사용여부
   - `orderType`: 어떤 질문인지 타입 (주문관련, 주문 아이템, 환자 정보 등)
+  - `sortNum`: 질문 정렬 번호
 
 ### `answer`
 
@@ -296,7 +298,7 @@ erDiagram
   - `addr`: 환자 주소
   - `socialNum`: 환자 주민번호
   - `useFlag`: 
-  - `orderDate`: 
+  - `orderDate`: 최근 주문 날짜
 
 ### `patientNote`
 
