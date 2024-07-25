@@ -40,6 +40,7 @@ export class PatientRepository {
                     phoneNum: true,
                     addr: true,
                     socialNum: true,
+                    orderDate: true,
                     patientBodyType: {
                         select: {
                             tallWeight: true,
@@ -166,6 +167,7 @@ export class PatientRepository {
                     phoneNum: true,
                     addr: true,
                     socialNum: true,
+                    orderDate: true,
                     patientBodyType: {
                         select: {
                             tallWeight: true,
