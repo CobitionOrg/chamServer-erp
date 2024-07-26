@@ -32,6 +32,7 @@ import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfTo
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
+import { SendCombineDto } from './Dto/sendCombineDto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -2288,6 +2289,144 @@ export class ErpService {
             console.log(res);
 
             return res === null ? false : true;
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 발송 목록끼리 합배송 처리
+     * @param sendCombineDto
+     */
+    async sendCombine(sendCombineDto: SendCombineDto) {
+        try {
+            // console.log(sendCombineDto);
+            await this.prisma.$transaction(async (tx) => {
+                const maxCombineNum = await tx.order.aggregate({
+                    _max: {
+                        combineNum: true
+                    }
+                });
+                let newCombineNum = (maxCombineNum._max.combineNum || 0) + 1;
+
+                const orderIdArr = [];
+                const tempOrderIdArr = [];
+                for (let i = 0; i < sendCombineDto.idsObjArr.length; i++) {
+                    orderIdArr.push(sendCombineDto.idsObjArr[i].orderId);
+                    tempOrderIdArr.push(sendCombineDto.idsObjArr[i].tempOrderId);
+                }
+                
+                // order 테이블 combineNum 수정
+                await tx.order.updateMany({
+                    where: {
+                        id: {
+                            in: [...orderIdArr]
+                        }
+                    },
+                    data: {
+                        combineNum: newCombineNum,
+                    }
+                });
+                // tempOrder 테이블 orderSortNum 및 sendList 수정
+                await tx.tempOrder.updateMany({
+                    where: {
+                        id: {
+                            in: [...tempOrderIdArr]
+                        }
+                    },
+                    data: {
+                        orderSortNum: 6,
+                        sendListId: sendCombineDto.sendListId,
+                    }
+                });
+
+                const orders = await tx.order.findMany({
+                    where: {
+                        id: {
+                            in: [...orderIdArr]
+                        }
+                    }
+                });
+
+                let orderItems = 0;
+
+                for (let i = 0; i < orders.length; i++) {
+                    const orderItem = await tx.orderItem.findMany({
+                        where: {
+                            orderId: orders[i].id,
+                            type: { in: ['common', 'yoyo']}
+                        }
+                    });
+
+                    orderItems += (orderItem.length);
+                }
+
+                if(orderItems == 1) {
+                    //합배송 주문 처리 되는 모든 주문을 합쳤을 때 택배비를 받아야하는 금액 처리
+                    for(let i = 0; i<orders.length; i++){
+                        const orderItem = await tx.orderItem.findMany({
+                            where: {
+                                orderId:orders[i].id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+    
+                        //이럴 경우 별도 주문을 한 사람에게 택배비가 부과됩니다.
+                        //따라서 별도 주문을 하지 않은 사람은 택배비를 빼줘야 합니다.
+                        if(orderItem.length != 0) { 
+                            await tx.order.update({
+                                where:{id: orders[i].id},
+                                data: {price: orders[i].price-3500}
+                            });
+                        }
+                    }
+                }else{
+                    //합배송 시 택배비를 면제해주는 금액처리
+                    for(let i = 0; i<orders.length; i++){
+                        const orderItem = await tx.orderItem.findMany({
+                            where: {
+                                orderId:orders[i].id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+
+                        if(checkSend(orderItem)){
+                            await tx.order.update({
+                                where:{id: orders[i].id},
+                                data: {price: orders[i].price-3500}
+                            });
+                        }
+                    }
+                }
+
+                // 배송 주소 업데이트
+                const encryptedAddr = this.crypto.encrypt(sendCombineDto.addr);
+                const patients = await tx.order.findMany({
+                    where: {
+                        id: {
+                            in: [...orderIdArr]
+                        }
+                    },
+                    select: {
+                        patientId: true,
+                    }
+                })
+
+                for (const e of patients) {
+                    await tx.patient.update({
+                        where: { id: e.patientId },
+                        data: { addr: encryptedAddr }
+                    });
+                }
+            });
+
+            return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
