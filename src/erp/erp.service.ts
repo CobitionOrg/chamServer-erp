@@ -120,8 +120,13 @@ export class ErpService {
             const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
             const encryptedSocialNum = this.crypto.encrypt(objPatient.socialNum);
-
+            
+            
+           
             await this.prisma.$transaction(async (tx) => {
+                let remark = '';
+                let orderSortNum = 1;
+
                 const patient = await tx.patient.create({
                     data: {
                         name: objPatient.name,
@@ -132,12 +137,19 @@ export class ErpService {
                     }
                 });
 
-                let remark = '';
 
                 if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
-                    remark = '파주맘'
+                    remark = '파주맘';
+                    orderSortNum = 2;
                 }
 
+                
+                if(checkGSB(objOrder.route)){
+                    remark = remark == '' ? '구수방' : remark+='/구수방'; 
+                    orderSortNum = 5;
+                }
+
+                console.log(orderSortNum);
                 const order = await tx.order.create({
                     data: {
                         route: objOrder.route,
@@ -152,11 +164,45 @@ export class ErpService {
                         price: price,
                         patientId: patient.id,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
+                        orderSortNum: orderSortNum, //구수방인지 체크
                         addr: encryptedAddr,
                         remark: remark,
                     }
                 });
+
+                //지인 체크
+                if(objOrder.route.includes('/')){
+                    let check = objOrder.route.split("/");
+                    console.log(check[0]);
+                    console.log(check[1]);
+                    const checkRecommend = await this.checkRecommend(check[0], check[1]);
+
+                    console.log(checkRecommend);
+                    if(checkRecommend.success) {
+                        //지인 확인 되었을 시
+                        orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                        remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+
+                        await tx.friendRecommend.create({
+                            data:{
+                                orderId: order.id,
+                                patientId: checkRecommend.patientId,
+                                checkFlag: true,
+                                date: kstDate,
+                                name: check[0],
+                                phoneNum: check[1],
+                            }
+                        });
+
+                        await tx.order.update({
+                            where:{id:order.id},
+                            data:{
+                                orderSortNum:orderSortNum,
+                                remark:remark
+                            }
+                        });
+                    }
+                }
 
                 const orderBodyType = await tx.orderBodyType.create({
                     data: {
@@ -471,6 +517,8 @@ export class ErpService {
                 //지인 10% 할인 플래그
                 let checkFlag = false;
                 let remark = '';
+                let orderSortNum = 1;
+
                 const recommendList = await tx.friendRecommend.findMany({
                     where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
                 });
@@ -500,9 +548,14 @@ export class ErpService {
 
 
                 if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
-                    remark += ' 파주맘';
+                    remark = remark == '' ? '파주맘' : remark+='/파주맘'; 
+                    orderSortNum = 2;
                 }
 
+                if(checkGSB(objOrder.route)){
+                    remark = remark == '' ? '구수방' : remark+='/구수방';
+                    orderSortNum = 5;
+                }
 
                 const order = await tx.order.create({
                     data: {
@@ -518,12 +571,46 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
+                        orderSortNum: orderSortNum, //구수방인지 체크
                         addr: encryptedAddr,
                         friendDiscount: checkFlag,
                         remark: remark,
                     }
                 });
+
+                //지인 체크
+                if(objOrder.route.includes('/')){
+                    let check = objOrder.route.split("/");
+                    console.log(check[0]);
+                    console.log(check[1]);
+                    const checkRecommend = await this.checkRecommend(check[0], check[1]);
+
+                    console.log(checkRecommend);
+                    if(checkRecommend.success) {
+                        //지인 확인 되었을 시
+                        orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                        remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+
+                        await tx.friendRecommend.create({
+                            data:{
+                                orderId: order.id,
+                                patientId: checkRecommend.patientId,
+                                checkFlag: true,
+                                date: kstDate,
+                                name: check[0],
+                                phoneNum: check[1],
+                            }
+                        });
+
+                        await tx.order.update({
+                            where:{id:order.id},
+                            data:{
+                                orderSortNum:orderSortNum,
+                                remark:remark
+                            }
+                        });
+                    }
+                }
 
                 console.log(objOrderItem);
                 console.log('--------------------');
@@ -593,6 +680,7 @@ export class ErpService {
                         name: name,
                     },
                     isComplete: false,
+                    useFlag: true
                 },
                 include: {
                     patient: true,
@@ -2840,6 +2928,45 @@ export class ErpService {
         }
     }
 
+
+    /**
+     * 지인 추천 체크
+     * @param name 
+     * @param phoneNum 
+     * @returns 
+     */
+    async checkRecommend(name:string, phoneNum:string) {
+        try{
+            const res = await this.prisma.patient.findMany({
+                where:{name: name}
+            });
+
+            let flag = false;
+            let id = 0;
+            for(const e of res) {
+                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+
+                if(
+                    e.name === name 
+                    && checkPhoneNum.includes(phoneNum)
+                ){
+                    flag = true;
+                    id = e.id;
+                    break;
+                }
+            }
+
+            return {success:flag, patientId: id};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
     /**
      * 지인 확인 할인 여부 체크
      * @param checkDiscountDto 
@@ -2847,74 +2974,48 @@ export class ErpService {
      */
     async checkDiscount(checkDiscountDto: CheckDiscountDto){
         try{
-            const res = await this.prisma.patient.findMany({
-                where:{name: checkDiscountDto.name}
-            });
+            const check = await this.checkRecommend(checkDiscountDto.name, checkDiscountDto.phoneNum);
 
-            console.log(res);
+            if(check.success) {
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.friendRecommend.create({
+                        data:{
+                            orderId: checkDiscountDto.orderId,
+                            patientId: check.patientId,
+                            checkFlag: true,
+                            date: checkDiscountDto.date,
+                            name: checkDiscountDto.name,
+                            phoneNum: checkDiscountDto.phoneNum,
+                        }
+                    });
 
-            for(const e of res) {
-                console.log(e);
-                const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
+                    const order = await tx.order.findUnique({
+                        where:{id:checkDiscountDto.orderId},
+                        select:{remark:true}
+                    });
 
-                console.log(checkPhoneNum);
+                    let remark = '지인 10포' + (order.remark == null ? '' : `/${order.remark}`);
+                    console.log('//////////////////////////////');
+                    console.log(remark);
+                    
+                    await tx.order.update({
+                        where:{id:checkDiscountDto.orderId},
+                        data:{
+                            orderSortNum:4,
+                            remark:remark
+                        }
+                    });
+                })
+                return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
 
-                if(
-                    e.name === checkDiscountDto.name 
-                    && checkPhoneNum.includes(checkDiscountDto.phoneNum)
-                ){
-                    await this.prisma.$transaction(async (tx) => {
-                        await tx.friendRecommend.create({
-                            data:{
-                                orderId: checkDiscountDto.orderId,
-                                patientId: e.id,
-                                checkFlag: true,
-                                date: checkDiscountDto.date,
-                                name: checkDiscountDto.name,
-                                phoneNum: checkDiscountDto.phoneNum,
-                            }
-                        });
-
-                        const order = await tx.order.findUnique({
-                            where:{id:checkDiscountDto.orderId},
-                            select:{remark:true}
-                        });
-
-                        let remark = '지인 10포' + (order.remark == null ? '' : `/${order.remark}`);
-                        console.log('//////////////////////////////');
-                        console.log(remark);
-
-                        await tx.order.update({
-                            where:{id:checkDiscountDto.orderId},
-                            data:{
-                                orderSortNum:4,
-                                remark:remark
-                            }
-                        });
-                    })
-                   
-                    break;
-                }else{
-                    // await this.prisma.friendRecommend.create({
-                    //     data:{
-                    //         orderId: checkDiscountDto.orderId,
-                    //         patientId: e.id,
-                    //         checkFlag: false,
-                    //         date: checkDiscountDto.date,
-                    //         name: checkDiscountDto.name,
-                    //         phoneNum: checkDiscountDto.phoneNum,
-                    //     }
-                    // });
-
-                    return {
-                        success:false,
-                        status: HttpStatus.NOT_FOUND, 
-                        msg:'등록하신 환자 데이터를 찾을 수 없습니다'
-                    };
-                }
+            }else{
+                return {
+                    success:false,
+                    status: HttpStatus.NOT_FOUND, 
+                    msg:'등록하신 환자 데이터를 찾을 수 없습니다'
+                };
             }
 
-            return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
