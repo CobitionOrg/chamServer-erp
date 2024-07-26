@@ -1075,6 +1075,7 @@ export class ErpService {
                 data: {
                     consultingType: false,
                     phoneConsulting: true,
+                    notCall: false,
                 }
             });
 
@@ -1103,6 +1104,7 @@ export class ErpService {
                 },
                 data: {
                     consultingType: false,
+                    notCall: false,
                 }
             });
 
