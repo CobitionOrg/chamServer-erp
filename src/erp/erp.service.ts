@@ -145,7 +145,7 @@ export class ErpService {
 
                 
                 if(checkGSB(objOrder.route)){
-                    remark = remark == '' ? '구수방' : remark+='/구수방' 
+                    remark = remark == '' ? '구수방' : remark+='/구수방'; 
                     orderSortNum = 5;
                 }
 
@@ -170,6 +170,7 @@ export class ErpService {
                     }
                 });
 
+                //지인 체크
                 if(objOrder.route.includes('/')){
                     let check = objOrder.route.split("/");
                     console.log(check[0]);
@@ -195,7 +196,10 @@ export class ErpService {
 
                         await tx.order.update({
                             where:{id:order.id},
-                            data:{orderSortNum:orderSortNum}
+                            data:{
+                                orderSortNum:orderSortNum,
+                                remark:remark
+                            }
                         });
                     }
                 }
@@ -513,6 +517,8 @@ export class ErpService {
                 //지인 10% 할인 플래그
                 let checkFlag = false;
                 let remark = '';
+                let orderSortNum = 1;
+
                 const recommendList = await tx.friendRecommend.findMany({
                     where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
                 });
@@ -542,11 +548,13 @@ export class ErpService {
 
 
                 if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
-                    remark = remark == '' ? '파주맘' : remark+='/파주맘' 
+                    remark = remark == '' ? '파주맘' : remark+='/파주맘'; 
+                    orderSortNum = 2;
                 }
 
                 if(checkGSB(objOrder.route)){
-                    remark = remark == '' ? '구수방' : remark+='/구수방' 
+                    remark = remark == '' ? '구수방' : remark+='/구수방';
+                    orderSortNum = 5;
                 }
 
                 const order = await tx.order.create({
@@ -563,12 +571,46 @@ export class ErpService {
                         essentialCheck: '',
                         price: price,
                         date: kstDate,
-                        orderSortNum: checkGSB(objOrder.route) ? 5 : 1, //구수방인지 체크
+                        orderSortNum: orderSortNum, //구수방인지 체크
                         addr: encryptedAddr,
                         friendDiscount: checkFlag,
                         remark: remark,
                     }
                 });
+
+                //지인 체크
+                if(objOrder.route.includes('/')){
+                    let check = objOrder.route.split("/");
+                    console.log(check[0]);
+                    console.log(check[1]);
+                    const checkRecommend = await this.checkRecommend(check[0], check[1]);
+
+                    console.log(checkRecommend);
+                    if(checkRecommend.success) {
+                        //지인 확인 되었을 시
+                        orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                        remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+
+                        await tx.friendRecommend.create({
+                            data:{
+                                orderId: order.id,
+                                patientId: checkRecommend.patientId,
+                                checkFlag: true,
+                                date: kstDate,
+                                name: check[0],
+                                phoneNum: check[1],
+                            }
+                        });
+
+                        await tx.order.update({
+                            where:{id:order.id},
+                            data:{
+                                orderSortNum:orderSortNum,
+                                remark:remark
+                            }
+                        });
+                    }
+                }
 
                 console.log(objOrderItem);
                 console.log('--------------------');
@@ -638,6 +680,7 @@ export class ErpService {
                         name: name,
                     },
                     isComplete: false,
+                    useFlag: true
                 },
                 include: {
                     patient: true,
