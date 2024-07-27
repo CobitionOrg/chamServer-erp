@@ -31,6 +31,7 @@ import { UpdateSendPriceDto } from './Dto/updateSendPrice.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 import { zip } from 'rxjs/operators';
+import { SendCombineDto } from './Dto/sendCombineDto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -555,6 +556,23 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${combineOrderDto.addr}에 ${orderIds}들 합배송`,'입금상담목록',header
+            )
+        }
+        return res;
+    }
+
+    @ApiOperation({summary: '발송 목록끼리 합배송 처리'})
+    @Post('/send-combine')
+    async sendCombine(@Body() sendCombineDto: SendCombineDto, @Headers() header) {
+        this.logger.log('합배송 처리');
+        const res = await this.erpService.sendCombine(sendCombineDto);
+        const tempOrderIds = [];
+        for (let i = 0; i < sendCombineDto.idsObjArr.length; i++) {
+            tempOrderIds.push(sendCombineDto.idsObjArr[i].tempOrderId)
+        }
+        if(res.success){
+            await this.logService.createLog(
+                `${sendCombineDto.addr}에 ${tempOrderIds}들 합배송`,'발송 목록',header
             )
         }
         return res;
