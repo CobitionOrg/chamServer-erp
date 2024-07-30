@@ -3812,4 +3812,37 @@ export class ErpService {
 
     //     return { success: true, status: HttpStatus.OK, url };
     // }
+
+    // // 환자 엑셀 데이터 삽입
+    // async importAndInsert(filePath: string) {
+    //     const wb = new Excel.Workbook();
+    //     await wb.xlsx.readFile(filePath);
+    //     const worksheet = wb.getWorksheet(1);
+
+    //     console.log(worksheet.rowCount);
+
+    //     for (let rowNumber = 2; rowNumber <= 2; rowNumber++) {
+    //         const row = worksheet.getRow(rowNumber);
+    //         const socialNum = row.getCell(1).value.toString();
+    //         const name = row.getCell(2).value.toString();
+    //         const phoneNum = row.getCell(3).value.toString();
+    //         const addr = row.getCell(4).value.toString();
+
+    //         const encryptedSocialNum = this.crypto.encrypt(socialNum);
+    //         const encryptedPhoneNum = this.crypto.encrypt(phoneNum);
+    //         const encryptedAddr = this.crypto.encrypt(addr);
+
+    //         await this.prisma.patient.create({
+    //             data: {
+    //                 socialNum: encryptedSocialNum,
+    //                 name: name,
+    //                 phoneNum: encryptedPhoneNum,
+    //                 addr: encryptedAddr,
+    //                 useFlag: true,
+    //             }
+    //         });
+    //     }
+
+    //     return { success: true };
+    // }
 }
