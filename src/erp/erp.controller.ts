@@ -788,4 +788,13 @@ export class ErpController {
     //     const res = await this.erpService.testOrderDataExport();
     //     return res;
     // }
+
+    // // 환자 엑셀 데이터 삽입
+    // @Public()
+    // @Get('/importAndInsert')
+    // async importAndInsert() {
+    //     const filePath = ''
+    //     const res = await this.erpService.importAndInsert(filePath);
+    //     return res;
+    // }
 }
