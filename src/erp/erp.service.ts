@@ -178,6 +178,7 @@ export class ErpService {
                 const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
 
                 let checkRecommend;
+                
                 if(routeName !== null && routePhoneNum !== null ){
                     checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
                 
