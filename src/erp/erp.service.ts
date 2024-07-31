@@ -121,9 +121,9 @@ export class ErpService {
             const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
             const encryptedSocialNum = this.crypto.encrypt(objPatient.socialNum);
-            
-            
-           
+
+
+
             await this.prisma.$transaction(async (tx) => {
                 let remark = '';
                 let orderSortNum = 1;
@@ -139,14 +139,14 @@ export class ErpService {
                 });
 
 
-                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
+                if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
                     remark = '파주맘';
                     orderSortNum = 2;
                 }
 
-                
-                if(checkGSB(objOrder.route)){
-                    remark = remark == '' ? '구수방' : remark+='/구수방'; 
+
+                if (checkGSB(objOrder.route)) {
+                    remark = remark == '' ? '구수방' : remark += '/구수방';
                     orderSortNum = 5;
                 }
 
@@ -171,9 +171,6 @@ export class ErpService {
                     }
                 });
 
-                
-                
-  
                 const orderBodyType = await tx.orderBodyType.create({
                     data: {
                         tallWeight: objOrderBodyType.tallWeight,
@@ -204,34 +201,41 @@ export class ErpService {
                 console.log('--------------------');
 
                 const items = [];
-                let assistantFlag = true; //별도 주문만 있는지 체크 플래그
+                let assistantFlag = false; //별도 주문만 있는지 체크 플래그
+                let commonFlag = false; // 별도 주문 외에 주문 있는지 체크 플래그
 
-                for(const e of objOrderItem){
+                for (const e of objOrderItem) {
                     const item = {
                         item: e.item,
                         type: e.type,
                         orderId: order.id
                     }
 
-                    if(e.type == 'assistant') {
+                    if (e.type == 'assistant') {
                         //별도 주문이 있을 때
-                        orderSortNum = 2;
-                    }else{
-                        assistantFlag = false; //별도 주문 외에 주문이 있을 시
+                        assistantFlag = true;
+                    } else {
+                        if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                            commonFlag = true;
+                        }
                     }
 
-                    items.push(item);
+                    if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                        items.push(item);
+                    }
+                    
                 }
 
-                if(assistantFlag) {
-                    //별도 주문만 있을 시
+                //별도 주문만 있을 때 - orderSortNum - 0
+                if (assistantFlag && !commonFlag) {
                     orderSortNum = 0;
-                    await tx.order.update({
-                        where:{id:order.id},
-                        data:{orderSortNum:orderSortNum}
-                    });
                 }
-              
+
+                //별도 주문도 추가 일 때 orderSortNum - 2 
+                if (assistantFlag && commonFlag) {
+                    console.log(orderSortNum + '!!');
+                    orderSortNum = 2;
+                }
 
                 console.log(items);
 
@@ -243,23 +247,24 @@ export class ErpService {
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
                 console.log(route);
 
-                if(route !== "" && orderSortNum != 0){
+                if (route !== "" && orderSortNum != 0) {
                     console.log('지인 체크');
                     const routeName = route.match(/[^\d]+/g).join('');//지인 이름
                     const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
-    
+
                     let checkRecommend;
-                    
-                    if(routeName !== null && routePhoneNum !== null ){
+
+                    if (routeName !== null && routePhoneNum !== null) {
                         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
-                    
-                        if(checkRecommend.success) {
+
+                        if (checkRecommend.success) {
                             //지인 확인 되었을 시
-                            orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
-                            remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
-        
+                            orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
+
+                            remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
+
                             await tx.friendRecommend.create({
-                                data:{
+                                data: {
                                     orderId: order.id,
                                     patientId: checkRecommend.patientId,
                                     checkFlag: true,
@@ -268,23 +273,29 @@ export class ErpService {
                                     phoneNum: routePhoneNum,
                                 }
                             });
-        
+
                             await tx.order.update({
-                                where:{id:order.id},
-                                data:{
-                                    orderSortNum:orderSortNum,
-                                    remark:remark
+                                where: { id: order.id },
+                                data: {
+                                    orderSortNum: orderSortNum,
+                                    remark: remark
                                 }
                             });
-                        }else{
+                        } else {
                             //지인을 입력했을 때 지인 확인이 안될 때
                             await tx.order.update({
-                                where:{id:order.id},
-                                data:{routeFlag:true}
-                            });   
+                                where: { id: order.id },
+                                data: { routeFlag: true }
+                            });
                         }
-        
+
                     }
+                }else{
+                    //그 외의 경우 마지막으로 orderSortNum 업데이트
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { orderSortNum: orderSortNum }
+                    });
                 }
             });
 
@@ -314,15 +325,15 @@ export class ErpService {
             const res = await this.prisma.patient.findMany({
                 where: { name } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
             },
-               
+
             );
             console.log(res);
 
             let check = true;
 
-            for(const e of res) {
+            for (const e of res) {
                 const checkSocialNum = this.crypto.decrypt(e.socialNum);
-                if(checkSocialNum === socialNum) {
+                if (checkSocialNum === socialNum) {
                     check = false;
                     break;
                 }
@@ -331,8 +342,8 @@ export class ErpService {
             console.log("check", check);
             return { success: check };
 
-            
-        }catch(err){
+
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -438,7 +449,7 @@ export class ErpService {
                         }
                     },
                     friendRecommends: {
-                        select:{
+                        select: {
                             checkFlag: true,
                             name: true,
                             phoneNum: true,
@@ -542,8 +553,8 @@ export class ErpService {
                 return { success: false, status: HttpStatus.CONFLICT, msg: '이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요' };
             }
 
-             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
-             const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
+            const encryptedAddr = this.crypto.encrypt(objPatient.addr);
+            const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
 
             await this.prisma.$transaction(async (tx) => {
                 await tx.patient.update({
@@ -563,40 +574,40 @@ export class ErpService {
                 let orderSortNum = 1;
 
                 const recommendList = await tx.friendRecommend.findMany({
-                    where:{patientId:patient.patient.id,checkFlag:true,useFlag:true}
+                    where: { patientId: patient.patient.id, checkFlag: true, useFlag: true }
                 });
                 console.log(recommendList);
-                if(recommendList.length !== 0 && (recommendList.length)%3 == 0){
+                if (recommendList.length !== 0 && (recommendList.length) % 3 == 0) {
                     checkFlag = true;
-                    price = price*0.9;
+                    price = price * 0.9;
                     remark = '지인 10% 할인/'
                     await tx.friendRecommend.updateMany({
-                        where:{patientId:patient.patient.id,checkFlag:true,useFlag:true},
-                        data:{useFlag:false}
+                        where: { patientId: patient.patient.id, checkFlag: true, useFlag: true },
+                        data: { useFlag: false }
                     })
                 }
 
                 const noteData = await tx.patientNote.findMany({
-                    where:{patientId:patient.patient.id,useFlag:true}
+                    where: { patientId: patient.patient.id, useFlag: true }
                 });
 
                 //특이 사항이 있을 시
-                if(noteData.length>0) {
-                    remark+=noteData.join(" ");
+                if (noteData.length > 0) {
+                    remark += noteData.join(" ");
                     await tx.patientNote.update({
-                        where:{id:noteData[0].id},
-                        data:{useFlag:false}
+                        where: { id: noteData[0].id },
+                        data: { useFlag: false }
                     })
                 }
 
 
-                if(objOrder.route.includes('파주맘') || objOrder.route.includes('파주')){
-                    remark = remark == '' ? '파주맘' : remark+='/파주맘'; 
+                if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
+                    remark = remark == '' ? '파주맘' : remark += '/파주맘';
                     orderSortNum = 2;
                 }
 
-                if(checkGSB(objOrder.route)){
-                    remark = remark == '' ? '구수방' : remark+='/구수방';
+                if (checkGSB(objOrder.route)) {
+                    remark = remark == '' ? '구수방' : remark += '/구수방';
                     orderSortNum = 5;
                 }
 
@@ -621,8 +632,8 @@ export class ErpService {
                     }
                 });
 
-               
-               
+
+
                 console.log(objOrderItem);
                 console.log('--------------------');
                 const items = [];
@@ -643,7 +654,7 @@ export class ErpService {
                         items.push(temp);
                         assistantFlag = true;
                     } else {
-                        if(tempObj.item.length>0){
+                        if (tempObj.item.length > 0) {
                             commonFlag = true;
                         }
                         for (let j = 0; j < tempObj.item.length; j++) {
@@ -671,14 +682,14 @@ export class ErpService {
                 console.log(commonFlag);
 
                 //별도 주문만 있을 때 - orderSortNum - 0
-                if(assistantFlag && !commonFlag) {
+                if (assistantFlag && !commonFlag) {
                     orderSortNum = 0;
                 }
 
-                //별도 주문도 추가 일 때 orderSortNum - 2 혹은 그 이상이면 유지
-                if(assistantFlag && commonFlag) {
-                    console.log(orderSortNum+'!!');
-                    orderSortNum = orderSortNum > 2 ? orderSortNum : 2;
+                //별도 주문도 추가 일 때 orderSortNum - 2 
+                if (assistantFlag && commonFlag) {
+                    console.log(orderSortNum + '!!');
+                    orderSortNum = 2;
                 }
 
                 //별도 주문이 없을 때 orderSortNum - 1 혹은 그냥 유지
@@ -686,58 +697,58 @@ export class ErpService {
                 //
                 //}
 
-                 //지인 체크
-                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
-                            
-                 if(route !== "" && orderSortNum !== 0){
-                     const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                     const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
-     
-                     let checkRecommend;
-     
+                //지인 체크
+                const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
+
+                if (route !== "" && orderSortNum !== 0) {
+                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
+                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
+
+                    let checkRecommend;
+
                     //이름과 전화번호가 둘 다 있어야만 지인 체크                     
-                     if(routeName !== null && routePhoneNum !== null ){
-                         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
-                     
-                         if(checkRecommend.success) {
-                             //지인 확인 되었을 시
-                             orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
-                             remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
-         
-                             await tx.friendRecommend.create({
-                                 data:{
-                                     orderId: order.id,
-                                     patientId: checkRecommend.patientId,
-                                     checkFlag: true,
-                                     date: kstDate,
-                                     name: routeName,
-                                     phoneNum: routePhoneNum,
-                                 }
-                             });
-         
-                             await tx.order.update({
-                                 where:{id:order.id},
-                                 data:{
-                                     orderSortNum:orderSortNum,
-                                     remark:remark
-                                 }
-                             });
-                         }else{
-                             //지인을 입력했을 때 지인 확인이 안될 때
-                             await tx.order.update({
-                                 where:{id:order.id},
-                                 data:{routeFlag:true}
-                             });   
-                         }
-         
-                     }
-                 }else{
+                    if (routeName !== null && routePhoneNum !== null) {
+                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+
+                        if (checkRecommend.success) {
+                            //지인 확인 되었을 시
+                            orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
+                            remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
+
+                            await tx.friendRecommend.create({
+                                data: {
+                                    orderId: order.id,
+                                    patientId: checkRecommend.patientId,
+                                    checkFlag: true,
+                                    date: kstDate,
+                                    name: routeName,
+                                    phoneNum: routePhoneNum,
+                                }
+                            });
+
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: {
+                                    orderSortNum: orderSortNum,
+                                    remark: remark
+                                }
+                            });
+                        } else {
+                            //지인을 입력했을 때 지인 확인이 안될 때
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: { routeFlag: true }
+                            });
+                        }
+
+                    }
+                } else {
                     //그 외의 경우 마지막으로 orderSortNum 업데이트
                     await tx.order.update({
-                        where:{id:order.id},
-                        data:{orderSortNum:orderSortNum}
+                        where: { id: order.id },
+                        data: { orderSortNum: orderSortNum }
                     });
-                 }
+                }
             });
 
             return { success: true, status: HttpStatus.CREATED };
@@ -779,10 +790,10 @@ export class ErpService {
 
             let check = true;
 
-            for(const e of res) {
+            for (const e of res) {
                 const checkSocialNum = this.crypto.decrypt(e.patient.socialNum);
                 console.log(checkSocialNum)
-                if(checkSocialNum.includes(socialNum)){
+                if (checkSocialNum.includes(socialNum)) {
                     console.log(e);
                     check = false;
                     break;
@@ -884,16 +895,16 @@ export class ErpService {
 
                 //지인 10% 할인 플래그
                 const exOrder = await tx.order.findUnique({
-                    where:{id:token.orderId},
-                    select:{friendDiscount:true}
+                    where: { id: token.orderId },
+                    select: { friendDiscount: true }
                 });
-       
-                if(exOrder.friendDiscount){
-                    price = price*0.9;
- 
+
+                if (exOrder.friendDiscount) {
+                    price = price * 0.9;
+
                     await tx.friendRecommend.updateMany({
-                        where:{patientId:token.patientId,checkFlag:true,useFlag:true},
-                        data:{useFlag:false}
+                        where: { patientId: token.patientId, checkFlag: true, useFlag: true },
+                        data: { useFlag: false }
                     });
                 }
 
@@ -903,7 +914,7 @@ export class ErpService {
                     },
                     data: {
                         payType: objOrder.payType,
-                        price:price
+                        price: price
                     }
                 });
 
@@ -955,9 +966,9 @@ export class ErpService {
             let check = false;
             let matched: any = {};
 
-            for(const e of res) {
+            for (const e of res) {
                 const checkSocialNum = this.crypto.decrypt(e.socialNum);
-                if(checkSocialNum.includes(objPatient.socialNum)) {
+                if (checkSocialNum.includes(objPatient.socialNum)) {
                     matched = { ...e };
                     check = true;
                 }
@@ -1091,7 +1102,7 @@ export class ErpService {
                             type: true,
                         }
                     },
-                  
+
                 }
             });
 
@@ -1124,15 +1135,15 @@ export class ErpService {
      * @returns {success: boolean, status: HttpStatus, msg: stirng}
      */
     async notCall(id: number) {
-        try{
+        try {
             console.log(id);
             await this.prisma.order.update({
-                where:{id:id},
-                data:{notCall:true}
+                where: { id: id },
+                data: { notCall: true }
             });
 
-            return {success:true,status:201,msg:'업데이트 완료'}
-        }catch(err){
+            return { success: true, status: 201, msg: '업데이트 완료' }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -1258,7 +1269,7 @@ export class ErpService {
             //         HttpStatus.UNPROCESSABLE_ENTITY
             //     )
             // } else {
-                
+
             // }
 
             const order = await this.prisma.order.findUnique({
@@ -1275,15 +1286,15 @@ export class ErpService {
             console.log(order);
             //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
             //분리 배송, 합배송 시 미리 생성되기 때문
-            if (order.tempOrders.length>0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
+            if (order.tempOrders.length > 0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
                 await this.prisma.order.update({
                     where: {
                         id: id
                     },
                     data: {
                         isComplete: true,
-                        card: order.payType =='카드결제' ? order.price : 0,
-                        cash: order.payType =='계좌이체' ? order.price : 0,
+                        card: order.payType == '카드결제' ? order.price : 0,
+                        cash: order.payType == '계좌이체' ? order.price : 0,
                         payFlag: 1
                     }
                 });
@@ -1300,8 +1311,8 @@ export class ErpService {
                         },
                         data: {
                             isComplete: true,
-                            card: order.payType =='카드결제' ? order.price : 0,
-                            cash: order.payType =='계좌이체' ? order.price : 0,
+                            card: order.payType == '카드결제' ? order.price : 0,
+                            cash: order.payType == '계좌이체' ? order.price : 0,
                             payFlag: 1,
                             consultingFlag: true
                         }
@@ -1328,7 +1339,7 @@ export class ErpService {
 
                     if (!res.success) throw error();
 
-                },{timeout:10000});
+                }, { timeout: 10000 });
 
             }
 
@@ -1417,9 +1428,9 @@ export class ErpService {
                                 amount: checkAmount
                             }
                         });
-                        
-                        if(checkAmount>345 && checkAmount<=350){
-                            await this.fixSendList(sendList[1].id,tx);
+
+                        if (checkAmount > 345 && checkAmount <= 350) {
+                            await this.fixSendList(sendList[1].id, tx);
                         }
 
                         return sendList[1].id
@@ -1439,8 +1450,8 @@ export class ErpService {
                             }
                         });
 
-                        await this.fixSortNum(sendList[0].id,tx);
-                        
+                        await this.fixSortNum(sendList[0].id, tx);
+
                     } else {
                         await tx.sendList.update({
                             where: {
@@ -1452,8 +1463,8 @@ export class ErpService {
                         })
                     }
 
-                    if(checkAmount>345 && checkAmount<=350){
-                        await this.fixSendList(sendList[0].id,tx);
+                    if (checkAmount > 345 && checkAmount <= 350) {
+                        await this.fixSendList(sendList[0].id, tx);
                     }
 
                     return sendList[0].id
@@ -1529,9 +1540,9 @@ export class ErpService {
 
             //     address = patient.addr
             // }
-            
+
             let encryptedAddr;
-            if(address == undefined) {
+            if (address == undefined) {
                 encryptedAddr = sendOne.addr;
             } else {
                 encryptedAddr = this.crypto.encrypt(address);
@@ -1544,10 +1555,10 @@ export class ErpService {
             console.log(sendOne);
 
             const sendList = await tx.tempOrder.aggregate({
-                where:{
+                where: {
                     sendListId: sendListId
                 },
-                _max:{
+                _max: {
                     sortFixNum: true
                 }
             });
@@ -1574,7 +1585,7 @@ export class ErpService {
                     date: sendOne.date,
                     orderSortNum: sendOne.orderSortNum,
                     addr: encryptedAddr,
-                    sortFixNum: max == 0 || max == null ? 0 : max+1,
+                    sortFixNum: max == 0 || max == null ? 0 : max + 1,
                     order: {
                         connect: { id: id }
                     },
@@ -1616,9 +1627,9 @@ export class ErpService {
             await this.prisma.$transaction(async (tx) => {
                 const sendOne = await tx.order.update({
                     where: { id: orderId },
-                    data: { 
+                    data: {
                         isComplete: true,
-                        consultingFlag: true 
+                        consultingFlag: true
                     }
                 });
 
@@ -1900,32 +1911,32 @@ export class ErpService {
                             orderSortNum: true
                         }
                     },
-                    friendDiscount:true,
+                    friendDiscount: true,
                 }
             });
 
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
-            let price = order.tempOrders.length>0 && order.tempOrders[0].orderSortNum == 7  ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
+            let price = order.tempOrders.length > 0 && order.tempOrders[0].orderSortNum == 7 ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
 
             //지인 10퍼센트 할인 시 할인 처리
-            if(order.friendDiscount){
-                price=price*0.9;
+            if (order.friendDiscount) {
+                price = price * 0.9;
             }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;
-            const orderData = { 
-                ...updateSurveyDto, 
-                price: price, 
+            const orderData = {
+                ...updateSurveyDto,
+                price: price,
                 orderSortNum: orderSortNum,
                 addr: encryptedAddr,
-                consultingFlag:true,
+                consultingFlag: true,
             };
 
             console.log('====================');
-            
+
             delete orderData.id;
             delete orderData.friendRecommends;
-            
+
             console.log(orderData);
 
             const res = await this.prisma.$transaction(async (tx) => {
@@ -1991,19 +2002,19 @@ export class ErpService {
                 orderId: id
             }));
             console.log(items);
-            
+
             //지인 10퍼센트 할인 시 할인 처리
             const exOrder = await this.prisma.order.findUnique({
-                where:{id:id},
-                select:{friendDiscount:true}
+                where: { id: id },
+                select: { friendDiscount: true }
             });
 
             const itemList = await this.getItems();
             const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
             let price = getOrderPrice.getPrice();
-            
-            if(exOrder.friendDiscount){
-                price=price*0.9;
+
+            if (exOrder.friendDiscount) {
+                price = price * 0.9;
             }
             const orderData = { ...updateSurveyDto, price: price, addr: encryptedAddr };
 
@@ -2025,7 +2036,7 @@ export class ErpService {
                 });
 
                 if (orderBodyTypeData !== null) {
-                    
+
                     await tx.patientBodyType.update({
                         where: {
                             patientId: patientData.id
@@ -2134,9 +2145,9 @@ export class ErpService {
         try {
             await this.prisma.order.update({
                 where: { id: id },
-                data: { 
+                data: {
                     cash: price,
-                    payFlag : 1, 
+                    payFlag: 1,
                 }
             });
 
@@ -2290,7 +2301,7 @@ export class ErpService {
                 });
 
                 const orders = await tx.order.findMany({
-                    where:{
+                    where: {
                         id: {
                             in: [...combineOrderDto.orderIdArr]
                         }
@@ -2302,50 +2313,50 @@ export class ErpService {
 
                 let orderItems = 0;
 
-                for(let i = 0; i<orders.length; i++){
+                for (let i = 0; i < orders.length; i++) {
                     const orderItem = await tx.orderItem.findMany({
                         where: {
-                            orderId:orders[i].id,
+                            orderId: orders[i].id,
                             type: { in: ['common', 'yoyo'] }
                         }
                     });
 
-                    orderItems+=(orderItem.length);
+                    orderItems += (orderItem.length);
                 }
 
-                if(orderItems == 1) {
+                if (orderItems == 1) {
                     //합배송 주문 처리 되는 모든 주문을 합쳤을 때 택배비를 받아야하는 금액 처리
-                    for(let i = 0; i<orders.length; i++){
+                    for (let i = 0; i < orders.length; i++) {
                         const orderItem = await tx.orderItem.findMany({
                             where: {
-                                orderId:orders[i].id,
+                                orderId: orders[i].id,
                                 type: { in: ['common', 'yoyo'] }
                             }
                         });
-    
+
                         //이럴 경우 별도 주문을 한 사람에게 택배비가 부과됩니다.
                         //따라서 별도 주문을 하지 않은 사람은 택배비를 빼줘야 합니다.
-                        if(orderItem.length != 0) { 
+                        if (orderItem.length != 0) {
                             await tx.order.update({
-                                where:{id: orders[i].id},
-                                data: {price: orders[i].price-3500}
+                                where: { id: orders[i].id },
+                                data: { price: orders[i].price - 3500 }
                             });
                         }
                     }
-                }else{
+                } else {
                     //합배송 시 택배비를 면제해주는 금액처리
-                    for(let i = 0; i<orders.length; i++){
+                    for (let i = 0; i < orders.length; i++) {
                         const orderItem = await tx.orderItem.findMany({
                             where: {
-                                orderId:orders[i].id,
+                                orderId: orders[i].id,
                                 type: { in: ['common', 'yoyo'] }
                             }
                         });
 
-                        if(checkSend(orderItem)){
+                        if (checkSend(orderItem)) {
                             await tx.order.update({
-                                where:{id: orders[i].id},
-                                data: {price: orders[i].price-3500}
+                                where: { id: orders[i].id },
+                                data: { price: orders[i].price - 3500 }
                             });
                         }
                     }
@@ -2355,10 +2366,10 @@ export class ErpService {
 
                 const encryptedAddr = this.crypto.encrypt(combineOrderDto.addr);
 
-                for(let i = 0; i<orders.length; i++){
+                for (let i = 0; i < orders.length; i++) {
                     const check = await this.isInTempOrder(orders[i].id);
-                    if(check) {
-                    // 발송 목록에 있는 항목이면 update
+                    if (check) {
+                        // 발송 목록에 있는 항목이면 update
                         const tempOrder = await tx.tempOrder.updateMany({
                             where: {
                                 orderId: orders[i].id
@@ -2377,35 +2388,35 @@ export class ErpService {
                             }
                         });
                     } else {
-                    // 아니면 create
-                    const res = await tx.tempOrder.create({
-                        data: {
-                            route: orders[i].route,
-                            message: orders[i].message,
-                            cachReceipt: orders[i].cachReceipt,
-                            typeCheck: orders[i].typeCheck,
-                            consultingTime: orders[i].consultingTime,
-                            payType: orders[i].payType,
-                            essentialCheck: orders[i].essentialCheck,
-                            outage: orders[i].outage,
-                            consultingType: orders[i].consultingType,
-                            phoneConsulting: orders[i].phoneConsulting,
-                            isComplete: orders[i].isComplete,
-                            isFirst: orders[i].isFirst,
-                            date: orders[i].date,
-                            orderSortNum: 6,
-                            addr: encryptedAddr,
-                            order: {
-                                connect: { id: orders[i].id }
-                            },
-                            patient: {
-                                connect: { id: orders[i].patientId }
-                            },
-                            sendList: {
-                                connect: { id: sendListId }
+                        // 아니면 create
+                        const res = await tx.tempOrder.create({
+                            data: {
+                                route: orders[i].route,
+                                message: orders[i].message,
+                                cachReceipt: orders[i].cachReceipt,
+                                typeCheck: orders[i].typeCheck,
+                                consultingTime: orders[i].consultingTime,
+                                payType: orders[i].payType,
+                                essentialCheck: orders[i].essentialCheck,
+                                outage: orders[i].outage,
+                                consultingType: orders[i].consultingType,
+                                phoneConsulting: orders[i].phoneConsulting,
+                                isComplete: orders[i].isComplete,
+                                isFirst: orders[i].isFirst,
+                                date: orders[i].date,
+                                orderSortNum: 6,
+                                addr: encryptedAddr,
+                                order: {
+                                    connect: { id: orders[i].id }
+                                },
+                                patient: {
+                                    connect: { id: orders[i].patientId }
+                                },
+                                sendList: {
+                                    connect: { id: sendListId }
+                                }
                             }
-                        }
-                    });
+                        });
                     }
                 }
                 // await tx.tempOrder.updateMany({
@@ -2500,7 +2511,7 @@ export class ErpService {
                     orderIdArr.push(sendCombineDto.idsObjArr[i].orderId);
                     tempOrderIdArr.push(sendCombineDto.idsObjArr[i].tempOrderId);
                 }
-                
+
                 // order 테이블 combineNum 수정
                 await tx.order.updateMany({
                     where: {
@@ -2539,46 +2550,46 @@ export class ErpService {
                     const orderItem = await tx.orderItem.findMany({
                         where: {
                             orderId: orders[i].id,
-                            type: { in: ['common', 'yoyo']}
+                            type: { in: ['common', 'yoyo'] }
                         }
                     });
 
                     orderItems += (orderItem.length);
                 }
 
-                if(orderItems == 1) {
+                if (orderItems == 1) {
                     //합배송 주문 처리 되는 모든 주문을 합쳤을 때 택배비를 받아야하는 금액 처리
-                    for(let i = 0; i<orders.length; i++){
+                    for (let i = 0; i < orders.length; i++) {
                         const orderItem = await tx.orderItem.findMany({
                             where: {
-                                orderId:orders[i].id,
-                                type: { in: ['common', 'yoyo'] }
-                            }
-                        });
-    
-                        //이럴 경우 별도 주문을 한 사람에게 택배비가 부과됩니다.
-                        //따라서 별도 주문을 하지 않은 사람은 택배비를 빼줘야 합니다.
-                        if(orderItem.length != 0) { 
-                            await tx.order.update({
-                                where:{id: orders[i].id},
-                                data: {price: orders[i].price-3500}
-                            });
-                        }
-                    }
-                }else{
-                    //합배송 시 택배비를 면제해주는 금액처리
-                    for(let i = 0; i<orders.length; i++){
-                        const orderItem = await tx.orderItem.findMany({
-                            where: {
-                                orderId:orders[i].id,
+                                orderId: orders[i].id,
                                 type: { in: ['common', 'yoyo'] }
                             }
                         });
 
-                        if(checkSend(orderItem)){
+                        //이럴 경우 별도 주문을 한 사람에게 택배비가 부과됩니다.
+                        //따라서 별도 주문을 하지 않은 사람은 택배비를 빼줘야 합니다.
+                        if (orderItem.length != 0) {
                             await tx.order.update({
-                                where:{id: orders[i].id},
-                                data: {price: orders[i].price-3500}
+                                where: { id: orders[i].id },
+                                data: { price: orders[i].price - 3500 }
+                            });
+                        }
+                    }
+                } else {
+                    //합배송 시 택배비를 면제해주는 금액처리
+                    for (let i = 0; i < orders.length; i++) {
+                        const orderItem = await tx.orderItem.findMany({
+                            where: {
+                                orderId: orders[i].id,
+                                type: { in: ['common', 'yoyo'] }
+                            }
+                        });
+
+                        if (checkSend(orderItem)) {
+                            await tx.order.update({
+                                where: { id: orders[i].id },
+                                data: { price: orders[i].price - 3500 }
                             });
                         }
                     }
@@ -2719,7 +2730,7 @@ export class ErpService {
                     //patient soft delete
                     await tx.patient.update({
                         where: { id: patientId },
-                        data: { useFlag: false } 
+                        data: { useFlag: false }
                     });
                 });
 
@@ -2824,7 +2835,7 @@ export class ErpService {
                     cash: true,
                     note: true,
                     addr: true,
-                    reviewFlag:true,
+                    reviewFlag: true,
                     patient: {
                         select: {
                             id: true,
@@ -2841,8 +2852,8 @@ export class ErpService {
                     },
                     tempOrders: {
                         select: {
-                            sendList:{
-                                select:{
+                            sendList: {
+                                select: {
                                     id: true,
                                     title: true,
                                 }
@@ -2853,7 +2864,7 @@ export class ErpService {
             });
 
             const sortedList = sortItems(list);
- 
+
             for (let row of sortedList) {
                 console.log(row);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
@@ -3007,7 +3018,7 @@ export class ErpService {
                 });
             });
 
-            return { success: true, status: HttpStatus.OK, msg: '초진 복구'}
+            return { success: true, status: HttpStatus.OK, msg: '초진 복구' }
         } else {
             //재진일 시 오더 정보만 복구
             const orderId = restoreOrderDto.orderId;
@@ -3020,7 +3031,7 @@ export class ErpService {
                 }
             });
 
-            return { success: true, status: HttpStatus.OK, msg: '재진 복구'}
+            return { success: true, status: HttpStatus.OK, msg: '재진 복구' }
         }
     }
 
@@ -3042,16 +3053,16 @@ export class ErpService {
      * @param newOrderDto 
      * @returns 
      */
-    async newOrder(newOrderDto: NewOrderDto){
-        try{
+    async newOrder(newOrderDto: NewOrderDto) {
+        try {
             const encryptedAddr = this.crypto.encrypt(newOrderDto.addr);
             const encryptedPhoneNum = this.crypto.encrypt(newOrderDto.phoneNum);
             const encryptedSocialNum = this.crypto.encrypt(newOrderDto.socialNum);
-            
+
             const date = new Date(newOrderDto.date);
-            const kstDate = new Date(date.getTime()+ 9 * 60 * 60 * 1000);
-           
-            if(newOrderDto.isFirst){
+            const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+            if (newOrderDto.isFirst) {
                 //초진일 시
                 await this.prisma.$transaction(async (tx) => {
                     const newPatient = await tx.patient.create({
@@ -3060,48 +3071,48 @@ export class ErpService {
                             phoneNum: encryptedPhoneNum,
                             addr: encryptedAddr,
                             socialNum: encryptedSocialNum,
-                            useFlag: true, 
+                            useFlag: true,
                         }
                     });
-                   
-                   await tx.order.create({
-                       data: {
-                        route: '',
-                        message: '',
-                        cachReceipt: '',
-                        typeCheck: '',
-                        consultingTime: '',
-                        payType: newOrderDto.payType,
-                        essentialCheck: '',
-                        outage: '',
-                        isFirst: newOrderDto.isFirst,
-                        price: 0,
-                        patientId: newPatient.id,
-                        date: kstDate,
-                        orderSortNum: 1, //구수방인지 체크
-                        addr: encryptedAddr
-                       } 
-                   })
+
+                    await tx.order.create({
+                        data: {
+                            route: '',
+                            message: '',
+                            cachReceipt: '',
+                            typeCheck: '',
+                            consultingTime: '',
+                            payType: newOrderDto.payType,
+                            essentialCheck: '',
+                            outage: '',
+                            isFirst: newOrderDto.isFirst,
+                            price: 0,
+                            patientId: newPatient.id,
+                            date: kstDate,
+                            orderSortNum: 1, //구수방인지 체크
+                            addr: encryptedAddr
+                        }
+                    })
                 });
 
-            }else{
+            } else {
                 //재진일 시
                 await this.prisma.$transaction(async (tx) => {
                     const exPatient = await tx.patient.findMany({
-                        where:{
+                        where: {
                             name: newOrderDto.name,
                             socialNum: encryptedSocialNum
                         }
                     });
 
-                    if(!exPatient) {
+                    if (!exPatient) {
                         throw new HttpException({
                             success: false,
                             status: HttpStatus.NOT_FOUND
                         },
                             HttpStatus.NOT_FOUND
                         );
-                    }else if(exPatient.length>1){
+                    } else if (exPatient.length > 1) {
                         throw new HttpException({
                             success: false,
                             status: HttpStatus.CONFLICT
@@ -3111,7 +3122,7 @@ export class ErpService {
                     }
 
                     await tx.patient.update({
-                        where:{
+                        where: {
                             id: exPatient[0].id
                         },
                         data: {
@@ -3119,7 +3130,7 @@ export class ErpService {
                             phoneNum: encryptedPhoneNum,
                             addr: encryptedAddr,
                             socialNum: encryptedSocialNum,
-                            useFlag: true, 
+                            useFlag: true,
                         }
                     });
 
@@ -3139,13 +3150,13 @@ export class ErpService {
                             date: kstDate,
                             orderSortNum: 1, //구수방인지 체크
                             addr: encryptedAddr
-                           } 
+                        }
                     });
                 })
             }
 
-            return {success: true, status: HttpStatus.CREATED};
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3163,29 +3174,29 @@ export class ErpService {
      * @param phoneNum 
      * @returns 
      */
-    async checkRecommend(name:string, phoneNum:string) {
-        try{
+    async checkRecommend(name: string, phoneNum: string) {
+        try {
             const res = await this.prisma.patient.findMany({
-                where:{name: name}
+                where: { name: name }
             });
 
             let flag = false;
             let id = 0;
-            for(const e of res) {
+            for (const e of res) {
                 const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
 
-                if(
-                    e.name === name 
+                if (
+                    e.name === name
                     && checkPhoneNum.includes(phoneNum)
-                ){
+                ) {
                     flag = true;
                     id = e.id;
                     break;
                 }
             }
 
-            return {success:flag, patientId: id};
-        }catch(err){
+            return { success: flag, patientId: id };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3200,14 +3211,14 @@ export class ErpService {
      * @param checkDiscountDto 
      * @returns {success:boolean, status: HttpStatus, msg: string}
      */
-    async checkDiscount(checkDiscountDto: CheckDiscountDto){
-        try{
+    async checkDiscount(checkDiscountDto: CheckDiscountDto) {
+        try {
             const check = await this.checkRecommend(checkDiscountDto.name, checkDiscountDto.phoneNum);
 
-            if(check.success) {
+            if (check.success) {
                 await this.prisma.$transaction(async (tx) => {
                     await tx.friendRecommend.create({
-                        data:{
+                        data: {
                             orderId: checkDiscountDto.orderId,
                             patientId: check.patientId,
                             checkFlag: true,
@@ -3218,35 +3229,35 @@ export class ErpService {
                     });
 
                     const order = await tx.order.findUnique({
-                        where:{id:checkDiscountDto.orderId},
-                        select:{remark:true}
+                        where: { id: checkDiscountDto.orderId },
+                        select: { remark: true }
                     });
 
                     let remark = '지인 10포' + (order.remark == null || order.remark == '' ? '' : `/${order.remark}`);
                     console.log('//////////////////////////////');
                     console.log(remark);
-                    
+
                     await tx.order.update({
-                        where:{id:checkDiscountDto.orderId},
-                        data:{
-                            orderSortNum:4,
-                            remark:remark,
+                        where: { id: checkDiscountDto.orderId },
+                        data: {
+                            orderSortNum: 4,
+                            remark: remark,
                             routeFlag: false,
-                            consultingFlag : true,
+                            consultingFlag: true,
                         }
                     });
                 })
-                return {success:true, status:HttpStatus.CREATED, msg:'지인처리가 완료 되었습니다'}
+                return { success: true, status: HttpStatus.CREATED, msg: '지인처리가 완료 되었습니다' }
 
-            }else{
+            } else {
                 return {
-                    success:false,
-                    status: HttpStatus.NOT_FOUND, 
-                    msg:'등록하신 환자 데이터를 찾을 수 없습니다'
+                    success: false,
+                    status: HttpStatus.NOT_FOUND,
+                    msg: '등록하신 환자 데이터를 찾을 수 없습니다'
                 };
             }
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3262,47 +3273,47 @@ export class ErpService {
      * @param id 
      * @returns {success:boolean, status: HttpStatus, msg: string}
      */
-    async cancelDiscount(id: number){
-        try{
+    async cancelDiscount(id: number) {
+        try {
             const exOrder = await this.prisma.order.findUnique({
-                where:{id:id},
-                select:{
-                    friendDiscount:true,
-                    patient:{
-                        select:{
-                            id:true,
+                where: { id: id },
+                select: {
+                    friendDiscount: true,
+                    patient: {
+                        select: {
+                            id: true,
                         }
                     },
-                    price:true,
-                    remark:true
+                    price: true,
+                    remark: true
                 }
             });
 
-            if(!exOrder.friendDiscount) return {success:false, status:HttpStatus.NOT_FOUND, msg:'해당 주문은 할인 대상이 아닙니다'}
+            if (!exOrder.friendDiscount) return { success: false, status: HttpStatus.NOT_FOUND, msg: '해당 주문은 할인 대상이 아닙니다' }
 
             await this.prisma.$transaction(async (tx) => {
                 let price = exOrder.price;
-                price = (price/9) * 10; //가격 원래대로
-                let newRemark = exOrder.remark.replace('지인 10% 할인/','');
+                price = (price / 9) * 10; //가격 원래대로
+                let newRemark = exOrder.remark.replace('지인 10% 할인/', '');
 
                 await tx.order.update({
-                    where:{id:id},
-                    data:{
+                    where: { id: id },
+                    data: {
                         price: price,
                         friendDiscount: false,
-                        remark: newRemark 
+                        remark: newRemark
                     }
                 });
 
                 await tx.friendRecommend.updateMany({
-                    where:{patientId:exOrder.patient.id},
-                    data:{useFlag:true}
+                    where: { patientId: exOrder.patient.id },
+                    data: { useFlag: true }
                 });
             });
 
-            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+            return { success: true, status: HttpStatus.CREATED, msg: '완료' };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3319,17 +3330,17 @@ export class ErpService {
      * @returns {success:boolean, status: HttpStatus, msg: string}
      */
     async updateNote(updateNoteDto: UpdateNoteDto) {
-        try{
+        try {
             await this.prisma.order.update({
-                where:{id:updateNoteDto.orderId},
-                data:{
-                    note:updateNoteDto.note,
+                where: { id: updateNoteDto.orderId },
+                data: {
+                    note: updateNoteDto.note,
                     reviewFlag: true
                 }
             });
 
-            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED, msg: '완료' };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3345,8 +3356,8 @@ export class ErpService {
      * @param id 
      * @returns {success:boolean, status: HttpStatus, msg: string}
      */
-    async updateReviewFlag(id: number){
-        try{
+    async updateReviewFlag(id: number) {
+        try {
             const tempData = await this.prisma.$queryRaw`
                 select 
                     reviewFlag 
@@ -3354,18 +3365,18 @@ export class ErpService {
                 where id = ${id}
             `;
             let flag = false;
-            if(tempData[0].reviewFlag != true){
+            if (tempData[0].reviewFlag != true) {
                 flag = true;
             }
 
             await this.prisma.order.update({
-                where:{id:id},
-                data:{reviewFlag:flag}
+                where: { id: id },
+                data: { reviewFlag: flag }
             });
 
-            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+            return { success: true, status: HttpStatus.CREATED, msg: '완료' };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3382,33 +3393,33 @@ export class ErpService {
      * @returns {success:boolean, status: HttpStatus, msg: string}
      */
     async createNewReview(createNewReviewDto: CreateNewReviewDto) {
-        try{
+        try {
             const patient = await this.prisma.patient.findMany({
-                where:{
+                where: {
                     name: createNewReviewDto.name
                 }
             });
 
             let patientData = null;
 
-            for(const e of patient){
+            for (const e of patient) {
                 const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
                 const checkSocialNum = this.crypto.decrypt(e.socialNum);
 
-                if(
+                if (
                     checkPhoneNum.includes(createNewReviewDto.phoneNum)
                     && checkSocialNum.includes(createNewReviewDto.socialNum)
-                ){
+                ) {
                     patientData = e;
                     break;
                 }
             }
 
-            if(patient==null){
+            if (patient == null) {
                 throw new HttpException({
                     success: false,
                     status: HttpStatus.NOT_FOUND,
-                    msg:'환자 데이터를 찾을 수 없습니다.'
+                    msg: '환자 데이터를 찾을 수 없습니다.'
                 },
                     HttpStatus.NOT_FOUND
                 );
@@ -3417,33 +3428,33 @@ export class ErpService {
             const date = new Date(createNewReviewDto.date);
             // 한국 시간으로 변환
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-            
+
             await this.prisma.order.create({
-                data:{
-                    useFlag:false,
-                    route:'',
-                    message:'',
-                    cachReceipt:'',
-                    typeCheck:'',
-                    consultingTime:'',
-                    payType:'',
-                    essentialCheck:'',
-                    outage:'후기대상목록에서 생성',
-                    consultingType:false,
-                    phoneConsulting:false,
-                    isComplete:false,
-                    patientId:patientData.id,
-                    isFirst:false,
-                    date:kstDate,
+                data: {
+                    useFlag: false,
+                    route: '',
+                    message: '',
+                    cachReceipt: '',
+                    typeCheck: '',
+                    consultingTime: '',
+                    payType: '',
+                    essentialCheck: '',
+                    outage: '후기대상목록에서 생성',
+                    consultingType: false,
+                    phoneConsulting: false,
+                    isComplete: false,
+                    patientId: patientData.id,
+                    isFirst: false,
+                    date: kstDate,
                     orderSortNum: 1,
                     note: createNewReviewDto.note,
-                    addr:'',
+                    addr: '',
                 }
             });
 
-            return {success:true, status:HttpStatus.CREATED, msg:'완료'};
+            return { success: true, status: HttpStatus.CREATED, msg: '완료' };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3455,23 +3466,23 @@ export class ErpService {
     }
 
     //이것도 리팩토링 안하면 절 죽이세요
-    async fixSendList(id: number, tx: any){
-        try{
+    async fixSendList(id: number, tx: any) {
+        try {
             // await this.prisma.$transaction(async (tx) => {
-                await tx.sendList.update({
-                    where: {
-                        id: id
-                    },
-                    data: {
-                        fixFlag: true,
-                    }
-                 });
+            await tx.sendList.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    fixFlag: true,
+                }
+            });
 
-                await this.fixSortNum(id,tx);
-    
+            await this.fixSortNum(id, tx);
+
             //});
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3482,9 +3493,9 @@ export class ErpService {
         }
     }
 
-    async fixSortNum(id: number ,tx: any) {
-        try{
-            const sendData = await this.getOrderTempList(id,tx);
+    async fixSortNum(id: number, tx: any) {
+        try {
+            const sendData = await this.getOrderTempList(id, tx);
 
             const list = sendData.list; //발송목록 tempOrder list;
 
@@ -3497,15 +3508,15 @@ export class ErpService {
             //     });
             // }
 
-            const qryArr = list.map(async (e,i) => {
+            const qryArr = list.map(async (e, i) => {
                 return tx.tempOrder.update({
-                    where:{id:e.id},
-                    data:{sortFixNum:i+1}
+                    where: { id: e.id },
+                    data: { sortFixNum: i + 1 }
                 });
             })
 
             await Promise.all([...qryArr]).then((value) => {
-                return {success:true, status:HttpStatus.CREATED};
+                return { success: true, status: HttpStatus.CREATED };
             }).catch((err) => {
                 this.logger.error(err);
                 throw new HttpException({
@@ -3517,8 +3528,8 @@ export class ErpService {
             });
 
 
-            return {success:true}
-        }catch(err){
+            return { success: true }
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3529,12 +3540,12 @@ export class ErpService {
         }
     }
 
-    
+
     /** 이거 제가 까먹고 리팩토링 안하면 절 죽이세요
      * 고정 안 된 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(id: number,tx) {
+    async getOrderTempList(id: number, tx) {
         try {
             console.log('this list is not fixed');
             const list = await tx.tempOrder.findMany({
@@ -3573,17 +3584,17 @@ export class ErpService {
                             price: true,
                             cash: true,
                             card: true,
-                            orderSortNum:true,
-                            combineNum:true,
+                            orderSortNum: true,
+                            combineNum: true,
                             payFlag: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
                         }
                     },
-                    orderUpdateInfos:{
-                        select:{
-                            info:true
+                    orderUpdateInfos: {
+                        select: {
+                            info: true
                         }
                     },
                     tempOrderItems: {
@@ -3752,7 +3763,7 @@ export class ErpService {
     //     });
 
     //     const itemsObjs = [];
-        
+
     //     items.forEach((e) => {
     //         if(e.answer.includes('요요')) {
     //             itemsObjs.push({
@@ -3876,7 +3887,7 @@ export class ErpService {
     //         styleHeaderCell(cell);
     //         sheet.getColumn(colNum).width = headerWidths[colNum - 1];
     //     });
-        
+
     //     // 주의 상품은 하나씩만 넣었음
     //     orderData.forEach((e) => {
     //         const rowDatas = [
