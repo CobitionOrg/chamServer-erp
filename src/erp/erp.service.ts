@@ -592,29 +592,33 @@ export class ErpService {
                 });
 
                 //지인 체크
-                if(objOrder.route.includes('/')){
-                    let check = objOrder.route.split("/");
-                    console.log(check[0]);
-                    console.log(check[1]);
-                    const checkRecommend = await this.checkRecommend(check[0], check[1]);
+                const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
+                            
+                const routeName = route.match(/[^\d]+/g).join('');//지인 이름
+                const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
 
-                    console.log(checkRecommend);
+                let checkRecommend;
+
+                     
+                if(routeName !== null && routePhoneNum !== null ){
+                    checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                
                     if(checkRecommend.success) {
                         //지인 확인 되었을 시
                         orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
                         remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
-
+    
                         await tx.friendRecommend.create({
                             data:{
                                 orderId: order.id,
                                 patientId: checkRecommend.patientId,
                                 checkFlag: true,
                                 date: kstDate,
-                                name: check[0],
-                                phoneNum: check[1],
+                                name: routeName,
+                                phoneNum: routePhoneNum,
                             }
                         });
-
+    
                         await tx.order.update({
                             where:{id:order.id},
                             data:{
@@ -622,8 +626,16 @@ export class ErpService {
                                 remark:remark
                             }
                         });
+                    }else{
+                        //지인을 입력했을 때 지인 확인이 안될 때
+                        await tx.order.update({
+                            where:{id:order.id},
+                            data:{routeFlag:true}
+                        });   
                     }
+    
                 }
+              
 
                 console.log(objOrderItem);
                 console.log('--------------------');
