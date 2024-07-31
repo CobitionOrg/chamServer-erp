@@ -171,11 +171,80 @@ export class ErpService {
                     }
                 });
 
+                
+                
+  
+                const orderBodyType = await tx.orderBodyType.create({
+                    data: {
+                        tallWeight: objOrderBodyType.tallWeight,
+                        digestion: objOrderBodyType.digestion.join('/'),
+                        sleep: objOrderBodyType.sleep.join('/'),
+                        constipation: objOrderBodyType.constipation.join('/'),
+                        nowDrug: objOrderBodyType.nowDrug.join('/'),
+                        pastDrug: objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
+                        orderId: order.id,
+                    }
+                });
+
+                const patientBodyType = await tx.patientBodyType.create({
+                    data: {
+                        tallWeight: objOrderBodyType.tallWeight,
+                        digestion: objOrderBodyType.digestion.join('/'),
+                        sleep: objOrderBodyType.sleep.join('/'),
+                        constipation: objOrderBodyType.constipation.join('/'),
+                        nowDrug: objOrderBodyType.nowDrug.join('/'),
+                        pastDrug: objOrderBodyType.pastDrug.join('/'),
+                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
+                        patientId: patient.id,
+                    }
+                })
+
+                console.log(objOrderItem);
+                console.log('--------------------');
+
+                const items = [];
+                let assistantFlag = true; //별도 주문만 있는지 체크 플래그
+
+                for(const e of objOrderItem){
+                    const item = {
+                        item: e.item,
+                        type: e.type,
+                        orderId: order.id
+                    }
+
+                    if(e.type == 'assistant') {
+                        //별도 주문이 있을 때
+                        orderSortNum = 2;
+                    }else{
+                        assistantFlag = false; //별도 주문 외에 주문이 있을 시
+                    }
+
+                    items.push(item);
+                }
+
+                if(assistantFlag) {
+                    //별도 주문만 있을 시
+                    orderSortNum = 0;
+                    await tx.order.update({
+                        where:{id:order.id},
+                        data:{orderSortNum:orderSortNum}
+                    });
+                }
+              
+
+                console.log(items);
+
+                const orderItem = await tx.orderItem.createMany({
+                    data: items
+                });
+
                 //지인 체크
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
                 console.log(route);
 
-                if(route !== ""){
+                if(route !== "" && orderSortNum != 0){
+                    console.log('지인 체크');
                     const routeName = route.match(/[^\d]+/g).join('');//지인 이름
                     const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
     
@@ -217,50 +286,6 @@ export class ErpService {
         
                     }
                 }
-                
-              
-                
-
-                const orderBodyType = await tx.orderBodyType.create({
-                    data: {
-                        tallWeight: objOrderBodyType.tallWeight,
-                        digestion: objOrderBodyType.digestion.join('/'),
-                        sleep: objOrderBodyType.sleep.join('/'),
-                        constipation: objOrderBodyType.constipation.join('/'),
-                        nowDrug: objOrderBodyType.nowDrug.join('/'),
-                        pastDrug: objOrderBodyType.pastDrug.join('/'),
-                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
-                        orderId: order.id,
-                    }
-                });
-
-                const patientBodyType = await tx.patientBodyType.create({
-                    data: {
-                        tallWeight: objOrderBodyType.tallWeight,
-                        digestion: objOrderBodyType.digestion.join('/'),
-                        sleep: objOrderBodyType.sleep.join('/'),
-                        constipation: objOrderBodyType.constipation.join('/'),
-                        nowDrug: objOrderBodyType.nowDrug.join('/'),
-                        pastDrug: objOrderBodyType.pastDrug.join('/'),
-                        pastSurgery: objOrderBodyType.pastSurgery.join('/'),
-                        patientId: patient.id,
-                    }
-                })
-
-                console.log(objOrderItem);
-                console.log('--------------------');
-
-                const items = objOrderItem.map((item) => ({
-                    item: item.item,
-                    type: item.type,
-                    orderId: order.id
-                }));
-
-                console.log(items);
-
-                const orderItem = await tx.orderItem.createMany({
-                    data: items
-                });
             });
 
             return { success: true, status: HttpStatus.CREATED };
@@ -596,56 +621,13 @@ export class ErpService {
                     }
                 });
 
-                //지인 체크
-                const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
-                            
-                if(route !== ""){
-                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
-    
-                    let checkRecommend;
-    
-                         
-                    if(routeName !== null && routePhoneNum !== null ){
-                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
-                    
-                        if(checkRecommend.success) {
-                            //지인 확인 되었을 시
-                            orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
-                            remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
-        
-                            await tx.friendRecommend.create({
-                                data:{
-                                    orderId: order.id,
-                                    patientId: checkRecommend.patientId,
-                                    checkFlag: true,
-                                    date: kstDate,
-                                    name: routeName,
-                                    phoneNum: routePhoneNum,
-                                }
-                            });
-        
-                            await tx.order.update({
-                                where:{id:order.id},
-                                data:{
-                                    orderSortNum:orderSortNum,
-                                    remark:remark
-                                }
-                            });
-                        }else{
-                            //지인을 입력했을 때 지인 확인이 안될 때
-                            await tx.order.update({
-                                where:{id:order.id},
-                                data:{routeFlag:true}
-                            });   
-                        }
-        
-                    }
-                }
+               
                
                 console.log(objOrderItem);
                 console.log('--------------------');
                 const items = [];
+                let assistantFlag = false; //별도 주문만 있는지 체크 플래그
+                let commonFlag = false; // 별도 주문 외에 주문 있는지 체크 플래그
 
                 for (let i = 0; i < objOrderItem.length; i++) {
                     let tempObj = objOrderItem[i];
@@ -659,8 +641,11 @@ export class ErpService {
                         }
                         //console.log(temp);
                         items.push(temp);
-
+                        assistantFlag = true;
                     } else {
+                        if(tempObj.item.length>0){
+                            commonFlag = true;
+                        }
                         for (let j = 0; j < tempObj.item.length; j++) {
                             temp = {
                                 item: tempObj.item[j],
@@ -681,6 +666,72 @@ export class ErpService {
                 const orderItem = await tx.orderItem.createMany({
                     data: items
                 });
+
+                //별도 주문만 있을 때 - orderSortNum - 0
+                if(assistantFlag && !commonFlag) {
+                    orderSortNum = 0;
+                    await tx.order.update({
+                        where:{id:order.id},
+                        data:{orderSortNum:orderSortNum}
+                    });
+                }
+
+                //별도 주문도 추가 일 때 orderSortNum - 2 혹은 그 이상이면 유지
+                if(assistantFlag && commonFlag) {
+                    orderSortNum = orderSortNum > 2 ? orderSortNum : 2;
+                }
+
+                //별도 주문이 없을 때 orderSortNum - 1 혹은 그냥 유지
+                //if(!assistantFlag && commonFlag) {
+                //
+                //}
+
+                 //지인 체크
+                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
+                            
+                 if(route !== "" && orderSortNum !== 0){
+                     const routeName = route.match(/[^\d]+/g).join('');//지인 이름
+                     const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
+     
+                     let checkRecommend;
+     
+                    //이름과 전화번호가 둘 다 있어야만 지인 체크                     
+                     if(routeName !== null && routePhoneNum !== null ){
+                         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                     
+                         if(checkRecommend.success) {
+                             //지인 확인 되었을 시
+                             orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                             remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+         
+                             await tx.friendRecommend.create({
+                                 data:{
+                                     orderId: order.id,
+                                     patientId: checkRecommend.patientId,
+                                     checkFlag: true,
+                                     date: kstDate,
+                                     name: routeName,
+                                     phoneNum: routePhoneNum,
+                                 }
+                             });
+         
+                             await tx.order.update({
+                                 where:{id:order.id},
+                                 data:{
+                                     orderSortNum:orderSortNum,
+                                     remark:remark
+                                 }
+                             });
+                         }else{
+                             //지인을 입력했을 때 지인 확인이 안될 때
+                             await tx.order.update({
+                                 where:{id:order.id},
+                                 data:{routeFlag:true}
+                             });   
+                         }
+         
+                     }
+                 }
             });
 
             return { success: true, status: HttpStatus.CREATED };
