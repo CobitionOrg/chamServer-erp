@@ -355,7 +355,7 @@ erDiagram
   - `friendDiscount`: 지인 할인 10% 대상 플래그
   - `notCall`: 유선 상담 시 상담 미연결 플래그
   - `reviewFlag`: 
-  - `routeFlag`: 지인입력 시 지인확인이 안됐을 시 여부 체크
+  - `routeFlag`: 지인입력 시 지인확인이 안됐을 시 여부 체크(확인이 안되면 true 확인되면 false)
 
 ### `friendRecommend`
 

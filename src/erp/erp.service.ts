@@ -391,6 +391,7 @@ export class ErpService {
                     card: true,
                     cash: true,
                     addr: true,
+                    routeFlag: true,
                     friendDiscount: true,
                     patient: {
                         select: {
@@ -3146,7 +3147,7 @@ export class ErpService {
                         select:{remark:true}
                     });
 
-                    let remark = '지인 10포' + (order.remark == null ? '' : `/${order.remark}`);
+                    let remark = '지인 10포' + (order.remark == null || order.remark == '' ? '' : `/${order.remark}`);
                     console.log('//////////////////////////////');
                     console.log(remark);
                     
@@ -3154,7 +3155,9 @@ export class ErpService {
                         where:{id:checkDiscountDto.orderId},
                         data:{
                             orderSortNum:4,
-                            remark:remark
+                            remark:remark,
+                            routeFlag: false,
+                            consultingFlag : true,
                         }
                     });
                 })
