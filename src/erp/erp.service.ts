@@ -667,17 +667,17 @@ export class ErpService {
                     data: items
                 });
 
+                console.log(assistantFlag);
+                console.log(commonFlag);
+
                 //별도 주문만 있을 때 - orderSortNum - 0
                 if(assistantFlag && !commonFlag) {
                     orderSortNum = 0;
-                    await tx.order.update({
-                        where:{id:order.id},
-                        data:{orderSortNum:orderSortNum}
-                    });
                 }
 
                 //별도 주문도 추가 일 때 orderSortNum - 2 혹은 그 이상이면 유지
                 if(assistantFlag && commonFlag) {
+                    console.log(orderSortNum+'!!');
                     orderSortNum = orderSortNum > 2 ? orderSortNum : 2;
                 }
 
@@ -731,6 +731,12 @@ export class ErpService {
                          }
          
                      }
+                 }else{
+                    //그 외의 경우 마지막으로 orderSortNum 업데이트
+                    await tx.order.update({
+                        where:{id:order.id},
+                        data:{orderSortNum:orderSortNum}
+                    });
                  }
             });
 
