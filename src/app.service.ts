@@ -5,11 +5,15 @@ const path = require('path');
 const fs = require('fs');
 import * as Excel from 'exceljs'
 import { MailerService } from '@nestjs-modules/mailer';
+import { GetListDto } from './erp/Dto/getList.dto';
+import { getDayStartAndEnd } from './util/kstDate.util';
+import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly mailerService: MailerService,
+    private prisma: PrismaService,
 
   ){}
   private readonly logger = new Logger(AppService.name);
@@ -262,5 +266,68 @@ export class AppService {
    
 
 
+  }
+
+  async cashExcelTest(getListDto: GetListDto) {
+    try{
+      let orderConditions = {};
+
+      const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+      orderConditions = {
+        consultingType: false,
+        isComplete: false,
+        useFlag: true,
+        date: {
+            gte: startDate,
+            lt: endDate,
+        }
+      }
+
+      const list = await this.prisma.order.findMany({
+        where: { ...orderConditions, payType:'계좌이체' },
+        select: {
+          price: true,
+          date: true,
+          cachReceipt: true,
+          patient : {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+
+      const banks = ['토스뱅크', '카카오페이','국민은행','우리은행','농협'];
+
+      let orderArr = [];
+
+      for(const e of list) {
+        const randomIndex = Math.floor(Math.random() * banks.length);
+
+        const obj = {
+          date: e.date,
+          return: 0,
+          cash: e.price,
+          name: e.patient.name,
+          bank: banks[randomIndex],
+          cashReceipt: e.cachReceipt,
+          type: '타행이체'
+        } 
+
+        orderArr.push(obj);
+      }
+
+      
+    }catch(err){
+      this.logger.error(err);
+      throw new HttpException({
+          success: false,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          msg: '내부 서버 에러'
+      },
+          HttpStatus.INTERNAL_SERVER_ERROR
+      );
+
+    }
   }
 }
