@@ -3945,4 +3945,148 @@ export class ErpService {
 
     //     return { success: true };
     // }
+
+    // // 전달받은 고객 정보 엑셀로 정형화
+    // async patientFiltering(filePath: string, validFilePath: string, invalidFilePath: string) {
+    //     const wb = new Excel.Workbook();
+    //     await wb.xlsx.readFile(filePath);
+    
+    //     // 모든 워크시트와 maxRows를 배열로 관리
+    //     const worksheets = [
+    //         wb.getWorksheet(1), wb.getWorksheet(2), wb.getWorksheet(3),
+    //         wb.getWorksheet(4), wb.getWorksheet(5), wb.getWorksheet(6),
+    //         wb.getWorksheet(7), wb.getWorksheet(8), wb.getWorksheet(9),
+    //         wb.getWorksheet(10), wb.getWorksheet(11), wb.getWorksheet(12),
+    //         wb.getWorksheet(13), wb.getWorksheet(14), wb.getWorksheet(15),
+    //         wb.getWorksheet(16), wb.getWorksheet(17), wb.getWorksheet(18)
+    //     ];
+    
+    //     const maxRows = [
+    //         5188, 9605, 2129, 5233, 9685, 9965, 9868, 10018, 10092,
+    //         10099, 9976, 10016, 9861, 9722, 1850, 7648, 10185, 7847
+    //     ];
+    
+    //     const validWb = new Excel.Workbook();
+    //     const validWs = validWb.addWorksheet('Valid Data');
+    
+    //     const invalidWb = new Excel.Workbook();
+    //     const invalidWs = invalidWb.addWorksheet('Invalid Data');
+    
+    //     // validWs에 헤더 추가
+    //     validWs.addRow(['주민번호', '이름', '전화번호', '주소', '소화상태', '수면상태', '변비유무', '현재 복용 중인 약', '과거 다이어트약 복용 경험', '수술이력', '키/몸무게']);
+        
+    //     // invalidWs에 헤더 추가
+    //     invalidWs.addRow(['주민번호', '이름', '전화번호', '주소', '필터사유']);
+    
+    //     const processedEntries = new Map<string, Excel.Row>(); // 중복 체크를 위한 Map
+    
+    //     const cleanSocialNum = (socialNum: string | null): string | null => {
+    //         if (!socialNum) return null;
+    //         return socialNum.replace(/\D/g, ''); // 숫자 이외의 문자 제거
+    //     };
+    
+    //     const cleanPhoneNum = (phoneNum: string | null): string | null => {
+    //         if (!phoneNum) return null;
+    //         let cleaned = phoneNum.replace(/\D/g, '');
+    //         if (cleaned[0] !== '0') {
+    //             cleaned = '0' + cleaned; // 맨 앞에 0이 없으면 추가
+    //         }
+    //         return cleaned;
+    //     };
+    
+    //     const isValidSocialNum = (socialNum: string | null): boolean => {
+    //         const cleaned = cleanSocialNum(socialNum);
+    //         return cleaned !== null && (cleaned.length === 7 || cleaned.length === 13);
+    //     };
+    
+    //     const isValidPhoneNum = (phoneNum: string | null): boolean => {
+    //         const cleaned = cleanPhoneNum(phoneNum);
+    //         return cleaned !== null && cleaned.length === 11;
+    //     };
+    
+    //     const isValidName = (name: string | null): boolean => {
+    //         return !!name; // null check
+    //     };
+    
+    //     const isValidAddr = (addr: string | null): boolean => {
+    //         return !!addr; // null check
+    //     };
+    
+    //     const hasAdditionalInfo = (row: Excel.Row): boolean => {
+    //         // 소화상태, 수면상태 등의 추가 데이터가 있는지 확인
+    //         for (let i = 5; i <= 11; i++) {  // 소화상태부터 키/몸무게까지 컬럼이 5번~11번에 위치
+    //             if (row.getCell(i).value) {
+    //                 return true; // 추가 데이터가 있으면 true 반환
+    //             }
+    //         }
+    //         return false; // 없으면 false
+    //     };
+    
+    //     const processRow = (row: Excel.Row, invalidWs: Excel.Worksheet) => {
+    //         let socialNum = row.getCell(1).value?.toString() || null;
+    //         const name = row.getCell(2).value?.toString() || null;
+    //         let phoneNum = row.getCell(3).value?.toString() || null;
+    //         const addr = row.getCell(4).value?.toString() || null;
+    
+    //         const uniqueKey = `${name}-${phoneNum}`;
+    //         let reason = ''; // 필터링 사유
+    
+    //         // 중복 체크 및 유효성 검사
+    //         if (processedEntries.has(uniqueKey)) {
+    //             const existingRow = processedEntries.get(uniqueKey);
+    //             if (existingRow && hasAdditionalInfo(row) && !hasAdditionalInfo(existingRow)) {
+    //                 // 새로운 행에 추가 정보가 있고 기존 행에 추가 정보가 없는 경우, 교체
+    //                 processedEntries.set(uniqueKey, row);
+    //             } else {
+    //                 reason = '중복';
+    //             }
+    //         } else if (!isValidSocialNum(socialNum)) {
+    //             reason = '주민번호';
+    //         } else if (!isValidPhoneNum(phoneNum)) {
+    //             reason = '전화번호';
+    //         } else if (!isValidName(name)) {
+    //             reason = '이름';
+    //         } else if (!isValidAddr(addr)) {
+    //             reason = '주소';
+    //         }
+    
+    //         if (!reason) {
+    //             // 필터에 걸리지 않으면 유효한 데이터로 저장
+    //             processedEntries.set(uniqueKey, row); // 중복 방지를 위해 추가
+    //         } else {
+    //             // 필터에 걸리면 필터사유와 함께 유효하지 않은 데이터로 저장
+    //             invalidWs.addRow([socialNum, name, phoneNum, addr, reason]);
+    //         }
+    //     };
+    
+    //     // 모든 워크시트를 순회하며 처리
+    //     worksheets.forEach((worksheet, index) => {
+    //         const maxRow = maxRows[index];
+    //         for (let rowNumber = 2; rowNumber <= maxRow; rowNumber++) {
+    //             const row = worksheet.getRow(rowNumber);
+    //             processRow(row, invalidWs);
+    //         }
+    //     });
+    
+    //     // 중복되지 않고 유효한 데이터 저장
+    //     processedEntries.forEach((row) => {
+    //         const socialNum = cleanSocialNum(row.getCell(1).value?.toString() || null);
+    //         const name = row.getCell(2).value?.toString() || null;
+    //         const phoneNum = cleanPhoneNum(row.getCell(3).value?.toString() || null);
+    //         const addr = row.getCell(4).value?.toString() || null;
+    
+    //         const rowData = [socialNum, name, phoneNum, addr];
+    //         for (let i = 5; i <= 11; i++) { // 추가 정보 컬럼 추가
+    //             rowData.push(row.getCell(i).value?.toString() || null);
+    //         }
+    
+    //         validWs.addRow(rowData);
+    //     });
+    
+    //     // 유효한 데이터와 유효하지 않은 데이터를 각각 파일로 저장
+    //     await validWb.xlsx.writeFile(validFilePath);
+    //     await invalidWb.xlsx.writeFile(invalidFilePath);
+    
+    //     return { message: 'Data filtering complete', validFilePath, invalidFilePath };
+    // }
 }
