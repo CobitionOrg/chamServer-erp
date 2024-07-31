@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
+import { GetListDto } from './erp/Dto/getList.dto';
 
 @Controller()
 export class AppController {
@@ -18,6 +19,11 @@ export class AppController {
   @Get('/mail')
   async mailTest() {
     return await this.appService.mailTest();
+  }
+
+  @Get('/excelCash')
+  async cashExcel(@Query() getListDto: GetListDto) {
+    const res = await this.appService.cashExcelTest(getListDto);
   }
 
 }

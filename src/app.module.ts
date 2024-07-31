@@ -17,6 +17,7 @@ import { TalkModule } from './talk/talk.module';
 import { VisitModule } from './visit/visit.module';
 import { PatientModule } from './patient/patient.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { PrismaService } from './prisma.service';
 @Module({
 
   imports: [
@@ -48,6 +49,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
   controllers: [AppController],
   providers: [
     AppService, 
+    PrismaService, //테스트 후 삭제 예정
     Logger, 
     {
       provide: APP_FILTER,
