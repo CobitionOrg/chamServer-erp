@@ -831,4 +831,16 @@ export class ErpController {
     //     const res = await this.erpService.importAndInsert(filePath);
     //     return res;
     // }
+
+    // // 양식에 맞지 않는 환자 데이터 거르기
+    // @Public()
+    // @Get('/filtering-patient')
+    // async patientFiltering() {
+    //     // filePath 수정 필요
+    //     const filePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\patient.xlsx'
+    //     const validFilePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\filtered\\valid\\patient_valid.xlsx';
+    //     const invalidFilePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\filtered\\invalid\\patient_invalid.xlsx';
+    //     const res = await this.erpService.patientFiltering(filePath, validFilePath, invalidFilePath);
+    //     return res;
+    // }
 }
