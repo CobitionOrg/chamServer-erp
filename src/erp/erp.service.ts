@@ -201,7 +201,8 @@ export class ErpService {
                 console.log('--------------------');
 
                 const items = [];
-                let assistantFlag = true; //별도 주문만 있는지 체크 플래그
+                let assistantFlag = false; //별도 주문만 있는지 체크 플래그
+                let commonFlag = false; // 별도 주문 외에 주문 있는지 체크 플래그
 
                 for (const e of objOrderItem) {
                     const item = {
@@ -212,23 +213,29 @@ export class ErpService {
 
                     if (e.type == 'assistant') {
                         //별도 주문이 있을 때
-                        orderSortNum = 2;
+                        assistantFlag = true;
                     } else {
-                        assistantFlag = false; //별도 주문 외에 주문이 있을 시
+                        if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                            commonFlag = true;
+                        }
                     }
 
-                    items.push(item);
+                    if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                        items.push(item);
+                    }
+                    
                 }
 
-                if (assistantFlag) {
-                    //별도 주문만 있을 시
+                //별도 주문만 있을 때 - orderSortNum - 0
+                if (assistantFlag && !commonFlag) {
                     orderSortNum = 0;
-                    await tx.order.update({
-                        where: { id: order.id },
-                        data: { orderSortNum: orderSortNum }
-                    });
                 }
 
+                //별도 주문도 추가 일 때 orderSortNum - 2 
+                if (assistantFlag && commonFlag) {
+                    console.log(orderSortNum + '!!');
+                    orderSortNum = 2;
+                }
 
                 console.log(items);
 
@@ -283,6 +290,12 @@ export class ErpService {
                         }
 
                     }
+                }else{
+                    //그 외의 경우 마지막으로 orderSortNum 업데이트
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { orderSortNum: orderSortNum }
+                    });
                 }
             });
 
@@ -673,10 +686,10 @@ export class ErpService {
                     orderSortNum = 0;
                 }
 
-                //별도 주문도 추가 일 때 orderSortNum - 2 혹은 그 이상이면 유지
+                //별도 주문도 추가 일 때 orderSortNum - 2 
                 if (assistantFlag && commonFlag) {
                     console.log(orderSortNum + '!!');
-                    orderSortNum = orderSortNum > 2 ? orderSortNum : 2;
+                    orderSortNum = 2;
                 }
 
                 //별도 주문이 없을 때 orderSortNum - 1 혹은 그냥 유지
