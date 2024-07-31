@@ -173,47 +173,52 @@ export class ErpService {
 
                 //지인 체크
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
-                
-                const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
+                console.log(route);
 
-                let checkRecommend;
-                
-                if(routeName !== null && routePhoneNum !== null ){
-                    checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
-                
-                    if(checkRecommend.success) {
-                        //지인 확인 되었을 시
-                        orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
-                        remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+                if(route !== ""){
+                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
+                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
     
-                        await tx.friendRecommend.create({
-                            data:{
-                                orderId: order.id,
-                                patientId: checkRecommend.patientId,
-                                checkFlag: true,
-                                date: kstDate,
-                                name: routeName,
-                                phoneNum: routePhoneNum,
-                            }
-                        });
-    
-                        await tx.order.update({
-                            where:{id:order.id},
-                            data:{
-                                orderSortNum:orderSortNum,
-                                remark:remark
-                            }
-                        });
-                    }else{
-                        //지인을 입력했을 때 지인 확인이 안될 때
-                        await tx.order.update({
-                            where:{id:order.id},
-                            data:{routeFlag:true}
-                        });   
+                    let checkRecommend;
+                    
+                    if(routeName !== null && routePhoneNum !== null ){
+                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                    
+                        if(checkRecommend.success) {
+                            //지인 확인 되었을 시
+                            orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                            remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+        
+                            await tx.friendRecommend.create({
+                                data:{
+                                    orderId: order.id,
+                                    patientId: checkRecommend.patientId,
+                                    checkFlag: true,
+                                    date: kstDate,
+                                    name: routeName,
+                                    phoneNum: routePhoneNum,
+                                }
+                            });
+        
+                            await tx.order.update({
+                                where:{id:order.id},
+                                data:{
+                                    orderSortNum:orderSortNum,
+                                    remark:remark
+                                }
+                            });
+                        }else{
+                            //지인을 입력했을 때 지인 확인이 안될 때
+                            await tx.order.update({
+                                where:{id:order.id},
+                                data:{routeFlag:true}
+                            });   
+                        }
+        
                     }
-    
                 }
+                
+              
                 
 
                 const orderBodyType = await tx.orderBodyType.create({
@@ -594,49 +599,50 @@ export class ErpService {
                 //지인 체크
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
                             
-                const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
-
-                let checkRecommend;
-
-                     
-                if(routeName !== null && routePhoneNum !== null ){
-                    checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
-                
-                    if(checkRecommend.success) {
-                        //지인 확인 되었을 시
-                        orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
-                        remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+                if(route !== ""){
+                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
+                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
     
-                        await tx.friendRecommend.create({
-                            data:{
-                                orderId: order.id,
-                                patientId: checkRecommend.patientId,
-                                checkFlag: true,
-                                date: kstDate,
-                                name: routeName,
-                                phoneNum: routePhoneNum,
-                            }
-                        });
+                    let checkRecommend;
     
-                        await tx.order.update({
-                            where:{id:order.id},
-                            data:{
-                                orderSortNum:orderSortNum,
-                                remark:remark
-                            }
-                        });
-                    }else{
-                        //지인을 입력했을 때 지인 확인이 안될 때
-                        await tx.order.update({
-                            where:{id:order.id},
-                            data:{routeFlag:true}
-                        });   
+                         
+                    if(routeName !== null && routePhoneNum !== null ){
+                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                    
+                        if(checkRecommend.success) {
+                            //지인 확인 되었을 시
+                            orderSortNum = orderSortNum == 5 ? 5 : 4;// 지인이랑 구수방 동시일 시 구수방으로
+                            remark = remark == '' ? '지인 10포' : remark+='/지인 10포' 
+        
+                            await tx.friendRecommend.create({
+                                data:{
+                                    orderId: order.id,
+                                    patientId: checkRecommend.patientId,
+                                    checkFlag: true,
+                                    date: kstDate,
+                                    name: routeName,
+                                    phoneNum: routePhoneNum,
+                                }
+                            });
+        
+                            await tx.order.update({
+                                where:{id:order.id},
+                                data:{
+                                    orderSortNum:orderSortNum,
+                                    remark:remark
+                                }
+                            });
+                        }else{
+                            //지인을 입력했을 때 지인 확인이 안될 때
+                            await tx.order.update({
+                                where:{id:order.id},
+                                data:{routeFlag:true}
+                            });   
+                        }
+        
                     }
-    
                 }
-              
-
+               
                 console.log(objOrderItem);
                 console.log('--------------------');
                 const items = [];
