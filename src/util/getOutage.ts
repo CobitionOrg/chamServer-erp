@@ -12,23 +12,26 @@ export const getOutage = (list) => {
             month = parseInt(tempOutage[0].replace('달',''));
             weight = parseInt(tempOutage[1].replace('kg',''));
 
-            if(weight>6){
-                outageList.push(list[i])
-            }else{
-                if(month === 1) {
-                    if(weight>=4) outageList.push(list[i]);
-                }else if(month === 2) {
-                    if(weight>=5) outageList.push(list[i]);
-                }else if(month === 3) {
-                    if(weight>=7) outageList.push(list[i]);
+            // console.log(month);
+            // console.log(weight);
+
+            if(!isNaN(month) && !isNaN(weight)){
+                if(weight>6){
+                    outageList.push(list[i])
+                }else{
+                    if(month === 1) {
+                        if(weight>=4) outageList.push(list[i]);
+                    }else if(month === 2) {
+                        if(weight>=5) outageList.push(list[i]);
+                    }else if(month === 3) {
+                        if(weight>=7) outageList.push(list[i]);
+                    }
                 }
             }
         }catch(err){
             console.log(err);
         }
        
-
-        
     }
 
     return outageList;
