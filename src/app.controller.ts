@@ -24,6 +24,7 @@ export class AppController {
   @Get('/excelCash')
   async cashExcel(@Query() getListDto: GetListDto) {
     const res = await this.appService.cashExcelTest(getListDto);
+    return res;
   }
 
 }
