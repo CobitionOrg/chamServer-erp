@@ -17,7 +17,7 @@ export class AppService {
   constructor(
     private readonly mailerService: MailerService,
     private prisma: PrismaService,
-
+    
   ) { }
   private readonly logger = new Logger(AppService.name);
 
@@ -420,4 +420,6 @@ export class AppService {
       }
   }
 
+
+  
 }

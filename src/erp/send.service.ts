@@ -17,6 +17,8 @@ import { getFooter } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
 import { sortItems } from "src/util/sortItems";
 import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
+import { generateUploadURL } from "src/util/s3";
+import axios from "axios";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -140,6 +142,11 @@ export class SendService {
         }
     }
 
+    /**
+     * 발송목록 조회
+     * @param id 
+     * @returns 
+     */
     async getOrderTemp(id: number) {
         try {
             const sendList = await this.prisma.sendList.findUnique({
@@ -1934,5 +1941,149 @@ export class SendService {
             );
         }
     }
+
+    //테스트용
+    async sendNumExcelTest(id: number) {
+        try{
+            const send = await this.getOrderTemp(id);
+
+            if(!send.success) return {success:false};
+
+            const list = send.list;
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("송장번호 테스트 엑셀");
+
+            for(let i = 0; i<list.length; i++) {
+                const rowDatas =[
+                    "", //""
+                    "1", //"차수"
+                    i, //"순번"
+                    `${3853030059}i`, //"운송장번호"
+                    "", //"합포장번호"
+                    "", //"관내물품"
+                    list[i].patient.name, //"수하인명"
+                    "042-451", //"우편번호"
+                    list[i].addr, //"수하인주소1"
+                    "****", //"수하인주소2"
+                    list[i].patient.phoneNum, //"수하인전화"
+                    list[i].patient.phoneNum, //"수하인휴대폰"
+                    '1', //"수량"
+                    '2,500', //"택배운임"
+                    '선불', //"선착불"
+                    '물품명', //"물품명"
+                    '', //"물품옵션"
+                    '', //"추가옵션"
+                    list[i].message, //"배송메세지"
+                    "", //"주문번호"
+                    "23910068", //"집하영업소"
+                    "239", //"집하지점"
+                    "347", //"배송지점"
+                    "E5-347", //"분류코드"
+                    "참명인한의원", //"송하인명"
+                    "서울 은평구 응암동", //"송하인주소1"
+                    "****", //"송하인주소2"
+                    "02-356-8***", //"송하인전화"
+                    "", //"송하인휴대폰"
+                    "", //"주의사항"
+                    "", //"제주선착불"
+                    "0", //"물품중량"
+                    "0", //"제주운임"
+                    "", //"연륙도서"
+                    "", //"산간지역"
+                    "", //"물품코드"
+                    "0", //"할증운임"
+                    "", //"물품가액"
+                    "", //"내품수량"
+                    "", //"원송장번호"
+                    "참명인한의원", //"주관고객"
+                    "발송목록 엑셀파일", //파일명
+                    "SV4D", //"프린터"
+                    "(신)감열A", //"출력송장"
+                    "1", //"발생횟수"
+                    "16:00:33" //"출력시간"
+                ];
+
+                const appendRow = sheet.addRow(rowDatas);
+            }
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.uploadFile(fileData);
+
+            return {success:true, status:HttpStatus.OK, url}
+
+        }catch(err){
+          this.logger.error(err);
+              throw new HttpException({
+                  success: false,
+                  status: HttpStatus.INTERNAL_SERVER_ERROR
+              },
+                  HttpStatus.INTERNAL_SERVER_ERROR
+              );
+        }
+      }
+
+      /**
+    * 엑셀 파일 업로드
+    * @param file 
+    * @returns fileUrl : String
+    */
+  async uploadFile(file: any) {
+    try {
+      const presignedUrl = await generateUploadURL();
+
+      console.log(presignedUrl);
+      await this.saveS3Data(presignedUrl.uploadURL, presignedUrl.imageName);
+
+      await axios.put(presignedUrl.uploadURL, {
+        body: file
+      }, {
+        headers: {
+          "Content-Type": file.type,
+        }
+      });
+
+      let fileUrl = presignedUrl.uploadURL.split('?')[0];
+      return fileUrl;
+    } catch (err) {
+      this.logger.error(err);
+      throw new HttpException({
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+
+
+  }
+
+     /**
+    * s3 데이터 오브젝트 이름 저장(나중에 삭제하기 위해서) 
+    * @param url 
+    * @param objectName 
+    * @returns {success:boolean}
+    */
+     async saveS3Data(url: string, objectName: string) {
+      try {
+          await this.prisma.urlData.create({
+              data: {
+                  url: url,
+                  objectName: objectName
+              }
+          });
+
+          return { success: true };
+      } catch (err) {
+          this.logger.error(err);
+          throw new HttpException({
+              success: false,
+              status: HttpStatus.INTERNAL_SERVER_ERROR
+          },
+              HttpStatus.INTERNAL_SERVER_ERROR
+          );
+      }
+  }
 
 }
