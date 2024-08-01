@@ -1192,7 +1192,8 @@ export class ErpService {
 
     /**
      * 유선 상담에서 입금 상담으로 이동
-     * @param callConsultingDto@returns { success: boolean, status: number}
+     * @param callConsultingDto
+     * @returns { success: boolean, status: number}
      */
     async callToRec(callConsultingDto: CallConsultingDto) {
         try {

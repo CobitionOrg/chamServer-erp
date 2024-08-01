@@ -8,14 +8,17 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { GetListDto } from './erp/Dto/getList.dto';
 import { getDayStartAndEnd } from './util/kstDate.util';
 import { PrismaService } from './prisma.service';
+import { styleHeaderCell } from './util/excelUtil';
+import { generateUploadURL } from './util/s3';
+import axios from 'axios';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly mailerService: MailerService,
     private prisma: PrismaService,
-
-  ){}
+    
+  ) { }
   private readonly logger = new Logger(AppService.name);
 
   getHello(): string {
@@ -26,8 +29,8 @@ export class AppService {
     await this.mailerService.sendMail({
       to: 'qudqud97@naver.com',
       from: 'noreply@gmail.com',
-      subject:'메일 테스트',
-      text:'텍스트'
+      subject: '메일 테스트',
+      text: '텍스트'
     }).then((result) => {
       this.logger.log(result);
     });
@@ -184,14 +187,14 @@ export class AppService {
     return filePath;
   }
 
-  
+
 
   async getTalkExcel(fileName?) {
     const list = [];
     const obj = {
       patient: {
-        name:'조병규',
-        phoneNum:'01092309536'
+        name: '조병규',
+        phoneNum: '01092309536'
       },
     }
 
@@ -199,8 +202,8 @@ export class AppService {
 
     const obj2 = {
       patient: {
-        name:'노송이',
-        phoneNum:'01039820305'
+        name: '노송이',
+        phoneNum: '01039820305'
       },
     }
 
@@ -252,7 +255,7 @@ export class AppService {
         }
       })
       return filePath;
-    }else {
+    } else {
       filePath = `./src/files/test1.xlsx`;
       fs.writeFile(filePath, fileData, (err) => {
         if (err) {
@@ -263,13 +266,13 @@ export class AppService {
       })
       return 'hi'
     }
-   
+
 
 
   }
 
   async cashExcelTest(getListDto: GetListDto) {
-    try{
+    try {
       let orderConditions = {};
 
       const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
@@ -278,18 +281,18 @@ export class AppService {
         isComplete: false,
         useFlag: true,
         date: {
-            gte: startDate,
-            lt: endDate,
+          gte: startDate,
+          lt: endDate,
         }
       }
 
       const list = await this.prisma.order.findMany({
-        where: { ...orderConditions, payType:'계좌이체' },
+        where: { ...orderConditions, payType: '계좌이체' },
         select: {
           price: true,
           date: true,
           cachReceipt: true,
-          patient : {
+          patient: {
             select: {
               name: true
             }
@@ -297,11 +300,11 @@ export class AppService {
         }
       });
 
-      const banks = ['토스뱅크', '카카오페이','국민은행','우리은행','농협'];
+      const banks = ['토스뱅크', '카카오페이', '국민은행', '우리은행', '농협'];
 
       let orderArr = [];
 
-      for(const e of list) {
+      for (const e of list) {
         const randomIndex = Math.floor(Math.random() * banks.length);
 
         const obj = {
@@ -312,22 +315,111 @@ export class AppService {
           bank: banks[randomIndex],
           cashReceipt: e.cachReceipt,
           type: '타행이체'
-        } 
+        }
 
         orderArr.push(obj);
       }
 
-      
-    }catch(err){
+      const wb = new Excel.Workbook();
+      const sheet = wb.addWorksheet("입출금내역");
+
+      const headers = ['date', 'return', 'cash', 'name', 'cashReceipt', 'type'];
+      const headerWidths = [30, 30, 10, 20, 10, 20];
+
+      const headerRow = sheet.addRow(headers);
+      headerRow.height = 30.75;
+      headerRow.eachCell((cell, colNum) => {
+        styleHeaderCell(cell);
+        sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+      });
+
+      orderArr.forEach((e) => {
+        const rowDatas = [e.date, e.return, e.cash, e.name, e.cashReceipt, e.type];
+        const appendRow = sheet.addRow(rowDatas);
+      });
+
+      const fileData = await wb.xlsx.writeBuffer();
+      const url = await this.uploadFile(fileData);
+      return { success: true, status: HttpStatus.OK, url };
+
+
+
+    } catch (err) {
       this.logger.error(err);
       throw new HttpException({
-          success: false,
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          msg: '내부 서버 에러'
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        msg: '내부 서버 에러'
       },
-          HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
 
     }
   }
+
+  /**
+    * 엑셀 파일 업로드
+    * @param file 
+    * @returns fileUrl : String
+    */
+  async uploadFile(file: any) {
+    try {
+      const presignedUrl = await generateUploadURL();
+
+      console.log(presignedUrl);
+      await this.saveS3Data(presignedUrl.uploadURL, presignedUrl.imageName);
+
+      await axios.put(presignedUrl.uploadURL, {
+        body: file
+      }, {
+        headers: {
+          "Content-Type": file.type,
+        }
+      });
+
+      let fileUrl = presignedUrl.uploadURL.split('?')[0];
+      return fileUrl;
+    } catch (err) {
+      this.logger.error(err);
+      throw new HttpException({
+        success: false,
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+
+
+  }
+
+     /**
+    * s3 데이터 오브젝트 이름 저장(나중에 삭제하기 위해서) 
+    * @param url 
+    * @param objectName 
+    * @returns {success:boolean}
+    */
+     async saveS3Data(url: string, objectName: string) {
+      try {
+          await this.prisma.urlData.create({
+              data: {
+                  url: url,
+                  objectName: objectName
+              }
+          });
+
+          return { success: true };
+      } catch (err) {
+          this.logger.error(err);
+          throw new HttpException({
+              success: false,
+              status: HttpStatus.INTERNAL_SERVER_ERROR
+          },
+              HttpStatus.INTERNAL_SERVER_ERROR
+          );
+      }
+  }
+
+
+  
 }
