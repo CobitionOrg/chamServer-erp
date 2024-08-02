@@ -4089,4 +4089,147 @@ export class ErpService {
     
     //     return { message: 'Data filtering complete', validFilePath, invalidFilePath };
     // }
+
+    // // 전달 받은 발송 목록 고객 정보 정형화
+    // async extractPatient (inputFilePath: string, outputFilePath: string) {
+    //     const workbook = new Excel.Workbook();
+    //     await workbook.xlsx.readFile(inputFilePath);
+
+    //     const outputWorkbook = new Excel.Workbook();
+    //     const outputSheet = outputWorkbook.addWorksheet('Extracted Data');
+
+    //     // 새 시트에 헤더 추가
+    //     outputSheet.addRow(['이름', '전화번호']);
+
+    //     const seenEntries = new Set<string>(); // 중복 검사용 Set
+
+    //     // 각 시트를 순회
+    //     workbook.eachSheet((worksheet) => {
+    //         let nameColIndex: number | null = null;
+    //         let phoneColIndex: number | null = null;
+
+    //         for (let rowIndex = 1; rowIndex <= worksheet.rowCount; rowIndex++) {
+    //             const row = worksheet.getRow(rowIndex);
+
+    //             // 첫 번째 행에서 이름과 전화번호 열을 탐색
+    //             if (rowIndex === 1) {
+    //                 row.eachCell((cell, colIndex) => {
+    //                     const cellValue = cell.value?.toString().trim();
+    //                     if (cellValue?.includes('이름')) nameColIndex = colIndex;
+    //                     // if (cellValue?.includes('전화번호')) phoneColIndex = colIndex;
+    //                     if (cellValue?.includes('핸드폰번호')) phoneColIndex = colIndex;
+    //                 });
+    //             } else {
+    //                 // 이름과 전화번호가 있는 열이 결정되었을 때, 데이터를 추출
+    //                 if (nameColIndex && phoneColIndex) {
+    //                     let name = row.getCell(nameColIndex).value?.toString().trim();
+    //                     let phone = row.getCell(phoneColIndex).value?.toString().trim();
+
+    //                     // 이름 정제
+    //                     name = this.cleanName(name);
+
+    //                     // 전화번호 정제
+    //                     phone = this.cleanPhone(phone);
+
+    //                     // 중복 여부 확인을 위한 key 생성
+    //                     const entryKey = `${name}-${phone}`;
+
+    //                     // 빈 값, null 값, 또는 유효하지 않은 전화번호라면 걸러냄
+    //                     if (name && phone && this.isValidPhone(phone) && !seenEntries.has(entryKey)) {
+    //                         outputSheet.addRow([name, phone]);
+    //                         seenEntries.add(entryKey); // 중복 방지를 위해 추가
+    //                     }
+
+    //                     // 이름이 빈 값, null, 또는 '총인원'이라면 탐색 중지
+    //                     if (!name || name === 'null' || name === '총인원') break;
+    //                 }
+    //             }
+    //         }
+    //     });
+
+    //     // 결과를 새 엑셀 파일로 저장
+    //     await outputWorkbook.xlsx.writeFile(outputFilePath);
+
+    //     return { message: 'Data extraction complete', outputFilePath };
+    // }
+
+    // // 이름 정제
+    // private cleanName(name: string | null): string | null {
+    //     if (!name) return null;
+
+    //     // 1. 공백 제거
+    //     name = name.trim();
+
+    //     // 2. 특수문자 발견 시 그 위치 이후의 문자열 제거
+    //     const specialCharIndex = name.search(/[^a-zA-Z가-힣0-9\s]/);
+    //     if (specialCharIndex !== -1) {
+    //         name = name.substring(0, specialCharIndex);
+    //     }
+
+    //     // 3. 숫자 제거
+    //     name = name.replace(/\d+/g, '');
+
+    //     // 최종 결과가 빈 문자열이 되면 null 반환
+    //     return name || null;
+    // }
+
+    // // 전화번호 정제
+    // private cleanPhone(phone: string | null): string | null {
+    //     if (!phone) return null;
+
+    //     // 숫자만 남기기
+    //     phone = phone.replace(/\D/g, '');
+
+    //     // 맨 앞에 0이 없으면 추가
+    //     if (phone.length > 0 && phone[0] !== '0') {
+    //         phone = '0' + phone;
+    //     }
+
+    //     return phone;
+    // }
+
+    // // 전화번호 유효성 검사
+    // private isValidPhone(phone: string | null): boolean {
+    //     if (!phone) return false;
+
+    //     // 총 길이가 11자리인지 확인
+    //     return phone.length === 11;
+    // }
+
+    // // 45개 파일 합치기
+    // async merge() {
+    //     const outputWorkbook = new Excel.Workbook();
+    //     const outputSheet = outputWorkbook.addWorksheet('Merged Data');
+
+    //     const uniqueEntries = new Set<string>();
+        
+    //     for (let i = 1; i <= 45; i++) {
+    //         const filePath = ``;
+    //         const workbook = new Excel.Workbook();
+    //         await workbook.xlsx.readFile(filePath);
+    //         const worksheet = workbook.getWorksheet(1);
+
+    //         worksheet.eachRow((row, rowNumber) => {
+    //             if (i === 1 && rowNumber === 1) {
+    //                 // 첫 파일의 첫 행만 헤더로 추가
+    //                 const rowData = row.values as any[];
+    //                 outputSheet.addRow(rowData.slice(1));
+    //             } else if (rowNumber > 1) { // 데이터 행
+    //                 const rowData = row.values as any[];
+    //                 const name = rowData[1]?.toString().trim() || '';
+    //                 const phone = rowData[2]?.toString().trim() || '';
+    
+    //                 const uniqueKey = `${name}-${phone}`;
+    
+    //                 if (name && phone && !uniqueEntries.has(uniqueKey)) {
+    //                     uniqueEntries.add(uniqueKey);
+    //                     outputSheet.addRow([name, phone]);
+    //                 }
+    //             }
+    //         });
+    //     }
+
+    //     const outputFilePath = ``;
+    //     await outputWorkbook.xlsx.writeFile(outputFilePath);
+    // }
 }

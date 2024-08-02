@@ -837,10 +837,31 @@ export class ErpController {
     // @Get('/filtering-patient')
     // async patientFiltering() {
     //     // filePath 수정 필요
-    //     const filePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\patient.xlsx'
-    //     const validFilePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\filtered\\valid\\patient_valid.xlsx';
-    //     const invalidFilePath = 'C:\\Users\\roy12\\Desktop\\cham\\patient\\filtered\\invalid\\patient_invalid.xlsx';
+    //     const filePath = ''
+    //     const validFilePath = '';
+    //     const invalidFilePath = '';
     //     const res = await this.erpService.patientFiltering(filePath, validFilePath, invalidFilePath);
     //     return res;
+    // }
+
+    // // 발송 목록 고객 리스트 정리
+    // @Public()
+    // @Get('/extract-patient')
+    // async extractPatient() {
+    //     const wtf = [25, 35, 37, 38, 39, 40, 41, 42, 43, 44, 45];
+    //     // filePath 수정 필요
+    //     for(let i of wtf) {
+    //         const inputFilePath = ``;
+    //         const outputFilePath = ``;
+    //         const res = await this.erpService.extractPatient(inputFilePath, outputFilePath);
+    //     }
+    //     return { success: true };
+    // }
+
+    // @Public()
+    // @Get('/merge')
+    // async merge() {
+    //     await this.erpService.merge();
+    //     return { success: true };
     // }
 }
