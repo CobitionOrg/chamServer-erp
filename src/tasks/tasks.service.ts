@@ -57,6 +57,35 @@ export class TasksService {
         await this.tasksRepository.deleteNotCallOrder();
     }
 
+    @Cron('59 13 * * *')
+    async sendErrorLog(){
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth()+1;
+        const day = date.getDate();
+
+        const monthTemp = month > 9 ? month : '0'+month;
+        const dayTemp = day > 9 ? day : "0"+day;
+
+        const logFileName = `${year}-${monthTemp}-${dayTemp}.error.log`;
+        const filePath = `../../logs/error/${logFileName}`;
+        const absoluteFilePath = path.resolve(__dirname, filePath);
+ 
+        await this.mailerService.sendMail({
+            to: 'qudqud97@naver.com',
+            from: 'noreply@gmail.com',
+            subject: '에러로그',
+            text: '에러로그',
+            attachments : [
+                {
+                    path: absoluteFilePath
+                }
+            ]
+        }).then((result) => {
+            this.logger.log(result);
+        });
+    }
+
 
     //자동 퇴근 처리 기능
     @Cron('0 11 * * 1,4') // 월요일, 목요일 오전 11시 (UTC) -> 저녁 8시 (KST)
@@ -92,18 +121,18 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('0 58 0,4,6 * * *')
-    async test() {
-        await this.mailerService.sendMail({
-            to: 'qudqud97@naver.com',
-            from: 'noreply@gmail.com',
-            subject: '메일 테스트',
-            text: '텍스트'
-        }).then((result) => {
-            this.logger.log(result);
-        });
+    // @Cron('0 58 0,4,6 * * *')
+    // async test() {
+    //     await this.mailerService.sendMail({
+    //         to: 'qudqud97@naver.com',
+    //         from: 'noreply@gmail.com',
+    //         subject: '메일 테스트',
+    //         text: '텍스트'
+    //     }).then((result) => {
+    //         this.logger.log(result);
+    //     });
 
-    }
+    // }
 
     //이런식으로 보내면 됨
     // @Cron('0 56 14 * * *')

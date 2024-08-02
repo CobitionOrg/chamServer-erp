@@ -7,7 +7,9 @@ import { OrderInsertTalk } from './Dto/orderInsert.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as moment from 'moment-timezone';
 import { AuthGuard } from 'src/auth/auth.guard';
-
+import { MailerService } from '@nestjs-modules/mailer';
+import { Public } from 'src/auth/decorators/public.decorator';
+import * as path from 'path';
 /*
 ★ 접수확인알림톡 (초/재진 한번에)
 -접수확인알림톡(리뉴얼)
@@ -40,7 +42,9 @@ import { AuthGuard } from 'src/auth/auth.guard';
 @UseGuards(AuthGuard)
 export class TalkController {
     constructor(
-        private readonly talkService: TalkService
+        private readonly talkService: TalkService,
+        private readonly mailerService: MailerService,
+
     ){}
 
     private readonly logger = new Logger(TalkController.name);
@@ -179,6 +183,36 @@ export class TalkController {
         const res = await this.talkService.completeSendTalkCron();
     }
   
+    @Public()
+    @Get('/logTest')
+    async sendErrorLog(){
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth()+1;
+        const day = date.getDate();
+
+        const monthTemp = month > 9 ? month : '0'+month;
+        const dayTemp = day > 9 ? day : "0"+day;
+
+        const logFileName = `${year}-${monthTemp}-${dayTemp}.error.log`;
+        const filePath = `../../logs/error/${logFileName}`
+        const absoluteFilePath = path.resolve(__dirname, filePath);
+        console.log(absoluteFilePath);
+        await this.mailerService.sendMail({
+            to: 'qudqud97@naver.com',
+            from: 'noreply@gmail.com',
+            subject: '에러로그',
+            text: '에러로그',
+            attachments : [
+                {
+                    path: absoluteFilePath
+                }
+            ]
+        }).then((result) => {
+            this.logger.log(result);
+        });
+    }
+
 
     //     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
     // //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})
