@@ -787,6 +787,12 @@ export class ErpController {
     }
 
 
+    @Get('/sendNumTestExcel/:id')
+    async sendNumTestExcel(@Param("id") id: number){
+        console.log(id);
+        return await this.sendService.sendNumExcelTest(id);
+    }
+
     @Get('/ffff')
     async ffff(){
         await this.erpService.updateAddr();
