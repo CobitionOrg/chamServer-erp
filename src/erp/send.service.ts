@@ -906,7 +906,7 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
-        }
+        } 
     }
 
     /**

@@ -1260,19 +1260,6 @@ export class ErpService {
      */
     async completeConsulting(id: number) {
         try {
-            // const paymentAmountCheck = await this.checkPaymentAmount(id);
-            // if (!paymentAmountCheck.success) {
-            //     throw new HttpException(
-            //         {
-            //             status: HttpStatus.UNPROCESSABLE_ENTITY,
-            //             error: "금액과 결제액 불일치"
-            //         },
-            //         HttpStatus.UNPROCESSABLE_ENTITY
-            //     )
-            // } else {
-
-            // }
-
             const order = await this.prisma.order.findUnique({
                 where: { id: id },
                 select: {
@@ -1284,7 +1271,7 @@ export class ErpService {
                 }
             });
 
-            console.log(order);
+            //console.log(order);
             //분리 배송, 합배송일 시 tempOrder는 생성하지 않는다.
             //분리 배송, 합배송 시 미리 생성되기 때문
             if (order.tempOrders.length > 0 && (order.tempOrders[0].orderSortNum == 7 || order.tempOrders[0].orderSortNum == 6)) {
@@ -1328,19 +1315,21 @@ export class ErpService {
                     });
 
 
-                    console.log(`-----------${orderItems.length}-----------`);
-                    console.log(orderItems);
+                    // console.log(`-----------${orderItems.length}-----------`);
+                    // console.log(orderItems);
 
                     //오더 개수
                     const orderAmount = orderItems.length;
-
+                    console.log('////////////////////////');
+                    
+                    console.log(orderAmount);
                     const sendListId = await this.insertToSendList(tx, orderAmount);
-
+                    console.log('sendListId: '+ sendListId);
                     const res = await this.createTempOrder(sendOne, id, sendListId, tx);
 
                     if (!res.success) throw error();
 
-                }, { timeout: 10000 });
+                });
 
             }
 
@@ -1383,7 +1372,7 @@ export class ErpService {
                 }
             });
 
-            console.log(sendList.length);
+            console.log("sendList Len : " + sendList.length);
 
             //아직 350개 차지 않은 발송 목록이 있을 때
             if (sendList.length > 0) {
@@ -1551,9 +1540,9 @@ export class ErpService {
 
             //temp order에 데이터를 삽입해
             //order 수정 시에도 발송목록에서 순서가 변하지 않도록 조정
-            console.log(id);
-            console.log(sendListId);
-            console.log(sendOne);
+            // console.log(id);
+            // console.log(sendListId);
+            // console.log(sendOne);
 
             const sendList = await tx.tempOrder.aggregate({
                 where: {
@@ -1564,8 +1553,8 @@ export class ErpService {
                 }
             });
 
-            console.log('==================')
-            console.log(sendList._max.sortFixNum)
+            // console.log('==================')
+            // console.log(sendList._max.sortFixNum)
 
             const max = sendList._max.sortFixNum;
 
@@ -2090,21 +2079,37 @@ export class ErpService {
             //console.log(cashList);
             //console.log(insertCashDto);
             const cashMatcher = new CashExcel(insertCashDto.cashExcelDto, cashList.list, itemList);
-            const results = cashMatcher.compare();
-
-            console.log(results);
+            const results = cashMatcher.compare(); 
+            // console.log('=========================');
+            // console.log(results);
             //엑셀 생성
             const createExcel = await createExcelCash(results.duplicates, results.noMatches);
             const url = createExcel.url;
             const objectName = createExcel.objectName;
 
             await this.saveS3Data(url, objectName);
-
-            // //발송목록 이동 처리 & cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
-            results.matches.forEach(async (e) => {
+           
+            //발송목록 이동 처리 & cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
+            for(const e of results.matches) {
                 await this.completeConsulting(e.id);
                 await this.cashUpdate(e.id, e.price);
-            });
+            }
+          
+
+            // const firstTenMatches = results.matches.slice(0, 10);
+            // const promises = firstTenMatches.map(async (e) => {
+            //     await this.completeConsulting(e.id);
+            //     await this.cashUpdate(e.id, e.price);
+            //   });
+              
+            //   await Promise.all(promises).then((value) => {
+            //     //console.log(value);
+            //     return { success: true, status: HttpStatus.OK };
+            // }).catch((err) => {
+            //     this.logger.error(err);
+            //     return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR };
+            // });
+
             return { success: true, url };
         } catch (err) {
             this.logger.error(err);
