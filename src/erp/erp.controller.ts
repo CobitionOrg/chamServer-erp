@@ -495,6 +495,8 @@ export class ErpController {
                 header
             );
         }
+
+        return res;
     }
 
     @ApiOperation({summary:'발송목록 타이틀 수정'})
@@ -528,7 +530,7 @@ export class ErpController {
         this.logger.log('발송목록 완료 안 된 전체 리스트 가져오기');
         const res = await this.sendService.getAllSendList();
         return res;
-    }
+    } 
 
     @ApiOperation({summary:'특정 발송목록을 선택해서 해당 발송목록으로 넘기기'})
     @Post('/completeSetSend')
