@@ -837,7 +837,7 @@ export class ErpController {
     // @Get('/filtering-patient')
     // async patientFiltering() {
     //     // filePath 수정 필요
-    //     const filePath = ''
+    //     const filePath = '';
     //     const validFilePath = '';
     //     const invalidFilePath = '';
     //     const res = await this.erpService.patientFiltering(filePath, validFilePath, invalidFilePath);
@@ -863,5 +863,13 @@ export class ErpController {
     // async merge() {
     //     await this.erpService.merge();
     //     return { success: true };
+    // }
+
+    // // 발송 목록에 없는 환자 제외
+    // @Public()
+    // @Get('/final-filtering')
+    // async fianlFiltering() {
+    //     const res = await this.erpService.finalFiltering();
+    //     return res;
     // }
 }
