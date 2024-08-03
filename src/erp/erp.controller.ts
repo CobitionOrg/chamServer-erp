@@ -880,4 +880,13 @@ export class ErpController {
     //     const res = await this.erpService.finalFiltering();
     //     return res;
     // }
+
+    // // 환자 데이터 넣기
+    // // 운영용(env db 수정 필)
+    // @Public()
+    // @Post('/patient')
+    // async insertPatient() {
+    //     const res = await this.erpService.insertPatient();
+    //     return res;
+    // }
 }
