@@ -4314,7 +4314,7 @@ export class ErpService {
 
     // // 운영용 db에 전달받은 데이터 넣기
     // async insertPatient() {
-    //     const filePath = 'C:\\Users\\roy12\\Desktop\\cham-data\\valid_patient_data.xlsx';
+    //     const filePath = '';
     //     const workbook = new Excel.Workbook();
     //     await workbook.xlsx.readFile(filePath);
     //     const worksheet = workbook.getWorksheet(1);
