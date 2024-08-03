@@ -880,7 +880,7 @@ export class SendService {
                         id: e.id
                     },
                     data: {
-                        sendNum: e.sendNum.toString();
+                        sendNum: e.sendNum.toString()
                     }
                 });
 
