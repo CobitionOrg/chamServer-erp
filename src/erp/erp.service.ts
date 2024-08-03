@@ -4311,4 +4311,59 @@ export class ErpService {
 
     //     return { success: true, validPath: validOutputFilePath, invalidPath: invalidOutputFilePath };
     // }
+
+    // // 운영용 db에 전달받은 데이터 넣기
+    // async insertPatient() {
+    //     const filePath = '';
+    //     const workbook = new Excel.Workbook();
+    //     await workbook.xlsx.readFile(filePath);
+    //     const worksheet = workbook.getWorksheet(1);
+
+    //     const maxRow = 48634;
+
+    //     for(let i = 2; i <= maxRow; i++) {
+    //         const row = worksheet.getRow(i);
+
+    //         const socialNum = row.getCell(1).text;
+    //         const name = row.getCell(2).text;
+    //         const phoneNum = row.getCell(3).text;
+    //         const addr = row.getCell(4).text;
+    //         const digestion = row.getCell(5).text || '';
+    //         const sleep = row.getCell(6).text || '';
+    //         const constipation = row.getCell(7).text || '';
+    //         const nowDrug = row.getCell(8).text || '';
+    //         const pastDrug = row.getCell(9).text || '';
+    //         const pastSurgery = row.getCell(10).text || '';
+    //         const tallWeight = row.getCell(11).text || '';
+
+    //         const encryptedSocialNum = this.crypto.encrypt(socialNum);
+    //         const encryptedPhoneNum = this.crypto.encrypt(phoneNum);
+    //         const encryptedAddr = this.crypto.encrypt(addr);
+
+    //         const patient = await this.prisma.patient.create({
+    //             data: {
+    //                 name: name,
+    //                 phoneNum: encryptedPhoneNum,
+    //                 addr: encryptedAddr,
+    //                 socialNum: encryptedSocialNum,
+    //                 useFlag: true,
+    //             }
+    //         });
+
+    //         await this.prisma.patientBodyType.create({
+    //             data: {
+    //                 tallWeight: tallWeight,
+    //                 digestion: digestion,
+    //                 sleep: sleep,
+    //                 constipation: constipation,
+    //                 nowDrug: nowDrug,
+    //                 pastDrug: pastDrug,
+    //                 pastSurgery: pastSurgery,
+    //                 patientId: patient.id,
+    //             }
+    //         });
+    //     }
+
+    //     return { success: true };
+    // }
 }
