@@ -873,14 +873,14 @@ export class SendService {
             console.log(sendExcelDto);
             const qryArr = [];
 
-            sendExcelDto.forEach(async (e) => {
+            sendExcelDto.forEach((e) => {
                 console.log(e);
                 const qry = this.prisma.tempOrder.update({
                     where: {
                         id: e.id
                     },
                     data: {
-                        sendNum: e.sendNum
+                        sendNum: e.sendNum.toString();
                     }
                 });
 
