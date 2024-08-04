@@ -81,7 +81,7 @@ export const orderItemLen = (list) => {
         yoyo += itemLen.yoyo;
     });
 
-    let detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}`;
+    let detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}, 전체 ${gam+ssen+yoyo}`;
     return detail;
 
 }
