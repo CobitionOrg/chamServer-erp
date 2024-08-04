@@ -70,3 +70,17 @@ export const getCurrentWeeksOfMondayStartAndFridayEnd = () => {
 
   return { mondayStart, fridayEnd };
 };
+
+export function getFirstAndLastDayOfMonth(year, month) {
+  // 주어진 달의 첫째 날 구하기
+  const firstDay = new Date(year, month - 1, 1);
+  
+  // 주어진 달의 마지막 날 구하기
+  const lastDay = new Date(year, month, 0);
+  lastDay.setHours(23, 59, 59, 999); // 마지막 날의 시간을 23:59:59로 설정
+
+  return {
+      firstDay: firstDay,
+      lastDay: lastDay
+  };
+}

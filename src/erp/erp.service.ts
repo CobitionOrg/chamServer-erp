@@ -28,11 +28,12 @@ import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
-import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getStartOfToday } from 'src/util/kstDate.util';
+import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getFirstAndLastDayOfMonth, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
 import { SendCombineDto } from './Dto/sendCombineDto';
+import { GetDateDto } from './Dto/getDate.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -2792,6 +2793,11 @@ export class ErpService {
         }
     }
 
+    /**
+     * outage 있는 환자 리스트 반환
+     * @param getOutageListDto 
+     * @returns 
+     */
     async getOutageList(getOutageListDto: GetListDto) {
         try {
             let orderConditions = {};
@@ -2895,6 +2901,57 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             )
+        }
+    }
+
+    async getOutageCount(getDateDto: GetDateDto) {
+        try{
+            let orderConditions = {};
+            if (getDateDto.date !== undefined) {
+                //날짜 조건 O
+                const date = new Date(getDateDto.date);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const { firstDay, lastDay } = getFirstAndLastDayOfMonth(year, month);
+
+                orderConditions = {
+                    date: {
+                        gte: firstDay,
+                        lt: lastDay,
+                    }
+                }
+
+            }
+
+            const list = await this.prisma.order.findMany({
+                where: {
+                    outage: {
+                        not: '',
+                    },
+                    ...orderConditions,
+                    consultingType: false,
+                    reviewFlag: true
+                    // isComplete: false,
+                },
+                select: {
+                    id: true,
+                }
+            });
+
+
+            let len = list.length;
+
+            return {success:true, status:HttpStatus.OK, len};
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+
         }
     }
 
@@ -4367,3 +4424,5 @@ export class ErpService {
     //     return { success: true };
     // }
 }
+
+
