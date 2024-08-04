@@ -1311,8 +1311,8 @@ export class SendService {
             console.log(list);
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
-            const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
-            const headerWidths = [16, 30, 40, 10];
+            const header = ['이름', '핸드폰 번호', '주문수량', '별도구매','결제방식','특이사항','현금','카드'];
+            const headerWidths = [16, 30, 40, 40, 10,20,10,10];
 
             const headerRow = sheet.addRow(header);
             headerRow.height = 30.75;
@@ -1334,16 +1334,21 @@ export class SendService {
                 const { name, phoneNum } = e.patient;
                 console.log(e.tempOrderItems)
                 let items = '';
-
+                let assistants = '';
                 for (let i = 0; i < e.order.orderItems.length; i++) {
                     console.log(e.order.orderItems[i].item)
-                    const item = getItem(e.order.orderItems[i].item);
-                    items += `${item}/`
+                    if(e.order.orderItems[i].type === 'assistant') {
+                        const assistant = getItem(e.order.orderItems[i].item);
+                        assistants += `${assistant}/`;
+                    }else{
+                        const item = getItem(e.order.orderItems[i].item);
+                        items += `${item}/`
+                    }
                 }
 
                 const payType = e.payType;
 
-                const rowDatas = [name, phoneNum, items, payType];
+                const rowDatas = [name, phoneNum, items, assistants, payType, e.order.remark, e.order.cash, e.order.card];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
