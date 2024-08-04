@@ -13,7 +13,7 @@ import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
-import { getFooter } from "src/util/accountBook";
+import { getFooter, orderItemLen } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
 import { sortItems } from "src/util/sortItems";
 import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
@@ -244,7 +244,9 @@ export class SendService {
                 row.patient.phoneNum = decryptedPhoneNum;
             }
 
-            return { success: true, list: list };
+            const detail = orderItemLen(list);
+
+            return { success: true, list: list, detail };
 
         } catch (err) {
             this.logger.error(err);
@@ -335,7 +337,9 @@ export class SendService {
                 row.patient.phoneNum = decryptedPhoneNum;
             }
 
-            return { success: true, list: sortedList };
+            const detail = orderItemLen(list);
+
+            return { success: true, list: sortedList, detail };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({

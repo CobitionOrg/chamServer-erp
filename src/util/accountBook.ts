@@ -69,6 +69,23 @@ export const getFooter = (list:Array<any>,addSend) => {
     return {logen, orderCount, fullCount, detail, card, cash, note };
 }
 
+//총 개월 수 수량
+export const orderItemLen = (list) => {
+    let gam = 0;
+    let ssen = 0;
+    let yoyo = 0;
+    list.forEach(e => {
+        const itemLen = getItemLen(e.order.orderItems);
+        gam += itemLen.gam;
+        ssen += itemLen.ssen;
+        yoyo += itemLen.yoyo;
+    });
+
+    let detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}`;
+    return detail;
+
+}
+
 const getItemLen = (orderItems) => {
     let gam = 0;
     let ssen = 0;    
