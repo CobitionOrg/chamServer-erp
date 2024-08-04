@@ -282,6 +282,8 @@ export class SurveyService {
         return { success: false, msg: '주문하신 내역이 없습니다' };
       }
 
+      console.log(res);
+
       const order = await this.prisma.order.findFirst({
         where: {
           patientId: res.id,
@@ -356,17 +358,18 @@ export class SurveyService {
         }
       });
 
+
       let check = false;
       let matched: any = {};
 
       for(const e of res) {
         const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
-        if(checkPhoneNum === getOrderDto.phoneNum) {
+        if(checkPhoneNum == getOrderDto.phoneNum) {
           matched = { ...e };
           check = true;
           break;
         }
-      }
+      } 
 
       return { success: check, id: matched.id }
     } catch (err) {
