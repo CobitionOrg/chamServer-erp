@@ -237,7 +237,11 @@ export class SendService {
                 }
             });
 
-            for (let row of list) {
+            const sortItemsList = sortItems(list, true);
+
+            const sortedList = getSortedList(sortItemsList);
+
+            for (let row of sortedList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 row.addr = decryptedAddr;
@@ -246,8 +250,7 @@ export class SendService {
 
             const detail = orderItemLen(list);
 
-            return { success: true, list: list, detail };
-
+            return { success: true, list: sortedList, detail };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
