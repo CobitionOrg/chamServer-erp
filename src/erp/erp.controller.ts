@@ -32,6 +32,7 @@ import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 import { zip } from 'rxjs/operators';
 import { SendCombineDto } from './Dto/sendCombineDto';
+import { GetDateDto } from './Dto/getDate.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -246,12 +247,20 @@ export class ErpController {
     }
 
     @ApiOperation({summary: 'outage 있는 환자 리스트 반환'})
-    @Public()
+    // @Public()
     @Get('/getOutageList')
     async getOutageList(@Query() getOutageListDto: GetListDto) {
         this.logger.log('outage 환자 목록 조회');
         return await this.erpService.getOutageList(getOutageListDto);
     }
+
+    @ApiOperation({summary:'누적 후기 수 가져오기'})
+    @Get('/getOutageCount')
+    async getOutageCount(@Query() getDateDto: GetDateDto) {
+        this.logger.log('누적 후기 수 가져오기');
+        return await this.erpService.getOutageCount(getDateDto);
+    }
+
   
     //쓰는지 여부 확인
     @ApiOperation({summary: '지인 확인'})
