@@ -860,6 +860,8 @@ export class SendService {
                     orderStr += ` s(10)`;
                 }
 
+                orderStr += ` ${e.order.remark}`;
+
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
@@ -1606,9 +1608,19 @@ export class SendService {
      */
     async cancelSendOrderFlag(id: number) {
         try {
-            await this.prisma.tempOrder.update({
+            const tempOrder = await this.prisma.tempOrder.update({
                 where: { id: id },
                 data: { cancelFlag: true }
+            });
+
+            await this.prisma.order.update({
+                where:{
+                    id: tempOrder.orderId
+                },
+                data:{
+                    cash: 0,
+                    card: 0
+                }
             });
 
             const exOrder = await this.prisma.tempOrder.findUnique({
