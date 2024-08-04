@@ -1628,7 +1628,7 @@ export class ErpService {
                     data: {
                         isComplete: true,
                         consultingFlag: true,
-                        cash: exOrder.price,
+                        cash: exOrder.price, //계좌이체의 경우 원내장부에 올라가야 되서 현금결제로 금액 입력
                     }
                 });
 
