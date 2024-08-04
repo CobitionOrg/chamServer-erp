@@ -1616,11 +1616,19 @@ export class ErpService {
             const sendListId = completeSetSendDto.sendListId;
 
             await this.prisma.$transaction(async (tx) => {
+                const exOrder = await tx.order.findUnique({
+                    where:{id:orderId},
+                    select:{
+                        price:true
+                    }
+                });
+
                 const sendOne = await tx.order.update({
                     where: { id: orderId },
                     data: {
                         isComplete: true,
-                        consultingFlag: true
+                        consultingFlag: true,
+                        cash: exOrder.price, //계좌이체의 경우 원내장부에 올라가야 되서 현금결제로 금액 입력
                     }
                 });
 
