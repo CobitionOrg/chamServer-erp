@@ -177,7 +177,7 @@ export class SendService {
      */
     async getFixOrderTempList(id: number) {
         try {
-            console.log('this is fixed list');
+            // console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
@@ -239,9 +239,7 @@ export class SendService {
 
             const sortItemsList = sortItems(list, true);
 
-            const sortedList = getSortedList(sortItemsList);
-
-            for (let row of sortedList) {
+            for (let row of sortItemsList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 row.addr = decryptedAddr;
@@ -250,7 +248,7 @@ export class SendService {
 
             const detail = orderItemLen(list);
 
-            return { success: true, list: sortedList, detail };
+            return { success: true, list: sortItemsList, detail };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -269,7 +267,7 @@ export class SendService {
      */
     async getOrderTempList(id: number) {
         try {
-            console.log('this list is not fixed');
+            // console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
