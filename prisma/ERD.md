@@ -144,6 +144,8 @@ erDiagram
   Boolean updateInfoCheck "nullable"
   Boolean cancelFlag "nullable"
   Int sortFixNum "nullable"
+  Boolean updateInfoCheckGam "nullable"
+  Boolean updatePrciecFlag "nullable"
 }
 "tempOrderItem" {
   Int id PK
@@ -354,7 +356,7 @@ erDiagram
   - `useFlag`: 발송목록 삭제 플래그
   - `friendDiscount`: 지인 할인 10% 대상 플래그
   - `notCall`: 유선 상담 시 상담 미연결 플래그
-  - `reviewFlag`: 
+  - `reviewFlag`: 후기 유무 플래그
   - `routeFlag`: 지인입력 시 지인확인이 안됐을 시 여부 체크(확인이 안되면 true 확인되면 false)
 
 ### `friendRecommend`
@@ -394,7 +396,9 @@ erDiagram
   - `addr`: 해당 오더 발송 주소
   - `updateInfoCheck`: 접수대에서 수정여부 체크 확인 플래그
   - `cancelFlag`: 주문 취소 플래그
-  - `sortFixNum`: 
+  - `sortFixNum`: 발송목록 정렬 순서 번호
+  - `updateInfoCheckGam`: 감비환실에서 수정여부 체크 확인 플래그
+  - `updatePrciecFlag`: 금액 변동 시 변경여부 확인 플래그
 
 ### `tempOrderItem`
 
