@@ -89,7 +89,12 @@ export class ErpService {
                 } else if (e.orderType == 'orderBodyType') {
                     objOrderBodyType[`${e.code}`] = e.answer;
                 } else {
-                    throw error('400 error');
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.BAD_REQUEST
+                    },
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             });
 
@@ -526,7 +531,12 @@ export class ErpService {
                 } else if (e.orderType == 'orderBodyType') {
                     objOrderBodyType[`${e.code}`] = e.answer;
                 } else {
-                    throw error('400 error');
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.BAD_REQUEST
+                    },
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             });
 
@@ -864,7 +874,12 @@ export class ErpService {
                 } else if (e.orderType == 'orderBodyType') {
                     objOrderBodyType[`${e.code}`] = e.answer;
                 } else {
-                    throw error('400 error');
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.BAD_REQUEST
+                    },
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             });
             console.log(objPatient.addr);
