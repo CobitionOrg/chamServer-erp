@@ -212,7 +212,7 @@ export class TalkController {
             this.logger.log(result);
         });
     }
-
+ 
 
     //     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})
     // //    @Cron('0 9,12,15 * * 1,2,3,4,5',{timeZone:"Asia/Seoul"})

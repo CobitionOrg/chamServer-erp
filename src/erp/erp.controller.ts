@@ -721,6 +721,22 @@ export class ErpController {
         return res;
     }
 
+
+    @ApiOperation({summary:'감비환실에서 업데이트 내역 체크'})
+    @Patch('/checkUpdateAtGam/:id')
+    async checkUpdateAtGam(@Param("id") id: number,@Headers() header) {
+        this.logger.log('감비환실에서 업데이트 내역 체크');
+        const res = await this.sendService.checkUpdateAtGam(id);
+        if(res.success){
+            await this.logService.createLog(
+                `${id}번 감비환실에서 업데이트 내역 체크`,'발송목록',header
+            )
+        }
+        return res;
+    }
+
+
+
     @ApiOperation({summary:'지인 확인 할인 여부 체크'})
     @Post('/checkDiscount')
     async checkDiscount(@Body() checkDiscountDto: CheckDiscountDto,@Headers() header){

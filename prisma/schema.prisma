@@ -263,56 +263,61 @@ model friendRecommend {
 
 model tempOrder {
   /// index key
-  id               Int               @id @default(autoincrement())
+  id                 Int               @id @default(autoincrement())
   /// 알게 된 경로 
-  route            String
+  route              String
   /// 배송 요청 메세지
-  message          String
+  message            String
   /// 현금 영수증
-  cachReceipt      String
+  cachReceipt        String
   /// 비대면 진료 타입 해당사항 체크
-  typeCheck        String
+  typeCheck          String
   /// 상담가능시간
-  consultingTime   String
+  consultingTime     String
   /// 결제 진행 방법
-  payType          String
+  payType            String
   /// 필수 체크
-  essentialCheck   String
+  essentialCheck     String
   /// 감량 된 킬로수
-  outage           String
+  outage             String
   /// 유선 상담 유무 -> true면 유선
-  consultingType   Boolean           @default(false)
+  consultingType     Boolean           @default(false)
   /// 유선 상담 완료 플래그
-  phoneConsulting  Boolean           @default(false)
+  phoneConsulting    Boolean           @default(false)
   /// 결제 완료 유무 -> 완료 시 발송목록으로
-  isComplete       Boolean           @default(false)
+  isComplete         Boolean           @default(false)
   /// 환자 key
-  patientId        Int
+  patientId          Int
   /// 초진 재진 유무
-  isFirst          Boolean           @default(true)
+  isFirst            Boolean           @default(true)
   /// 접수 일자
-  date             DateTime          @db.DateTime(0)
+  date               DateTime          @db.DateTime(0)
   /// 정렬 번호
-  orderSortNum     Int               @default(0)
+  orderSortNum       Int               @default(0)
   /// 원 오더 key
-  orderId          Int
+  orderId            Int
   /// 송장 번호
-  sendNum          String?           @db.VarChar(100)
+  sendNum            String?           @db.VarChar(100)
   /// 발송목록 key
-  sendListId       Int
+  sendListId         Int
   /// 해당 오더 발송 주소
-  addr             String?           @db.Text
+  addr               String?           @db.Text
   /// 접수대에서 수정여부 체크 확인 플래그
-  updateInfoCheck  Boolean?          @default(true)
+  updateInfoCheck    Boolean?          @default(true)
   /// 주문 취소 플래그
-  cancelFlag       Boolean?
-  sortFixNum       Int?              @default(0)
-  addSend          addSend?
-  orderUpdateInfos orderUpdateInfo[]
-  order            order             @relation(fields: [orderId], references: [id])
-  patient          patient           @relation(fields: [patientId], references: [id])
-  sendList         sendList          @relation(fields: [sendListId], references: [id])
-  tempOrderItems   tempOrderItem?
+  cancelFlag         Boolean?
+  /// 발송목록 정렬 순서 번호
+  sortFixNum         Int?              @default(0)
+  /// 감비환실에서 수정여부 체크 확인 플래그
+  updateInfoCheckGam Boolean?          @default(true)
+  /// 금액 변동 시 변경여부 확인 플래그
+  updatePrciecFlag   Boolean?          @default(false)
+  addSend            addSend?
+  orderUpdateInfos   orderUpdateInfo[]
+  order              order             @relation(fields: [orderId], references: [id])
+  patient            patient           @relation(fields: [patientId], references: [id])
+  sendList           sendList          @relation(fields: [sendListId], references: [id])
+  tempOrderItems     tempOrderItem?
 
   @@index([orderId], map: "tempOrder_orderId_fkey")
   @@index([patientId], map: "tempOrder_patientId_fkey")
