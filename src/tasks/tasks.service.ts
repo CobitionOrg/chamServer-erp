@@ -86,6 +86,15 @@ export class TasksService {
         });
     }
 
+    @Cron('59 13 * * *')
+    async deleteFriendRecommend() {
+        this.logger.log('1년 지난 추천 데이터 삭제');
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        await this.tasksRepository.deleteFriendRecommend(oneYearAgo);
+    }
+
 
     //자동 퇴근 처리 기능
     @Cron('0 11 * * 1,4') // 월요일, 목요일 오전 11시 (UTC) -> 저녁 8시 (KST)
