@@ -196,6 +196,8 @@ export class SendService {
                     payType: true,
                     addr: true,
                     updateInfoCheck: true,
+                    updateInfoCheckGam: true,
+                    updatePrciecFlag: true,
                     cancelFlag: true,
                     patient: {
                         select: {
@@ -286,6 +288,8 @@ export class SendService {
                     payType: true,
                     addr: true,
                     updateInfoCheck: true,
+                    updateInfoCheckGam: true,
+                    updatePrciecFlag: true,
                     cancelFlag: true,
                     patient: {
                         select: {
@@ -455,7 +459,12 @@ export class SendService {
                     }
                     objOrderItem.push(obj);
                 } else {
-                    throw error('400 error');
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.BAD_REQUEST
+                    },
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             });
 
@@ -588,6 +597,12 @@ export class SendService {
 
                 let cash = 0;
                 let card = 0;
+                let checkPrcieFlag = false;
+
+                if(price!=exTempOrder[0].order.price) {
+                    checkPrcieFlag = true;
+                }
+
 
                 if(objOrder.payType ==='계좌이체'){
                     if(price !== parseInt(objOrder.card) || price !== parseInt(objOrder.cash)) {
@@ -625,8 +640,9 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
+                        updatePrciecFlag: checkPrcieFlag
                     }
-                })
+                });
 
                 console.log('----------------')
                 console.log(objOrderItem)
@@ -1312,8 +1328,8 @@ export class SendService {
             console.log(list);
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
-            const header = ['이름', '핸드폰 번호', '주문수량', '결제방식'];
-            const headerWidths = [16, 30, 40, 10];
+            const header = ['이름', '핸드폰 번호', '주문수량', '별도구매','결제방식','특이사항','현금','카드'];
+            const headerWidths = [16, 30, 40, 40, 10,20,10,10];
 
             const headerRow = sheet.addRow(header);
             headerRow.height = 30.75;
@@ -1335,16 +1351,21 @@ export class SendService {
                 const { name, phoneNum } = e.patient;
                 console.log(e.tempOrderItems)
                 let items = '';
-
+                let assistants = '';
                 for (let i = 0; i < e.order.orderItems.length; i++) {
                     console.log(e.order.orderItems[i].item)
-                    const item = getItem(e.order.orderItems[i].item);
-                    items += `${item}/`
+                    if(e.order.orderItems[i].type === 'assistant') {
+                        const assistant = getItem(e.order.orderItems[i].item);
+                        assistants += `${assistant}/`;
+                    }else{
+                        const item = getItem(e.order.orderItems[i].item);
+                        items += `${item}/`
+                    }
                 }
 
                 const payType = e.payType;
 
-                const rowDatas = [name, phoneNum, items, payType];
+                const rowDatas = [name, phoneNum, items, assistants, payType, e.order.remark, e.order.cash, e.order.card];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
@@ -1433,7 +1454,7 @@ export class SendService {
             );
         }
     }
-
+ 
     /**
      * 체크된 수정 데이터 orderUpdateInfo 테이블에 데이터 넣기
      * @param insertUpdateInfoDto 
@@ -1450,7 +1471,7 @@ export class SendService {
 
                 await tx.tempOrder.update({
                     where: { id: insertUpdateInfoDto.tempOrderId },
-                    data: { updateInfoCheck: false }
+                    data: { updateInfoCheck: false, updateInfoCheckGam: false }
                 });
                 const qryArr = insertUpdateInfoDto.infoData.map(async e => {
                     console.log('------------------');
@@ -1678,6 +1699,30 @@ export class SendService {
             return { success: true, status: HttpStatus.OK, msg: '확인 완료' }
 
         } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * 감비환실에서 업데이트 내역 체크
+     * @param id 
+     * @returns 
+     */
+    async checkUpdateAtGam(id: number) {
+        try{
+            await this.prisma.tempOrder.update({
+                where: { id: id },
+                data: { updateInfoCheckGam: true }
+            });
+
+            return { success: true, status: HttpStatus.OK, msg: '확인 완료' }
+        }catch(err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,

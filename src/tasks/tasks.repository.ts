@@ -627,4 +627,32 @@ export class TasksRepository {
             );
         }
     }
+
+
+    /**
+     * 1년 지난 추천 데이터 삭제
+     * @param oneYearAgo :Date
+     * @returns {success:boolean}
+     */
+    async deleteFriendRecommend(oneYearAgo: Date) {
+        try{
+            await this.prisma.friendRecommend.deleteMany({
+                where: {
+                    date:{
+                        lt: oneYearAgo
+                    }
+                }
+            });
+
+            return {success:true};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
