@@ -177,7 +177,7 @@ export class SendService {
      */
     async getFixOrderTempList(id: number) {
         try {
-            // console.log('this is fixed list');
+            console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
@@ -269,7 +269,7 @@ export class SendService {
      */
     async getOrderTempList(id: number) {
         try {
-            // console.log('this list is not fixed');
+            console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
