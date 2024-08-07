@@ -13,13 +13,15 @@ export class GetOrderSendPrice{
     }
 
     //일단 주문 내역 금액만 합계
-    getPrice(){
+    getPrice(orderSortNum?: number){
         let priceSum = 0;
 
         const checkSend = this.checkSend();
 
         if(checkSend && this.isPickup === false){
-            priceSum+=3500;
+            if(orderSortNum !== -1){
+                priceSum+=3500;
+            }
         }
 
         console.log('////////////////////////////');

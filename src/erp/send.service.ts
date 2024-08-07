@@ -496,7 +496,7 @@ export class SendService {
 
                 if (exTempOrder[0].orderSortNum < 6) {
                     //합배송, 분리 배송이 아닐 시
-                    price = getOrderPrice.getPrice();
+                    price = getOrderPrice.getPrice(exTempOrder[0].orderSortNum);
                 } else if (exTempOrder[0].orderSortNum == 6) {
                     console.log('합배송일 시')
 
@@ -602,6 +602,7 @@ export class SendService {
                     checkPrcieFlag = true;
                 }
 
+               
 
                 if(objOrder.payType ==='계좌이체'){
                     if(price !== parseInt(objOrder.card) || price !== parseInt(objOrder.cash)) {
@@ -612,6 +613,8 @@ export class SendService {
                         card = price
                     }
                 }
+
+                
 
                 const order = await tx.order.update({
                     where: {
