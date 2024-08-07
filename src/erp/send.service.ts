@@ -239,7 +239,9 @@ export class SendService {
                 }
             });
 
-            for (let row of list) {
+            const sortItemsList = sortItems(list, true);
+
+            for (let row of sortItemsList) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 row.addr = decryptedAddr;
@@ -248,8 +250,7 @@ export class SendService {
 
             const detail = orderItemLen(list);
 
-            return { success: true, list: list, detail };
-
+            return { success: true, list: sortItemsList, detail };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -1030,7 +1031,8 @@ export class SendService {
                         id: id
                     },
                     data: {
-                        useFlag: false
+                        useFlag: false,
+                        fixFlag: false,
                     }
                 });
 

@@ -87,23 +87,23 @@ const compareByPriority = (
     case 4: // 요
       return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
     case 5: // 감&요
-      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
-        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
-      }
-      return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
-    case 6: // 쎈&요
-      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
-        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
-      }
-      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
-    case 7: // 감&쎈&요
-      if (aPriorityInfo.yoMonths !== bPriorityInfo.yoMonths) {
-        return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
-      }
       if (aPriorityInfo.gamMonths !== bPriorityInfo.gamMonths) {
         return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
       }
-      return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+      return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+    case 6: // 쎈&요
+      if (aPriorityInfo.cenMonths !== bPriorityInfo.cenMonths) {
+        return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+      }
+      return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
+    case 7: // 감&쎈&요
+      if (aPriorityInfo.gamMonths !== bPriorityInfo.gamMonths) {
+        return aPriorityInfo.gamMonths - bPriorityInfo.gamMonths;
+      }
+      if (aPriorityInfo.cenMonths !== bPriorityInfo.cenMonths) {
+        return aPriorityInfo.cenMonths - bPriorityInfo.cenMonths;
+      }
+      return aPriorityInfo.yoMonths - bPriorityInfo.yoMonths;
     default:
       return 0;
   }
