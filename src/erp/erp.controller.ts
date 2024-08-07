@@ -801,7 +801,6 @@ export class ErpController {
         return res;
     }
 
-    @Public()
     @ApiOperation({summary: '입금/상담 목록에서 합배송 시 발송 목록 조회'})
     @Get('/not-completed')
     async getNotFixedTempOrderList() {
@@ -811,6 +810,14 @@ export class ErpController {
         return res;
     }
 
+    @ApiOperation({summary: '발송목록에서 금액 변경 확인 체크'})
+    @Patch("/checkPrice/:id")
+    async checkPrice(@Param("id") id: number) {
+        this.logger.log('발송목록에서 금액 변경 확인 체크 처리');
+
+        const res = await this.sendService.checkPrice(id);
+        return res;
+    }
 
     @Get('/sendNumTestExcel/:id')
     async sendNumTestExcel(@Param("id") id: number){
