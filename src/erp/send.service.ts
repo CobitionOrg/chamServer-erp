@@ -1031,7 +1031,8 @@ export class SendService {
                         id: id
                     },
                     data: {
-                        useFlag: false
+                        useFlag: false,
+                        fixFlag: false,
                     }
                 });
 
