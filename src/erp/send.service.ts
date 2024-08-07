@@ -2163,4 +2163,30 @@ export class SendService {
       }
   }
 
+
+  /**
+   * 발송목록에서 금액 변경 확인 체크 처리
+   * @param id 
+   * @returns {success:boolean,status:HttpStatus}
+   */
+  async checkPrice(id: number) {
+    try{
+        await this.prisma.tempOrder.update({
+            where:{id:id},
+            data:{updatePrciecFlag : true }
+        });
+
+        return {success:true, status:HttpStatus.CREATED};
+    }catch(err){
+        this.logger.error(err);
+        throw new HttpException({
+            success: false,
+            status: HttpStatus.INTERNAL_SERVER_ERROR
+        },
+            HttpStatus.INTERNAL_SERVER_ERROR
+        );
+
+    }
+  }
+
 }
