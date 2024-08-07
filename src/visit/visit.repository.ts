@@ -70,6 +70,7 @@ export class VisitRepository {
                     payFlag: true,
                     addr:true,
                     isPickup: true,
+                    price: true,
                     patient: {
                         select: {
                             id: true,

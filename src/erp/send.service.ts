@@ -2173,7 +2173,7 @@ export class SendService {
     try{
         await this.prisma.tempOrder.update({
             where:{id:id},
-            data:{updatePrciecFlag : true }
+            data:{updatePrciecFlag : false }
         });
 
         return {success:true, status:HttpStatus.CREATED};
