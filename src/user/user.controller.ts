@@ -26,6 +26,12 @@ export class UserController {
         return await this.userService.findUserById('test');
     }
 
+    @UseGuards(AuthGuard)
+    @Get('/loginTest')
+    async loginTest() {
+        return {success:true};
+    }
+
     @ApiOperation({summary:'회원가입'})
     @HttpCode(HttpStatus.CREATED)
     @Post('/signUp')
@@ -55,6 +61,7 @@ export class UserController {
 
     @ApiOperation({summary:'퇴근'})
     @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     @Patch('/leaveWork')
     async leaveWork(@Body() leaveWork : LeaveWorkDto, @Headers() header){
         this.logger.log('퇴근 체크');
