@@ -1327,7 +1327,7 @@ export class SendService {
             console.log(list);
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
-            const header = ['이름', '핸드폰 번호', '주문수량', '별도구매','결제방식','특이사항','현금','카드'];
+            const header = ['이름', '핸드폰 번호', '주문수량', '별도구매','특이사항','현금','카드'];
             const headerWidths = [16, 30, 40, 40, 10,20,10,10];
 
             const headerRow = sheet.addRow(header);
@@ -1364,7 +1364,7 @@ export class SendService {
 
                 const payType = e.payType;
 
-                const rowDatas = [name, phoneNum, items, assistants, payType, e.order.remark, e.order.cash, e.order.card];
+                const rowDatas = [name, phoneNum, items, assistants, e.order.remark, e.order.cash, e.order.card];
                 const appendRow = sheet.addRow(rowDatas);
             });
 
