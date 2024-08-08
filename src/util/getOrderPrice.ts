@@ -194,7 +194,7 @@ export function checkSend(orderItems){
 
         if(Array.isArray(e.item)){
             e.item.forEach(i => {
-                if(e.type != 'assistant' && i.item !=''){
+                if(e.type != 'assistant' && i.item !='' && i.item != '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
                     const obj = {
                         item:i,
                         type:e.type
@@ -203,7 +203,7 @@ export function checkSend(orderItems){
                 }
             })
         }else{
-            if(e.type != 'assistant' && e.item != ''){
+            if(e.type != 'assistant' && e.item != ''&& e.item != '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
                 check.push(e);
             }
         }

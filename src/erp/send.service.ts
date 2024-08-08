@@ -19,6 +19,7 @@ import { sortItems } from "src/util/sortItems";
 import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
 import { generateUploadURL } from "src/util/s3";
 import axios from "axios";
+import { getPhoneNum } from "src/util/getPhoneNum";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -643,13 +644,17 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
-                        updatePrciecFlag: checkPrcieFlag
+                        updatePrciecFlag: checkPrcieFlag,
+                        orderSortNum: parseInt(objOrder.orderSortNum),
                     }
                 });
 
                 console.log('----------------')
                 console.log(objOrderItem)
                 const items = [];
+                
+                let assistantFlag = false;
+
                 objOrderItem.forEach((e) => {
                     console.log(e);
                     if (e.type == 'assistant') {
@@ -660,6 +665,8 @@ export class SendService {
                             orderId: orderId
                         }
                         items.push(obj);
+
+                        assistantFlag = true;
                     } else {
                         //나머지는 array
                         const arr = [...e.item];
@@ -675,6 +682,19 @@ export class SendService {
                     }
 
                 });
+
+                if(assistantFlag && objOrder.orderSortNum === 1) {
+                    //별도 주문이 추가 되어 orderSortNum이 특이로 바뀌어야 될 때
+                    await tx.tempOrder.updateMany({
+                        where:{orderId:orderId},
+                        data:{orderSortNum:2}
+                    });
+
+                    await tx.order.updateMany({
+                        where:{id:orderId},
+                        data:{orderSortNum:2}
+                    });
+                }
 
                 //기존 order items 제거
                 await tx.orderItem.deleteMany({
@@ -1352,8 +1372,10 @@ export class SendService {
                         sepearteId = e.order.id
                     }
                 }
-                const { name, phoneNum } = e.patient;
-                console.log(e.tempOrderItems)
+                let { name, phoneNum } = e.patient;
+                phoneNum = getPhoneNum(phoneNum);
+
+                console.log(e.tempOrderItems);
                 let items = '';
                 let assistants = '';
                 for (let i = 0; i < e.order.orderItems.length; i++) {

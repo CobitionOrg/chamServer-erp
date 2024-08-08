@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { VisitRepository } from './visit.repository';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { Crypto } from 'src/util/crypto.util';
+import { checkSend } from 'src/util/getOrderPrice';
 
 @Injectable()
 export class VisitService {
@@ -22,7 +23,18 @@ export class VisitService {
         }>
      */
     async visitOrder(id: number) {
-        return await this.visitRepository.visitOrder(id);
+        const order = await this.visitRepository.getOrder(id);
+       
+        let price = order.price;
+        console.log(order.orderItems);
+
+        const checkSendTax = checkSend(order.orderItems);
+        
+        console.log(checkSendTax);
+        if(checkSendTax) {
+            price-=3500;
+        }
+        return await this.visitRepository.visitOrder(id,price);
     }
 
     /**
