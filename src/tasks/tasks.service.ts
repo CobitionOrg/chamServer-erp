@@ -213,10 +213,12 @@ export class TasksService {
         const today = new Date();
         const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
 
-        const yesterdayKstDate = new Date(kstDate.getDate() - 1);
-        const twoWeeksAgoKstDate = new Date(yesterdayKstDate.getDate() - 14);
-
+        const yesterdayKstDate = new Date(kstDate);
+        yesterdayKstDate.setDate(kstDate.getDate() - 1);
         yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        
+        const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
+        twoWeeksAgoKstDate.setDate(kstDate.getDate() - 14);
         twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
         // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
@@ -536,7 +538,7 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('8 4 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('3 4 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // error
         // await this.payReview();
