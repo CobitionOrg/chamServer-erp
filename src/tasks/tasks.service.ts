@@ -538,7 +538,7 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('3 4 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('17 4 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // error
         // await this.payReview();
