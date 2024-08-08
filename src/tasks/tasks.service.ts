@@ -528,6 +528,25 @@ export class TasksService {
             // await browser.close();
         }
     }
+
+    // 자동 발송 관련 엑셀 파일 테스트
+    @Cron('50 2 * * *', { timeZone: "Asia/Seoul" })
+    async excelTest() {
+        // error
+        // await this.payReview();
+
+        // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
+        await this.orderInsertTalk();
+
+        // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
+        // await this.notCall();
+
+        // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
+        // await this.completeSend();
+
+        // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
+        // await this.notPay();
+    }
 }
 
 
