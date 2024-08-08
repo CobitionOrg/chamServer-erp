@@ -240,7 +240,10 @@ export class TasksService {
     // 매주 월, 화, 목, 금 오전 11시
     @Cron('0 0 11 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async completeSend() {
-        const fileName = new Date().toISOString();
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+        const fileName = kstDate.toISOString();
         const completeSendDate = getDateString(fileName);
 
         //////////// 테스트
@@ -543,7 +546,7 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('58 5 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('3 6 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
         // 원하는 시간대로 파일명 저장 확인 완료
