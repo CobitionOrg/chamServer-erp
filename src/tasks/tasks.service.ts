@@ -167,6 +167,7 @@ export class TasksService {
         const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+        //await this.sendTalk(excelFilePath, '접수확인알림톡');
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
@@ -193,6 +194,7 @@ export class TasksService {
         console.log(excelFilePath);
 
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+        //await this.sendTalk(excelFilePath,'구매후기');
     }
 
     //유선 상담 연결 안 될 시
@@ -213,6 +215,7 @@ export class TasksService {
         console.log(excelFilePath);
 
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+        //await this.sendTalk(excelFilePath,'유선상담연결안될시');
     }
 
     //발송 알림톡 발송
@@ -253,6 +256,7 @@ export class TasksService {
             const fristExcelPath = await this.completeSendExcel(firstTalk.list, `${fName}-first`);
 
             //알람통 발송 ㄱㄱ
+            //await this.sendTalk(fristExcelPath,'발송알림톡');
         }
 
         //재진 엑셀 파일
@@ -260,6 +264,8 @@ export class TasksService {
             const returnExcelPath = await this.completeSendExcel(returnTalk.list, `${fName}-return`);
 
             //알람톡 발송 ㄱㄱ
+            //await this.sendTalk(returnExcelPath,'발송알림톡');
+
         }
 
     }

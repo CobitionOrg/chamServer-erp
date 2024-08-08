@@ -9,18 +9,42 @@ export class VisitRepository {
 
     private readonly logger = new Logger(VisitRepository.name);
 
+
+    async getOrder(id: number) {
+        try{
+            const res = await this.prisma.order.findUnique({
+                where:{id:id},
+                select:{
+                    orderItems:true,
+                    price:true
+                }
+            });
+
+            return res;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            ) 
+        }
+    }
     /**
      * 방문수령 처리
      * @param id 
      * @returns 
      */
-    async visitOrder(id: number) {
+    async visitOrder(id: number, price: number) {
         try{
             await this.prisma.order.update({
                 where:{id:id},
                 data:{
                     orderSortNum:-1,
                     consultingFlag: true,
+                    price: price
                 }
             });
 
