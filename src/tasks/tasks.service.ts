@@ -222,8 +222,8 @@ export class TasksService {
         twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
         // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
-        console.log(yesterdayKstDate);
-        console.log(twoWeeksAgoKstDate);
+        // console.log(yesterdayKstDate);
+        // console.log(twoWeeksAgoKstDate);
 
         const res = await this.tasksRepository.notCall(yesterdayKstDate, twoWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
@@ -242,6 +242,11 @@ export class TasksService {
     async completeSend() {
         const fileName = new Date().toISOString();
         const completeSendDate = getDateString(fileName);
+
+        //////////// 테스트
+        console.log("fileName", fileName);
+        console.log("completeSendDate", completeSendDate);
+        ////////////
 
         //당일 발송되는 발송목록 id
         const completeSendRes = await this.tasksRepository.completeSendTalkGetList(completeSendDate);
@@ -538,23 +543,27 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('21 4 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('58 5 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
-        // error
-        // await this.payReview();
-
         // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
         // 원하는 시간대로 파일명 저장 확인 완료
         // await this.orderInsertTalk();
 
         // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
-        await this.notCall();
+        // 원하는 시간대 및 데이터 확인 완료
+        // await this.notCall();
 
         // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
-        // await this.completeSend();
+        // 시간 및 데이터 확인 필
+        await this.completeSend();
 
         // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
+        // 시간 및 데이터 확인 필
         // await this.notPay();
+
+        // error
+        // 시간 및 데이터 확인 필
+        // await this.payReview();
     }
 }
 
