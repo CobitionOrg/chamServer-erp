@@ -154,7 +154,8 @@ export class TasksService {
     // }
 
     //접수 확인 알람톡
-    @Cron('0 14 14 * * *')
+    // 매일 9시 12시 15시
+    @Cron('0 0 0,3,6 * * *') // 자정, 3시, 6시 (UTC) -> 9시 12시 15시 (KST)
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -171,7 +172,8 @@ export class TasksService {
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
-    @Cron('0 0 0 * * 6')
+    // 매주 토요일 오전 9시
+    @Cron('0 0 0 * * 5') // 금요일 자정 (UTC) -> 토요일 오전 9시 (KST)
     async payReview() {
         const date = new Date();
         const dayOfWeek = date.getDay();
@@ -198,7 +200,8 @@ export class TasksService {
     }
 
     //유선 상담 연결 안 될 시
-    @Cron('0 0 1 * * 5')
+    // 매주 금요일 오전 10시
+    @Cron('0 0 1 * * 5') // 금요일 오전 1시 -> 금요일 오전 10시 (KST)
     async notCall() {
         const today = new Date();
         const yesterday = new Date(today);
@@ -219,6 +222,7 @@ export class TasksService {
     }
 
     //발송 알림톡 발송
+    // 매주 월, 화, 목, 금 오전 11시
     @Cron('0 0 2 * * 1,2,4,5', {
         timeZone: 'Asia/Seoul', // KST를 위한 타임존 설정
     })
@@ -270,7 +274,8 @@ export class TasksService {
 
     }
 
-
+    //미결제
+    // 매주 금요일 오전 10시
     @Cron('0 0 1 * * 5')
     async notPay() {
         const today = new Date();
@@ -518,6 +523,24 @@ export class TasksService {
             // await browser.close();
         }
 
+    }
+
+    //서버 테스트
+    @Cron('0 40 1 * * 5', {
+        timeZone: 'Asia/Seoul'
+    })
+    async test1() {
+        console.log("this is set time zone asia/seoul");
+    }
+
+    @Cron('0 40 1 * * 5')
+    async test2() {
+        console.log("no setting");
+    }
+
+    @Cron('0 40 16 * * 4')
+    async test3() {
+        console.log("this is minus 9");
     }
 }
 
