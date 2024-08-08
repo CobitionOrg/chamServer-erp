@@ -24,6 +24,7 @@ export class TasksService {
 
     private readonly logger = new Logger(TasksService.name);
 
+    // 매일 23시 59분
     @Cron('0 59 23 * * *', { timeZone: "Asia/Seoul" })
     async handleCron() {
         this.logger.debug('delete s3 data');
@@ -35,6 +36,7 @@ export class TasksService {
         await this.tasksRepository.deleteS3Data();
     }
 
+    // 매일 23시 59분
     @Cron('0 59 23 * * * ', { timeZone: "Asia/Seoul" })
     async deleteFile() {
         this.logger.debug('delete save file');
@@ -46,7 +48,8 @@ export class TasksService {
         await this.tasksRepository.deleteSaveFile();
     }
 
-    @Cron('0 59 23 * * * ')
+    // 매일 23시 59분
+    @Cron('0 59 23 * * * ', { timeZone: "Asia/Seoul" })
     async deleteNotCallOrder() {
         this.logger.debug('delete save file');
         await this.logService.createLog(
@@ -57,7 +60,8 @@ export class TasksService {
         await this.tasksRepository.deleteNotCallOrder();
     }
 
-    @Cron('59 13 * * *')
+    // 매일 13시 59분
+    @Cron('59 13 * * *', { timeZone: "Asia/Seoul" })
     async sendErrorLog(){
         const date = new Date();
         const year = date.getFullYear();
@@ -86,7 +90,8 @@ export class TasksService {
         });
     }
 
-    @Cron('59 13 * * *')
+    // 매일 13시 59분
+    @Cron('59 13 * * *', { timeZone: "Asia/Seoul" })
     async deleteFriendRecommend() {
         this.logger.log('1년 지난 추천 데이터 삭제');
         const oneYearAgo = new Date();
@@ -95,9 +100,9 @@ export class TasksService {
         await this.tasksRepository.deleteFriendRecommend(oneYearAgo);
     }
 
-
     //자동 퇴근 처리 기능
-    @Cron('0 11 * * 1,4') // 월요일, 목요일 오전 11시 (UTC) -> 저녁 8시 (KST)
+    // 매주 월, 목요일 20시
+    @Cron('0 20 * * 1,4', { timeZone: "Asia/Seoul" })
     async leavWorkAt20() {
         this.logger.debug('월, 목요일 20시 자동 퇴근');
         await this.logService.createLog(
@@ -108,7 +113,8 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(20);
     }
 
-    @Cron('0 9 * * 2,5') // 화요일, 금요일 오전 9시 (UTC) -> 저녁 6시 (KST)
+    // 매주 화, 금요일 18시
+    @Cron('0 18 * * 2,5', { timeZone: "Asia/Seoul" })
     async leavWorkAt18() {
         this.logger.debug('화, 금요일 18시 자동 퇴근');
         await this.logService.createLog(
@@ -119,7 +125,8 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(18);
     }
 
-    @Cron('0 6 * * 6') // 토요일 오전 6시 (UTC) -> 오후 3시 (KST)
+    // 매주 토요일 15시
+    @Cron('0 15 * * 6', { timeZone: "Asia/Seoul" })
     async leaveWorkAt15() {
         this.logger.debug('토요일 15시 자동 퇴근');
         await this.logService.createLog(
@@ -155,7 +162,7 @@ export class TasksService {
 
     //접수 확인 알람톡
     // 매일 9시 12시 15시
-    @Cron('0 0 0,3,6 * * *') // 자정, 3시, 6시 (UTC) -> 9시 12시 15시 (KST)
+    @Cron('0 0 9,12,15 * * *', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -173,7 +180,7 @@ export class TasksService {
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
     // 매주 토요일 오전 9시
-    @Cron('0 0 0 * * 5') // 금요일 자정 (UTC) -> 토요일 오전 9시 (KST)
+    @Cron('0 0 9 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
         const dayOfWeek = date.getDay();
@@ -201,7 +208,7 @@ export class TasksService {
 
     //유선 상담 연결 안 될 시
     // 매주 금요일 오전 10시
-    @Cron('0 0 1 * * 5') // 금요일 오전 1시 -> 금요일 오전 10시 (KST)
+    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notCall() {
         const today = new Date();
         const yesterday = new Date(today);
@@ -223,9 +230,7 @@ export class TasksService {
 
     //발송 알림톡 발송
     // 매주 월, 화, 목, 금 오전 11시
-    @Cron('0 0 2 * * 1,2,4,5', {
-        timeZone: 'Asia/Seoul', // KST를 위한 타임존 설정
-    })
+    @Cron('0 0 11 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async completeSend() {
         const fileName = new Date().toISOString();
         const completeSendDate = getDateString(fileName);
@@ -276,7 +281,7 @@ export class TasksService {
 
     //미결제
     // 매주 금요일 오전 10시
-    @Cron('0 0 1 * * 5')
+    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notPay() {
         const today = new Date();
 
@@ -522,25 +527,6 @@ export class TasksService {
         } finally {
             // await browser.close();
         }
-
-    }
-
-    //서버 테스트
-    @Cron('0 40 1 * * 5', {
-        timeZone: 'Asia/Seoul'
-    })
-    async test1() {
-        console.log("this is set time zone asia/seoul");
-    }
-
-    @Cron('0 40 1 * * 5')
-    async test2() {
-        console.log("no setting");
-    }
-
-    @Cron('0 40 16 * * 4')
-    async test3() {
-        console.log("this is minus 9");
     }
 }
 
