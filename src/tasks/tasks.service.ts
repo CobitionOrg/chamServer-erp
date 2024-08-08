@@ -213,26 +213,17 @@ export class TasksService {
         const today = new Date();
         const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
 
-        const oneDayInMillis = 24 * 60 * 60 * 1000; // 하루를 밀리초로 변환
-        const twoWeeksInMillis = 2 * 7 * 24 * 60 * 60 * 1000; // 2주를 밀리초로 변환
-        const yesterdayKstDate = new Date(kstDate.getTime() - oneDayInMillis);
-        const twoWeeksAgoKstDate = new Date(yesterdayKstDate.getTime() - twoWeeksInMillis);
+        const yesterdayKstDate = new Date(kstDate.getDate() - 1);
+        const twoWeeksAgoKstDate = new Date(yesterdayKstDate.getDate() - 14);
 
         yesterdayKstDate.setUTCHours(23, 59, 59, 999);
         twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
-        console.log("8월 8일 끝, 7월 25일 시작 나와야 함");
+        // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
         console.log(yesterdayKstDate);
         console.log(twoWeeksAgoKstDate);
 
-
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        //2주 전 날짜
-        const twoWeeksAgo = new Date(yesterday);
-        twoWeeksAgo.setDate(yesterday.getDate() - 14);
-
-        const res = await this.tasksRepository.notCall(yesterday, twoWeeksAgo);
+        const res = await this.tasksRepository.notCall(yesterdayKstDate, twoWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
         //엑셀 파일 생성
@@ -545,7 +536,7 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('30 3 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('8 4 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // error
         // await this.payReview();
