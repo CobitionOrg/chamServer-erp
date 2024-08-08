@@ -217,6 +217,10 @@ export class TasksService {
         const twoWeeksAgo = new Date(yesterday);
         twoWeeksAgo.setDate(yesterday.getDate() - 14);
 
+        console.log("8월 8일, 7월 25일 나와야 함");
+        console.log(yesterday);
+        console.log(twoWeeksAgo);
+
         const res = await this.tasksRepository.notCall(yesterday, twoWeeksAgo);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
@@ -530,16 +534,17 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('56 2 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('3 3 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // error
         // await this.payReview();
 
         // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
-        await this.orderInsertTalk();
+        // 원하는 시간대로 파일명 저장 확인 완료
+        // await this.orderInsertTalk();
 
         // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
-        // await this.notCall();
+        await this.notCall();
 
         // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
         // await this.completeSend();
