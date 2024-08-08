@@ -299,16 +299,24 @@ export class TasksService {
     // 매주 금요일 오전 10시
     @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notPay() {
-        const today = new Date();
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate()-1);
+        // 하루 전
+        const yesterdayKstDate = new Date(kstDate);
+        yesterdayKstDate.setDate(kstDate.getDate() - 1);
+        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        
+        // 4주 전
+        const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
+        fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
+        fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
-        //4주 전 날짜
-        const fourWeeksAgo = new Date(yesterday);
-        fourWeeksAgo.setDate(yesterday.getDate() - 28);
+        console.log("yesterdayKstDate", yesterdayKstDate);
+        console.log("fourWeeksAgoKstDate", fourWeeksAgoKstDate);
 
-        const res = await this.tasksRepository.notPay(yesterday, fourWeeksAgo);
+
+        const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
     
         const fileName = 'notPay';
@@ -546,23 +554,23 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('3 6 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('18 6 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
         // 원하는 시간대로 파일명 저장 확인 완료
         // await this.orderInsertTalk();
 
         // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
-        // 원하는 시간대 및 데이터 확인 완료
+        // 시간 및 데이터 확인 완료
         // await this.notCall();
 
         // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
-        // 시간 및 데이터 확인 필
-        await this.completeSend();
+        // 시간 및 데이터 확인 완료
+        // await this.completeSend();
 
         // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
         // 시간 및 데이터 확인 필
-        // await this.notPay();
+        await this.notPay();
 
         // error
         // 시간 및 데이터 확인 필
