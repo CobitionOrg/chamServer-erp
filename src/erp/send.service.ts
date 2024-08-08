@@ -156,8 +156,10 @@ export class SendService {
             });
 
             if (sendList.fixFlag) {
+                //고정된 발송목록
                 return await this.getFixOrderTempList(id);
             } else {
+                //고정 안 된 발송목록
                 return await this.getOrderTempList(id);
             }
         } catch (err) {
@@ -1859,8 +1861,17 @@ export class SendService {
 
             const tempOrderList = sendList.tempOrders;
 
+            const sortItemsList = sortItems(tempOrderList, true);
+            const sortedList = getSortedList(sortItemsList);
+
+            console.log(sortedList);
+
             const wb = new Excel.Workbook();
-            const sheet = wb.addWorksheet('감비환장부');
+            
+            let title = sendList.title;
+            title = title.replaceAll('/','-');
+
+            const sheet = wb.addWorksheet(`${title} 감비환장부`);
             styleHeaderCell(wb);
             //헤더 부분
             sheet.mergeCells('A1:K1');
@@ -1886,7 +1897,7 @@ export class SendService {
 
             let isSeparteId = 0;
 
-            tempOrderList.forEach((e, i) => {
+            sortedList.forEach((e, i) => {
                 // 현금 영수증 관련
                 let cashReceipt = e.order.cachReceipt;
                 // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
