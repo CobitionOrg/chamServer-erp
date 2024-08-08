@@ -569,7 +569,7 @@ export class TasksService {
     //     // await this.completeSend();
 
     //     // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
-    //     // 시간 확인 완료, 데이터 확인 필
+    //     // 시간 및 데이터 확인 완료
     //     // await this.notPay();
 
     //     // error
