@@ -218,7 +218,7 @@ export class TasksService {
         yesterdayKstDate.setUTCHours(23, 59, 59, 999);
         
         const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
-        twoWeeksAgoKstDate.setDate(kstDate.getDate() - 14);
+        twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
         twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
         // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
@@ -538,7 +538,7 @@ export class TasksService {
     }
 
     // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('17 4 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('21 4 * * *', { timeZone: "Asia/Seoul" })
     async excelTest() {
         // error
         // await this.payReview();
