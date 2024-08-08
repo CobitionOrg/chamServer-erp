@@ -294,7 +294,7 @@ export class TasksService {
         const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
 
         //발송 알람톡 ㄱㄱ
-
+        //await this.sendTalk(notPayExcelPath,'미입금');
     }
 
     /**
