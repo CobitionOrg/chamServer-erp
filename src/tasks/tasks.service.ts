@@ -137,33 +137,33 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('2 * * * * *', { timeZone: "Asia/Seoul" })
-    async test() {
-        console.log("test");
-        const date = new Date();
-        const dayOfWeek = date.getDay();
+    // @Cron('2 * * * * *', { timeZone: "Asia/Seoul" })
+    // async test() {
+    //     console.log("test");
+    //     const date = new Date();
+    //     const dayOfWeek = date.getDay();
 
-        //해당 주의 월요일 계산
-        const diffToSunday = 1 - dayOfWeek;
-        const monday = new Date(date);
-        monday.setDate(date.getDate() + diffToSunday);
-        monday.setHours(0, 0, 0, 0);
+    //     //해당 주의 월요일 계산
+    //     const diffToSunday = 1 - dayOfWeek;
+    //     const monday = new Date(date);
+    //     monday.setDate(date.getDate() + diffToSunday);
+    //     monday.setHours(0, 0, 0, 0);
 
-        //해당 주의 금요일 계산
-        const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(date);
-        friday.setDate(date.getDate() + diffToFriday);
-        friday.setHours(23, 59, 59, 999);
-        const list = await this.tasksRepository.payReview(monday, friday);
-        console.log('----------------------');
-        console.log(list.list);
-        console.log(list.list[0]);
-        if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
-        console.log(excelFilePath);
+    //     //해당 주의 금요일 계산
+    //     const diffToFriday = 5 - dayOfWeek;
+    //     const friday = new Date(date);
+    //     friday.setDate(date.getDate() + diffToFriday);
+    //     friday.setHours(23, 59, 59, 999);
+    //     const list = await this.tasksRepository.payReview(monday, friday);
+    //     console.log('----------------------');
+    //     console.log(list.list);
+    //     console.log(list.list[0]);
+    //     if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    //     //엑셀 파일 생성
+    //     const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
+    //     console.log(excelFilePath);
 
-    }
+    // }
     // @Cron('0 58 0,4,6 * * *')
     // async test() {
     //     await this.mailerService.sendMail({
