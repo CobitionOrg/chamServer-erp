@@ -137,7 +137,7 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('2 28 * * * *', { timeZone: "Asia/Seoul" })
+    @Cron('2 30 * * * *', { timeZone: "Asia/Seoul" })
     async test() {
         // console.log("test");
         // const date = new Date();
