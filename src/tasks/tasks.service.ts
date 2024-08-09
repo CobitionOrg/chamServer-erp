@@ -137,7 +137,7 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('2 25 * * * *', { timeZone: "Asia/Seoul" })
+    @Cron('2 28 * * * *', { timeZone: "Asia/Seoul" })
     async test() {
         // console.log("test");
         // const date = new Date();
@@ -174,7 +174,7 @@ export class TasksService {
         list.push(obj);
         const excelFilePath = await this.getTalkExcel(list, '테스트');
         console.log(excelFilePath);
-        await this.sendTalk(excelFilePath,'접수확인알림톡');
+        //await this.sendTalk(excelFilePath,'접수확인알림톡');
 
     }
 
@@ -555,7 +555,7 @@ export class TasksService {
             await page.click('a.msg_link8');
 
             console.log(fileName);
-            const filePath = path.resolve(__dirname, `../../src/files/${fileName}`);
+            const filePath = path.resolve(__dirname, `../../src/files/${fileName}.xlsx`);
             console.log(filePath);
             const fileInputSelector = 'input[name="address_file"]';
 
