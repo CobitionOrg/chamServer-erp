@@ -147,5 +147,8 @@ export class LogService {
         return await this.logRepository.readLogById(userName);
     }
 
-   
+    // 여기
+   async testtest() {
+    console.log(process.env.jwtConstant);
+   }
 }

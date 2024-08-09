@@ -7,7 +7,7 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 @Controller('log')
 @UseFilters(new HttpExceptionFilter())
 @ApiTags('log')
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 export class LogController {
     constructor(
       private readonly logSerive: LogService  
@@ -37,5 +37,11 @@ export class LogController {
     @Get('/readLog/:userName')
     async readLogById(@Param("userName") userName:string){
       return await this.logSerive.readLogById(userName);
+    }
+
+    // 여기
+    @Get('/testtest')
+    async testtest() {
+      return await this.logSerive.testtest();
     }
 }
