@@ -174,6 +174,7 @@ export class TasksService {
         list.push(obj);
         const excelFilePath = await this.getTalkExcel(list, '테스트');
         console.log(excelFilePath);
+        //await this.sendTalk(excelFilePath,'접수확인알림톡');
 
     }
 
@@ -491,9 +492,9 @@ export class TasksService {
         try {
             // 브라우저 실행
             const browser = await puppeteer.launch({
-                headless: false
-                //   headless: true,
-                //   args: ['--no-sandbox', '--disable-setuid-sandbox']
+                //headless: false
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
             }); // headless: false는 브라우저 UI를 표시합니다.
             const page = await browser.newPage();
             page.on('console', msg => {
