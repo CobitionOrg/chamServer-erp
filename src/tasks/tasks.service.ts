@@ -62,25 +62,25 @@ export class TasksService {
 
     // 매일 13시 59분
     @Cron('59 13 * * *', { timeZone: "Asia/Seoul" })
-    async sendErrorLog(){
+    async sendErrorLog() {
         const date = new Date();
         const year = date.getFullYear();
-        const month = date.getMonth()+1;
+        const month = date.getMonth() + 1;
         const day = date.getDate();
 
-        const monthTemp = month > 9 ? month : '0'+month;
-        const dayTemp = day > 9 ? day : "0"+day;
+        const monthTemp = month > 9 ? month : '0' + month;
+        const dayTemp = day > 9 ? day : "0" + day;
 
         const logFileName = `${year}-${monthTemp}-${dayTemp}.error.log`;
         const filePath = `../../logs/error/${logFileName}`;
         const absoluteFilePath = path.resolve(__dirname, filePath);
- 
+
         await this.mailerService.sendMail({
             to: 'qudqud97@naver.com',
             from: 'noreply@gmail.com',
             subject: '에러로그',
             text: '에러로그',
-            attachments : [
+            attachments: [
                 {
                     path: absoluteFilePath
                 }
@@ -137,35 +137,48 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('2 * * * * *', { timeZone: "Asia/Seoul" })
+    @Cron('2 25 * * * *', { timeZone: "Asia/Seoul" })
     async test() {
-        console.log("test");
-        const date = new Date();
-        const dayOfWeek = date.getDay();
+        // console.log("test");
+        // const date = new Date();
+        // const dayOfWeek = date.getDay();
 
-        //해당 주의 월요일 계산
-        const diffToSunday = 1 - dayOfWeek;
-        const monday = new Date(date);
-        monday.setDate(date.getDate() + diffToSunday);
-        monday.setHours(0, 0, 0, 0);
+        // //해당 주의 월요일 계산
+        // const diffToSunday = 1 - dayOfWeek;
+        // const monday = new Date(date);
+        // monday.setDate(date.getDate() + diffToSunday);
+        // monday.setHours(0, 0, 0, 0);
 
-        //해당 주의 금요일 계산
-        const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(date);
-        friday.setDate(date.getDate() + diffToFriday);
-        friday.setHours(23, 59, 59, 999);
-        const list = await this.tasksRepository.payReview(monday, friday);
-        console.log('----------------------');
-        console.log(list.list);
-        console.log(list.list[0]);
-        if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
+        // //해당 주의 금요일 계산
+        // const diffToFriday = 5 - dayOfWeek;
+        // const friday = new Date(date);
+        // friday.setDate(date.getDate() + diffToFriday);
+        // friday.setHours(23, 59, 59, 999);
+        // const list = await this.tasksRepository.payReview(monday, friday);
+        // console.log('----------------------');
+        // console.log(list.list);
+        // console.log(list.list[0]);
+        // if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+        // //엑셀 파일 생성
+        // const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
+        // console.log(excelFilePath);
+
+        const list = [];
+        const obj = {
+            patient: {
+                name: '조병규',
+                phoneNum: '01092309536'
+            },
+        }
+
+        list.push(obj);
+        const excelFilePath = await this.getTalkExcel(list, '테스트');
         console.log(excelFilePath);
+        await this.sendTalk(excelFilePath,'접수확인알림톡');
 
     }
 
-    
+
     // @Cron('0 58 0,4,6 * * *')
     // async test() {
     //     await this.mailerService.sendMail({
@@ -245,7 +258,7 @@ export class TasksService {
         const yesterdayKstDate = new Date(kstDate);
         yesterdayKstDate.setDate(kstDate.getDate() - 1);
         yesterdayKstDate.setUTCHours(23, 59, 59, 999);
-        
+
         const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
         twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
         twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
@@ -335,7 +348,7 @@ export class TasksService {
         const yesterdayKstDate = new Date(kstDate);
         yesterdayKstDate.setDate(kstDate.getDate() - 1);
         yesterdayKstDate.setUTCHours(23, 59, 59, 999);
-        
+
         // 4주 전
         const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
         fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
@@ -347,7 +360,7 @@ export class TasksService {
 
         const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-    
+
         const fileName = 'notPay';
         const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
 
@@ -374,7 +387,7 @@ export class TasksService {
             sheet.getColumn(colNum).width = headerWidths[colNum - 1];
         });
 
-        for(const e of list) {
+        for (const e of list) {
             console.log(e);
             const { name, phoneNum } = e.patient;
             const rowDatas = [name, phoneNum, name, '', '', '', '', '', '', '', '', ''];
@@ -383,7 +396,7 @@ export class TasksService {
             appendRow.getCell(2).value = phoneNum.toString();
             appendRow.getCell(2).numFmt = '@';
         }
-       
+
 
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
@@ -394,44 +407,44 @@ export class TasksService {
 
     }
 
-        /**
-    * 접수 알람톡 용 엑셀 파일 만들기
-    * @param list 
-    * @param fileName 
-    * @returns 
-    */
-        async getTalkExcelPayReview(list, fileName?) {
-            console.log('sibla');
-            const wb = new Excel.Workbook();
-            const sheet = wb.addWorksheet('발송알림톡');
-            const headers = ['이름', '휴대폰번호', '변수1', '변수2', '변수3', '변수4', '변수5', '변수6', '변수7', '변수8', '변수9', '변수10'];
-            const headerWidths = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
-            const headerRow = sheet.addRow(headers);
-            let filePath;
-    
-            headerRow.eachCell((cell, colNum) => {
-                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
-            });
-    
-            for(const e of list) {
-                console.log(e);
-                const { name, phoneNum } = e.order.patient;
-                const rowDatas = [name, phoneNum, name, '', '', '', '', '', '', '', '', ''];
-                const appendRow = sheet.addRow(rowDatas);
-                //자동으로 번호에 '붙는 상황 방지
-                appendRow.getCell(2).value = phoneNum.toString();
-                appendRow.getCell(2).numFmt = '@';
-            }
-           
-    
-            const fileData = await wb.xlsx.writeBuffer();
-            if (fileName) {
-                filePath = await createExcelFile(fileData, fileName);
-    
-                return fileName;
-            }
-    
+    /**
+* 접수 알람톡 용 엑셀 파일 만들기
+* @param list 
+* @param fileName 
+* @returns 
+*/
+    async getTalkExcelPayReview(list, fileName?) {
+        console.log('sibla');
+        const wb = new Excel.Workbook();
+        const sheet = wb.addWorksheet('발송알림톡');
+        const headers = ['이름', '휴대폰번호', '변수1', '변수2', '변수3', '변수4', '변수5', '변수6', '변수7', '변수8', '변수9', '변수10'];
+        const headerWidths = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+        const headerRow = sheet.addRow(headers);
+        let filePath;
+
+        headerRow.eachCell((cell, colNum) => {
+            sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+        });
+
+        for (const e of list) {
+            console.log(e);
+            const { name, phoneNum } = e.order.patient;
+            const rowDatas = [name, phoneNum, name, '', '', '', '', '', '', '', '', ''];
+            const appendRow = sheet.addRow(rowDatas);
+            //자동으로 번호에 '붙는 상황 방지
+            appendRow.getCell(2).value = phoneNum.toString();
+            appendRow.getCell(2).numFmt = '@';
         }
+
+
+        const fileData = await wb.xlsx.writeBuffer();
+        if (fileName) {
+            filePath = await createExcelFile(fileData, fileName);
+
+            return fileName;
+        }
+
+    }
 
     /**
     * 발송 알림 톡 파일
@@ -479,9 +492,9 @@ export class TasksService {
         try {
             // 브라우저 실행
             const browser = await puppeteer.launch({
-                headless: false
-                //   headless: true,
-                //   args: ['--no-sandbox', '--disable-setuid-sandbox']
+                //headless: false
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
             }); // headless: false는 브라우저 UI를 표시합니다.
             const page = await browser.newPage();
             page.on('console', msg => {

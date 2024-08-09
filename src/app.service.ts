@@ -200,14 +200,14 @@ export class AppService {
 
     list.push(obj);
 
-    const obj2 = {
-      patient: {
-        name: '노송이',
-        phoneNum: '01039820305'
-      },
-    }
+    // const obj2 = {
+    //   patient: {
+    //     name: '노송이',
+    //     phoneNum: '01039820305'
+    //   },
+    // }
 
-    list.push(obj2);
+    //list.push(obj2);
 
     const wb = new Excel.Workbook();
     const sheet = wb.addWorksheet('발송알림톡');
