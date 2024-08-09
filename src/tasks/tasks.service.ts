@@ -24,6 +24,7 @@ export class TasksService {
 
     private readonly logger = new Logger(TasksService.name);
 
+    // 매일 23시 59분
     @Cron('0 59 23 * * *', { timeZone: "Asia/Seoul" })
     async handleCron() {
         this.logger.debug('delete s3 data');
@@ -35,6 +36,7 @@ export class TasksService {
         await this.tasksRepository.deleteS3Data();
     }
 
+    // 매일 23시 59분
     @Cron('0 59 23 * * * ', { timeZone: "Asia/Seoul" })
     async deleteFile() {
         this.logger.debug('delete save file');
@@ -46,7 +48,8 @@ export class TasksService {
         await this.tasksRepository.deleteSaveFile();
     }
 
-    @Cron('0 59 23 * * * ')
+    // 매일 23시 59분
+    @Cron('0 59 23 * * * ', { timeZone: "Asia/Seoul" })
     async deleteNotCallOrder() {
         this.logger.debug('delete save file');
         await this.logService.createLog(
@@ -57,7 +60,8 @@ export class TasksService {
         await this.tasksRepository.deleteNotCallOrder();
     }
 
-    @Cron('59 13 * * *')
+    // 매일 13시 59분
+    @Cron('59 13 * * *', { timeZone: "Asia/Seoul" })
     async sendErrorLog(){
         const date = new Date();
         const year = date.getFullYear();
@@ -86,7 +90,8 @@ export class TasksService {
         });
     }
 
-    @Cron('59 13 * * *')
+    // 매일 13시 59분
+    @Cron('59 13 * * *', { timeZone: "Asia/Seoul" })
     async deleteFriendRecommend() {
         this.logger.log('1년 지난 추천 데이터 삭제');
         const oneYearAgo = new Date();
@@ -95,9 +100,9 @@ export class TasksService {
         await this.tasksRepository.deleteFriendRecommend(oneYearAgo);
     }
 
-
     //자동 퇴근 처리 기능
-    @Cron('0 11 * * 1,4') // 월요일, 목요일 오전 11시 (UTC) -> 저녁 8시 (KST)
+    // 매주 월, 목요일 20시
+    @Cron('0 20 * * 1,4', { timeZone: "Asia/Seoul" })
     async leavWorkAt20() {
         this.logger.debug('월, 목요일 20시 자동 퇴근');
         await this.logService.createLog(
@@ -108,7 +113,8 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(20);
     }
 
-    @Cron('0 9 * * 2,5') // 화요일, 금요일 오전 9시 (UTC) -> 저녁 6시 (KST)
+    // 매주 화, 금요일 18시
+    @Cron('0 18 * * 2,5', { timeZone: "Asia/Seoul" })
     async leavWorkAt18() {
         this.logger.debug('화, 금요일 18시 자동 퇴근');
         await this.logService.createLog(
@@ -119,7 +125,8 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(18);
     }
 
-    @Cron('0 6 * * 6') // 토요일 오전 6시 (UTC) -> 오후 3시 (KST)
+    // 매주 토요일 15시
+    @Cron('0 15 * * 6', { timeZone: "Asia/Seoul" })
     async leaveWorkAt15() {
         this.logger.debug('토요일 15시 자동 퇴근');
         await this.logService.createLog(
@@ -154,7 +161,8 @@ export class TasksService {
     // }
 
     //접수 확인 알람톡
-    @Cron('0 14 14 * * *')
+    // 매일 9시 12시 15시
+    @Cron('0 0 9,12,15 * * *', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -171,7 +179,8 @@ export class TasksService {
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
-    @Cron('0 0 0 * * 6')
+    // 매주 토요일 오전 9시
+    @Cron('0 0 9 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
         const dayOfWeek = date.getDay();
@@ -198,16 +207,25 @@ export class TasksService {
     }
 
     //유선 상담 연결 안 될 시
-    @Cron('0 0 1 * * 5')
+    // 매주 금요일 오전 10시
+    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notCall() {
         const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        //2주 전 날짜
-        const twoWeeksAgo = new Date(yesterday);
-        twoWeeksAgo.setDate(yesterday.getDate() - 14);
+        const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
 
-        const res = await this.tasksRepository.notCall(yesterday, twoWeeksAgo);
+        const yesterdayKstDate = new Date(kstDate);
+        yesterdayKstDate.setDate(kstDate.getDate() - 1);
+        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        
+        const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
+        twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
+        twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+
+        // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
+        // console.log(yesterdayKstDate);
+        // console.log(twoWeeksAgoKstDate);
+
+        const res = await this.tasksRepository.notCall(yesterdayKstDate, twoWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
         //엑셀 파일 생성
@@ -219,12 +237,19 @@ export class TasksService {
     }
 
     //발송 알림톡 발송
-    @Cron('0 0 2 * * 1,2,4,5', {
-        timeZone: 'Asia/Seoul', // KST를 위한 타임존 설정
-    })
+    // 매주 월, 화, 목, 금 오전 11시
+    @Cron('0 0 11 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async completeSend() {
-        const fileName = new Date().toISOString();
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+        const fileName = kstDate.toISOString();
         const completeSendDate = getDateString(fileName);
+
+        //////////// 테스트
+        console.log("fileName", fileName);
+        console.log("completeSendDate", completeSendDate);
+        ////////////
 
         //당일 발송되는 발송목록 id
         const completeSendRes = await this.tasksRepository.completeSendTalkGetList(completeSendDate);
@@ -270,19 +295,28 @@ export class TasksService {
 
     }
 
-
-    @Cron('0 0 1 * * 5')
+    //미결제
+    // 매주 금요일 오전 10시
+    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notPay() {
-        const today = new Date();
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate()-1);
+        // 하루 전
+        const yesterdayKstDate = new Date(kstDate);
+        yesterdayKstDate.setDate(kstDate.getDate() - 1);
+        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        
+        // 4주 전
+        const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
+        fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
+        fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
-        //4주 전 날짜
-        const fourWeeksAgo = new Date(yesterday);
-        fourWeeksAgo.setDate(yesterday.getDate() - 28);
+        console.log("yesterdayKstDate", yesterdayKstDate);
+        console.log("fourWeeksAgoKstDate", fourWeeksAgoKstDate);
 
-        const res = await this.tasksRepository.notPay(yesterday, fourWeeksAgo);
+
+        const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
     
         const fileName = 'notPay';
@@ -517,8 +551,31 @@ export class TasksService {
         } finally {
             // await browser.close();
         }
-
     }
+
+    // // 자동 발송 관련 엑셀 파일 테스트
+    // @Cron('18 6 * * *', { timeZone: "Asia/Seoul" })
+    // async excelTest() {
+    //     // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
+    //     // 원하는 시간대로 파일명 저장 확인 완료
+    //     // await this.orderInsertTalk();
+
+    //     // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
+    //     // 시간 및 데이터 확인 완료
+    //     // await this.notCall();
+
+    //     // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
+    //     // 시간 및 데이터 확인 완료
+    //     // await this.completeSend();
+
+    //     // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
+    //     // 시간 및 데이터 확인 완료
+    //     // await this.notPay();
+
+    //     // error
+    //     // 시간 및 데이터 확인 필
+    //     // await this.payReview();
+    // }
 }
 
 
