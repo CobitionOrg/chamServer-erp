@@ -712,8 +712,8 @@ export class ErpService {
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
 
                 if (route !== "" && orderSortNum !== 0) {
-                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
+                    const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
+                    const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
                     let checkRecommend;
 
