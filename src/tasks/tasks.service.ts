@@ -637,29 +637,58 @@ export class TasksService {
         }
     }
 
-    // // 자동 발송 관련 엑셀 파일 테스트
-    // @Cron('18 6 * * *', { timeZone: "Asia/Seoul" })
-    // async excelTest() {
-    //     // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
-    //     // 원하는 시간대로 파일명 저장 확인 완료
-    //     // await this.orderInsertTalk();
+    async timeTest() {
+        const date = new Date();
 
-    //     // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
-    //     // 시간 및 데이터 확인 완료
-    //     // await this.notCall();
+// 한국 시간 기준으로 변경 (UTC+9)
+const now = new Date();
+const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+const koreaTime = new Date(utc + (9 * 60 * 60000));
 
-    //     // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
-    //     // 시간 및 데이터 확인 완료
-    //     // await this.completeSend();
+// 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+const dayOfWeek = koreaTime.getDay();
 
-    //     // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
-    //     // 시간 및 데이터 확인 완료
-    //     // await this.notPay();
+// 해당 주의 월요일 계산
+const diffToMonday = 2 - dayOfWeek;
+const monday = new Date(koreaTime);
+monday.setDate(koreaTime.getDate() + diffToMonday);
+monday.setUTCHours(0, 0, 0, 0);
 
-    //     // error
-    //     // 시간 및 데이터 확인 필
-    //     // await this.payReview();
-    // }
+// 해당 주의 금요일 계산
+const diffToFriday = 6 - dayOfWeek;
+const friday = new Date(koreaTime);
+friday.setDate(koreaTime.getDate() + diffToFriday);
+friday.setUTCHours(23, 59, 59, 999);
+
+console.log(dayOfWeek);
+console.log(monday, friday);
+    }
+
+    // 자동 발송 관련 엑셀 파일 테스트
+    @Cron('6 2 * * *', { timeZone: "Asia/Seoul" })
+    async excelTest() {
+        // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
+        // 원하는 시간대로 파일명 저장 확인 완료
+        // await this.orderInsertTalk();
+
+        // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
+        // 시간 및 데이터 확인 완료
+        // await this.notCall();
+
+        // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
+        // 시간 및 데이터 확인 완료
+        // await this.completeSend();
+
+        // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
+        // 시간 및 데이터 확인 완료
+        // await this.notPay();
+
+        // error
+        // 시간 및 데이터 확인 필
+        // await this.payReview();
+
+        await this.timeTest();
+    }
 }
 
 
