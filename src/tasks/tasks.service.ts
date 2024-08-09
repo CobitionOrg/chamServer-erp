@@ -137,7 +137,7 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    @Cron('2 30 * * * *', { timeZone: "Asia/Seoul" })
+    @Cron('2 33 * * * *', { timeZone: "Asia/Seoul" })
     async test() {
         // console.log("test");
         // const date = new Date();
@@ -174,7 +174,7 @@ export class TasksService {
         list.push(obj);
         const excelFilePath = await this.getTalkExcel(list, '테스트');
         console.log(excelFilePath);
-        //await this.sendTalk(excelFilePath,'접수확인알림톡');
+        await this.sendTalk(excelFilePath,'접수확인알림톡');
 
     }
 
