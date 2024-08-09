@@ -42,7 +42,7 @@ export class AuthGuard implements CanActivate {
                 const payload = await this.jwtService.verifyAsync(
                     token,
                     {
-                        secret: orderUpdConstants.secret
+                        secret: process.env.orderUpdConstants
                     }
                 );
                 console.log(payload);
@@ -64,15 +64,11 @@ export class AuthGuard implements CanActivate {
         }
 
         try {
-            console.log(token); // 여기
-            console.log("Is it a jwtConstants?"); // 여기
-            console.log(jwtConstants.secret); // 여기
-            console.log("this is from env");
-            console.log(process.env.jwtConstant);
+            // 서버에서 secret: jwtConstants.secret으로 하면 undefined가 나옵니다
             const payload = await this.jwtService.verifyAsync(
                 token,
                 {
-                    secret: jwtConstants.secret
+                    secret: process.env.jwtConstant
                 }
             );
             //console.log(payload);
