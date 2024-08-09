@@ -593,7 +593,7 @@ export class TasksRepository {
                 where: {
                     ...orderConditions,
                     orderSortNum: { gte: 0 },
-                    consultingFlag: false,
+                    // consultingFlag: false,
                     useFlag: true,
                     payFlag: 0,
                     isFirst: false

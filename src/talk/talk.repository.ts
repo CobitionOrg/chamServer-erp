@@ -161,7 +161,8 @@ export class TalkRepositoy {
             console.log(id);
             await this.prisma.order.updateMany({
                 where: {
-                    id: id, talkFlag: true
+                    id: id, 
+                    //talkFlag: true //이거 지워도 되지 않을까 해서 주석으로 남겨놓습니다
                 },
                 data: {
                     consultingFlag: true
