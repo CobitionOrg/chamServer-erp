@@ -225,19 +225,27 @@ export class TasksService {
     @Cron('0 0 9 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
-        const dayOfWeek = date.getDay();
 
-        //해당 주의 월요일 계산
-        const diffToSunday = 1 - dayOfWeek;
-        const monday = new Date(date);
-        monday.setDate(date.getDate() + diffToSunday);
-        monday.setHours(0, 0, 0, 0);
+        // 한국 시간 기준으로 변경 (UTC+9)
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const koreaTime = new Date(utc + (9 * 60 * 60000));
 
-        //해당 주의 금요일 계산
+        // 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+        const dayOfWeek = koreaTime.getDay();
+
+        // 해당 주의 월요일 계산
+        const diffToMonday = 1 - dayOfWeek;
+        const monday = new Date(koreaTime);
+        monday.setDate(koreaTime.getDate() + diffToMonday);
+        monday.setUTCHours(0, 0, 0, 0);
+
+        // 해당 주의 금요일 계산
         const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(date);
-        friday.setDate(date.getDate() + diffToFriday);
-        friday.setHours(23, 59, 59, 999);
+        const friday = new Date(koreaTime);
+        friday.setDate(koreaTime.getDate() + diffToFriday);
+        friday.setUTCHours(23, 59, 59, 999);
+
         const list = await this.tasksRepository.payReview(monday, friday);
         if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
         //엑셀 파일 생성
@@ -637,120 +645,100 @@ export class TasksService {
         }
     }
 
-    async orderInsertTalkTimeTest() {
-        const date = new Date();
-        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-        const hour = kstDate.getHours();
+    // async orderInsertTalkTimeTest() {
+    //     const date = new Date();
+    //     const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    //     const hour = kstDate.getHours();
 
-        console.log("orderInsertTalk");
-        console.log("It should be 2 => ", hour);
-    }
+    //     console.log("orderInsertTalk");
+    //     console.log("It should be now hour => ", hour);
+    // }
 
-    async payReviewTimeTest() {
-        const date = new Date();
+    // async payReviewTimeTest() {
+    //     const date = new Date();
 
-        // 한국 시간 기준으로 변경 (UTC+9)
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const koreaTime = new Date(utc + (9 * 60 * 60000));
+    //     // 한국 시간 기준으로 변경 (UTC+9)
+    //     const now = new Date();
+    //     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    //     const koreaTime = new Date(utc + (9 * 60 * 60000));
 
-        // 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
-        const dayOfWeek = koreaTime.getDay();
+    //     // 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+    //     const dayOfWeek = koreaTime.getDay();
 
-        // 해당 주의 월요일 계산
-        const diffToMonday = 1 - dayOfWeek;
-        const monday = new Date(koreaTime);
-        monday.setDate(koreaTime.getDate() + diffToMonday);
-        monday.setUTCHours(0, 0, 0, 0);
+    //     // 해당 주의 월요일 계산
+    //     const diffToMonday = 1 - dayOfWeek;
+    //     const monday = new Date(koreaTime);
+    //     monday.setDate(koreaTime.getDate() + diffToMonday);
+    //     monday.setUTCHours(0, 0, 0, 0);
 
-        // 해당 주의 금요일 계산
-        const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(koreaTime);
-        friday.setDate(koreaTime.getDate() + diffToFriday);
-        friday.setUTCHours(23, 59, 59, 999);
+    //     // 해당 주의 금요일 계산
+    //     const diffToFriday = 5 - dayOfWeek;
+    //     const friday = new Date(koreaTime);
+    //     friday.setDate(koreaTime.getDate() + diffToFriday);
+    //     friday.setUTCHours(23, 59, 59, 999);
 
-        console.log("payReivew");
-        console.log("It should be 8.5 000000 and 8.9 235959");
-        console.log(monday, friday);
-    }
+    //     console.log("payReivew");
+    //     console.log("It should be monday 000000 and friday 235959");
+    //     console.log(monday, friday);
+    // }
 
-    async notCallTimeTest() {
-        const today = new Date();
-        const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
+    // async notCallTimeTest() {
+    //     const today = new Date();
+    //     const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
 
-        const yesterdayKstDate = new Date(kstDate);
-        yesterdayKstDate.setDate(kstDate.getDate() - 1);
-        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+    //     const yesterdayKstDate = new Date(kstDate);
+    //     yesterdayKstDate.setDate(kstDate.getDate() - 1);
+    //     yesterdayKstDate.setUTCHours(23, 59, 59, 999);
 
-        const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
-        twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
-        twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+    //     const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
+    //     twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
+    //     twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
-        console.log("notCall");
-        console.log("It should be 8.9 235959 and 7.26 000000");
-        console.log(yesterdayKstDate, twoWeeksAgoKstDate);
-    }
+    //     console.log("notCall");
+    //     console.log("It should be today - 1 235959 and today - 15 000000");
+    //     console.log(yesterdayKstDate, twoWeeksAgoKstDate);
+    // }
 
-    async completeSendTimeTest() {
-        const date = new Date();
-        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    // async completeSendTimeTest() {
+    //     const date = new Date();
+    //     const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        const fileName = kstDate.toISOString();
-        const completeSendDate = getDateString(fileName);
+    //     const fileName = kstDate.toISOString();
+    //     const completeSendDate = getDateString(fileName);
 
-        console.log("completeSend");
-        console.log("It should be 2024/8/10");
-        console.log(completeSendDate);
-    }
+    //     console.log("completeSend");
+    //     console.log("It should be now Date like 2024/8/10");
+    //     console.log(completeSendDate);
+    // }
 
-    async notPayTimeTest() {
-        const date = new Date();
-        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    // async notPayTimeTest() {
+    //     const date = new Date();
+    //     const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        // 하루 전
-        const yesterdayKstDate = new Date(kstDate);
-        yesterdayKstDate.setDate(kstDate.getDate() - 1);
-        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+    //     // 하루 전
+    //     const yesterdayKstDate = new Date(kstDate);
+    //     yesterdayKstDate.setDate(kstDate.getDate() - 1);
+    //     yesterdayKstDate.setUTCHours(23, 59, 59, 999);
 
-        // 4주 전
-        const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
-        fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
-        fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+    //     // 4주 전
+    //     const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
+    //     fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
+    //     fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
 
-        console.log("notPay");
-        console.log("It should be 7.12 000000 and 8.9 235959");
-        console.log(fourWeeksAgoKstDate, yesterdayKstDate);
-    }
+    //     console.log("notPay");
+    //     console.log("It should be today - 29 000000 and today - 1 235959");
+    //     console.log(fourWeeksAgoKstDate, yesterdayKstDate);
+    // }
 
-    // 자동 발송 관련 엑셀 파일 테스트
-    @Cron('20 2 * * *', { timeZone: "Asia/Seoul" })
-    async excelTest() {
-        // 시간대 상관 없음 그냥 접수 확인 알림톡 안 된 인원 전부 가져옴
-        // 원하는 시간대로 파일명 저장 확인 완료
-        // await this.orderInsertTalk();
-
-        // 2주 전 목요일부터 이번주 목요일까지 유선 상담 연결 안 된 데이터
-        // 시간 및 데이터 확인 완료
-        // await this.notCall();
-
-        // 월, 화, 목, 금 중 해당 요일의 sendList title에 해당하는 날짜로
-        // 시간 및 데이터 확인 완료
-        // await this.completeSend();
-
-        // 4주 전 목요일부터 이번주 목요일 까지 미결제 데이터
-        // 시간 및 데이터 확인 완료
-        // await this.notPay();
-
-        // error
-        // 시간 및 데이터 확인 필
-        // await this.payReview();
-
-        await this.orderInsertTalkTimeTest();
-        await this.payReviewTimeTest();
-        await this.notCallTimeTest();
-        await this.completeSendTimeTest();
-        await this.notPayTimeTest();
-    }
+    // // 자동 발송 관련 엑셀 시간 테스트
+    // @Cron('20 2 * * *', { timeZone: "Asia/Seoul" })
+    // async excelTest() {
+    //     await this.orderInsertTalkTimeTest();
+    //     await this.payReviewTimeTest();
+    //     await this.notCallTimeTest();
+    //     await this.completeSendTimeTest();
+    //     await this.notPayTimeTest();
+    // }
 }
 
 
