@@ -255,8 +255,8 @@ export class ErpService {
 
                 if (route !== "" && orderSortNum != 0) {
                     console.log('지인 체크');
-                    const routeName = route.match(/[^\d]+/g).join('');//지인 이름
-                    const routePhoneNum = route.match(/\d+/g).join('');//지인 번호
+                    const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
+                    const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
                     let checkRecommend;
 
