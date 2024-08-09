@@ -137,6 +137,33 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
+    @Cron('2 * * * * *', { timeZone: "Asia/Seoul" })
+    async test() {
+        // console.log("test");
+        // const date = new Date();
+        // const dayOfWeek = date.getDay();
+
+        // //해당 주의 월요일 계산
+        // const diffToSunday = 1 - dayOfWeek;
+        // const monday = new Date(date);
+        // monday.setDate(date.getDate() + diffToSunday);
+        // monday.setHours(0, 0, 0, 0);
+
+        // //해당 주의 금요일 계산
+        // const diffToFriday = 5 - dayOfWeek;
+        // const friday = new Date(date);
+        // friday.setDate(date.getDate() + diffToFriday);
+        // friday.setHours(23, 59, 59, 999);
+        // const list = await this.tasksRepository.payReview(monday, friday);
+        // console.log('----------------------');
+        // console.log(list.list);
+        // console.log(list.list[0]);
+        // if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+        // //엑셀 파일 생성
+        // const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
+        // console.log(excelFilePath);
+
+    }
     // @Cron('0 58 0,4,6 * * *')
     // async test() {
     //     await this.mailerService.sendMail({
@@ -199,7 +226,7 @@ export class TasksService {
         const list = await this.tasksRepository.payReview(monday, friday);
         if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
         //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcel(list.list, '구매후기');
+        const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
         console.log(excelFilePath);
 
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
@@ -333,6 +360,7 @@ export class TasksService {
     * @returns 
     */
     async getTalkExcel(list, fileName?) {
+        console.log('sibla');
         const wb = new Excel.Workbook();
         const sheet = wb.addWorksheet('발송알림톡');
         const headers = ['이름', '휴대폰번호', '변수1', '변수2', '변수3', '변수4', '변수5', '변수6', '변수7', '변수8', '변수9', '변수10'];
@@ -344,23 +372,64 @@ export class TasksService {
             sheet.getColumn(colNum).width = headerWidths[colNum - 1];
         });
 
-        list.forEach((e) => {
+        for(const e of list) {
+            console.log(e);
             const { name, phoneNum } = e.patient;
             const rowDatas = [name, phoneNum, name, '', '', '', '', '', '', '', '', ''];
             const appendRow = sheet.addRow(rowDatas);
             //자동으로 번호에 '붙는 상황 방지
             appendRow.getCell(2).value = phoneNum.toString();
             appendRow.getCell(2).numFmt = '@';
-        });
+        }
+       
 
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
             filePath = await createExcelFile(fileData, fileName);
 
-            return filePath;
+            return fileName;
         }
 
     }
+
+        /**
+    * 접수 알람톡 용 엑셀 파일 만들기
+    * @param list 
+    * @param fileName 
+    * @returns 
+    */
+        async getTalkExcelPayReview(list, fileName?) {
+            console.log('sibla');
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet('발송알림톡');
+            const headers = ['이름', '휴대폰번호', '변수1', '변수2', '변수3', '변수4', '변수5', '변수6', '변수7', '변수8', '변수9', '변수10'];
+            const headerWidths = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+            const headerRow = sheet.addRow(headers);
+            let filePath;
+    
+            headerRow.eachCell((cell, colNum) => {
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+    
+            for(const e of list) {
+                console.log(e);
+                const { name, phoneNum } = e.order.patient;
+                const rowDatas = [name, phoneNum, name, '', '', '', '', '', '', '', '', ''];
+                const appendRow = sheet.addRow(rowDatas);
+                //자동으로 번호에 '붙는 상황 방지
+                appendRow.getCell(2).value = phoneNum.toString();
+                appendRow.getCell(2).numFmt = '@';
+            }
+           
+    
+            const fileData = await wb.xlsx.writeBuffer();
+            if (fileName) {
+                filePath = await createExcelFile(fileData, fileName);
+    
+                return fileName;
+            }
+    
+        }
 
     /**
     * 발송 알림 톡 파일
@@ -394,7 +463,7 @@ export class TasksService {
         const fileData = await wb.xlsx.writeBuffer();
         if (fileName) {
             filePath = await createExcelFile(fileData, fileName);
-            return filePath;
+            return fileName;
         }
     }
 
