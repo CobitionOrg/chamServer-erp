@@ -67,6 +67,8 @@ export class AuthGuard implements CanActivate {
             console.log(token); // 여기
             console.log("Is it a jwtConstants?"); // 여기
             console.log(jwtConstants.secret); // 여기
+            console.log("this is from env");
+            console.log(process.env.jwtConstant);
             const payload = await this.jwtService.verifyAsync(
                 token,
                 {
