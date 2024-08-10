@@ -711,7 +711,7 @@ export class ErpService {
                 //지인 체크
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
 
-                if (route !== "" && orderSortNum !== 0) {
+                if (route !== "" && orderSortNum !== 0 && route !== null) {
                     const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
                     const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
