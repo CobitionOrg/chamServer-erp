@@ -921,4 +921,12 @@ export class ErpController {
     //     const res = await this.erpService.insertPatient();
     //     return res;
     // }
+    
+    // // 새로 받은 환자 데이터 기존 DB와 비교 후 없으면 삽입
+    // @Public()
+    // @Post('/compare-insert')
+    // async compareAndInsert() {
+    //     const res = await this.erpService.compareAndInsert();
+    //     return res;
+    // }
 }
