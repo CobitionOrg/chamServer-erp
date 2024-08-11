@@ -137,8 +137,8 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    // @Cron('2 33 * * * *', { timeZone: "Asia/Seoul" })
-    // async test() {
+    @Cron('2 33 * * * *', { timeZone: "Asia/Seoul" })
+    async test() {
         // console.log("test");
         // const date = new Date();
         // const dayOfWeek = date.getDay();
@@ -163,20 +163,20 @@ export class TasksService {
         // const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
         // console.log(excelFilePath);
 
-    //     const list = [];
-    //     const obj = {
-    //         patient: {
-    //             name: '조병규',
-    //             phoneNum: '01092309536'
-    //         },
-    //     }
+        const list = [];
+        const obj = {
+            patient: {
+                name: '조병규',
+                phoneNum: '01092309536'
+            },
+        }
 
-    //     list.push(obj);
-    //     const excelFilePath = await this.getTalkExcel(list, '테스트');
-    //     console.log(excelFilePath);
-    //     await this.sendTalk(excelFilePath,'접수확인알림톡');
+        list.push(obj);
+        const excelFilePath = await this.getTalkExcel(list, '테스트');
+        console.log(excelFilePath);
+        await this.sendTalk(excelFilePath,'접수확인알림톡');
 
-    // }
+    }
 
 
     // @Cron('0 58 0,4,6 * * *')
