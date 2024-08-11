@@ -4446,6 +4446,75 @@ export class ErpService {
 
     //     return { success: true };
     // }
+
+    // // 기존 DB와 비교 후 없으면 삽입
+    // async compareAndInsert() {
+    //     const filePath = "";
+    //     const workbook = new Excel.Workbook();
+    //     await workbook.xlsx.readFile(filePath);
+    //     const worksheet = workbook.getWorksheet(1);
+    //     const maxRow = 9282;
+
+    //     let count = 0;
+        
+    //     for(let i = 2; i <= maxRow; i++) {
+    //         const row = worksheet.getRow(i);
+
+    //         const socialNum = row.getCell(1).text;
+    //         const name = row.getCell(2).text;
+    //         const phoneNum = row.getCell(3).text;
+    //         const addr = row.getCell(4).text;
+    //         const digestion = row.getCell(5).text || '';
+    //         const sleep = row.getCell(6).text || '';
+    //         const constipation = row.getCell(7).text || '';
+    //         const nowDrug = row.getCell(8).text || '';
+    //         const pastDrug = row.getCell(9).text || '';
+    //         const pastSurgery = row.getCell(10).text || '';
+    //         const tallWeight = row.getCell(11).text || '';
+
+    //         const encryptedSocialNum = this.crypto.encrypt(socialNum);
+    //         const encryptedPhoneNum = this.crypto.encrypt(phoneNum);
+    //         const encryptedAddr = this.crypto.encrypt(addr);
+
+    //         const existPatient = await this.prisma.patient.findMany({
+    //             where: {
+    //                 name: name,
+    //                 phoneNum: encryptedPhoneNum
+    //             }
+    //         });
+
+    //         if(existPatient.length === 0) {
+    //             const patient = await this.prisma.patient.create({
+    //                 data: {
+    //                     name: name,
+    //                     phoneNum: encryptedPhoneNum,
+    //                     addr: encryptedAddr,
+    //                     socialNum: encryptedSocialNum,
+    //                     useFlag: true,
+    //                 }
+    //             });
+
+    //             await this.prisma.patientBodyType.create({
+    //                 data: {
+    //                     tallWeight: tallWeight,
+    //                     digestion: digestion,
+    //                     sleep: sleep,
+    //                     constipation: constipation,
+    //                     nowDrug: nowDrug,
+    //                     pastDrug: pastDrug,
+    //                     pastSurgery: pastSurgery,
+    //                     patientId: patient.id,
+    //                 }
+    //             });
+
+    //             count++;
+    //         } else {
+    //             continue;
+    //         }
+    //     }
+
+    //     return { success: true, count: count };
+    // }
 }
 
 
