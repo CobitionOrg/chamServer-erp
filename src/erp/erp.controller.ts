@@ -33,6 +33,7 @@ import { CreateNewReviewDto } from './Dto/createNewReview.dto';
 import { zip } from 'rxjs/operators';
 import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
+import { RouteFlagDto } from './Dto/routeFlag.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -828,6 +829,15 @@ export class ErpController {
     @Get('/ffff')
     async ffff(){
         await this.erpService.updateAddr();
+    }
+
+    @ApiOperation({summary:'지인 확인 체크'})
+    @Patch('/updateRouteFlag')
+    async updateRouteFlag(@Body() routeFlagDto:RouteFlagDto){
+        this.logger.log('입금상담목록에서 지인 확인 체크 안된 거 색칠 처리');
+        const res = await this.updateRouteFlag(routeFlagDto);
+
+        return res;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.

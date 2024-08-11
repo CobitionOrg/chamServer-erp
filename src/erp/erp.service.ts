@@ -34,6 +34,7 @@ import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
 import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
+import { RouteFlagDto } from './Dto/routeFlag.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -3718,6 +3719,30 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금상담목록에서 지인 확인 체크 안된 거 색칠 처리
+     * @param routeFlagDto 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async updateRouteFlag(routeFlagDto:RouteFlagDto) {
+        try{
+            await this.prisma.order.update({
+                where:{id:routeFlagDto.id},
+                data:{routeFlag: !routeFlagDto.routeFlag}
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
 
 
 
