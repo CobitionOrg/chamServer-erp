@@ -137,9 +137,9 @@ export class TasksService {
         await this.tasksRepository.leaveWorkAt(15);
     }
 
-    // @Cron('2 33 * * * *', { timeZone: "Asia/Seoul" })
-    // async test() {
-        // console.log("test");
+    @Cron('2 37 * * * *', { timeZone: "Asia/Seoul" })
+    async test() {
+        console.log("test");
         // const date = new Date();
         // const dayOfWeek = date.getDay();
 
@@ -163,20 +163,20 @@ export class TasksService {
         // const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
         // console.log(excelFilePath);
 
-    //     const list = [];
-    //     const obj = {
-    //         patient: {
-    //             name: '조병규',
-    //             phoneNum: '01092309536'
-    //         },
-    //     }
+        const list = [];
+        const obj = {
+            patient: {
+                name: '조병규',
+                phoneNum: '01092309536'
+            },
+        }
 
-    //     list.push(obj);
-    //     const excelFilePath = await this.getTalkExcel(list, '테스트');
-    //     console.log(excelFilePath);
-    //     await this.sendTalk(excelFilePath,'접수확인알림톡');
+        list.push(obj);
+        const excelFilePath = await this.getTalkExcel(list, '테스트');
+        console.log(excelFilePath);
+        await this.sendTalk(excelFilePath,'접수확인알림톡');
 
-    // }
+    }
 
 
     // @Cron('0 58 0,4,6 * * *')
@@ -218,6 +218,7 @@ export class TasksService {
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
         //await this.sendTalk(excelFilePath, '접수확인알림톡');
+        //await this.tasksRepository.updateTalkFlag(res);
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)

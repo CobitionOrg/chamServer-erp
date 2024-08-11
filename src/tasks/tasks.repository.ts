@@ -223,8 +223,7 @@ export class TasksRepository {
 
             const res = list.map(item => ({
                 id: item.id,
-                patient:
-                {
+                patient: {
                     name: item.patient.name,
                     phoneNum: this.crypto.decrypt(item.patient.phoneNum)
                 }
@@ -239,6 +238,35 @@ export class TasksRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 발송 알람톡 보낸거 체크 처리
+     * @param list 
+     * @returns {success:boolean,status:HttpStatus}
+     */
+    async updateTalkFlag(list) {
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                for(const e of list) {
+                    await tx.order.update({
+                        where:{id:e.id},
+                        data:{talkFlag:true}
+                    })
+                }
+            });
+
+            return {success: true, status:HttpStatus.OK};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 

@@ -34,6 +34,7 @@ import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
 import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
+import { RouteFlagDto } from './Dto/routeFlag.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -254,7 +255,6 @@ export class ErpService {
                 console.log(route);
 
                 if (route !== "" && orderSortNum != 0) {
-                    console.log('지인 체크');
                     const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
                     const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
@@ -710,56 +710,59 @@ export class ErpService {
 
                 //지인 체크
                 const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
+                console.log(route);
 
-                // if (route !== "" && orderSortNum !== 0 && route !== null) {
-                //     const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
-                //     const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
+                if (route !== "" && orderSortNum != 0) {
+                    console.log('지인 체크');
 
-                //     let checkRecommend;
+                    const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
+                    const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
-                //     //이름과 전화번호가 둘 다 있어야만 지인 체크                     
-                //     if (routeName !== null && routePhoneNum !== null) {
-                //         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                    let checkRecommend;
 
-                //         if (checkRecommend.success) {
-                //             //지인 확인 되었을 시
-                //             orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
-                //             remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
+                    //이름과 전화번호가 둘 다 있어야만 지인 체크                     
+                    if (routeName !== null && routePhoneNum !== null) {
+                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
 
-                //             await tx.friendRecommend.create({
-                //                 data: {
-                //                     orderId: order.id,
-                //                     patientId: checkRecommend.patientId,
-                //                     checkFlag: true,
-                //                     date: kstDate,
-                //                     name: routeName,
-                //                     phoneNum: routePhoneNum,
-                //                 }
-                //             });
+                        if (checkRecommend.success) {
+                            //지인 확인 되었을 시
+                            orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
+                            remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
 
-                //             await tx.order.update({
-                //                 where: { id: order.id },
-                //                 data: {
-                //                     orderSortNum: orderSortNum,
-                //                     remark: remark
-                //                 }
-                //             });
-                //         } else {
-                //             //지인을 입력했을 때 지인 확인이 안될 때
-                //             await tx.order.update({
-                //                 where: { id: order.id },
-                //                 data: { routeFlag: true }
-                //             });
-                //         }
+                            await tx.friendRecommend.create({
+                                data: {
+                                    orderId: order.id,
+                                    patientId: checkRecommend.patientId,
+                                    checkFlag: true,
+                                    date: kstDate,
+                                    name: routeName,
+                                    phoneNum: routePhoneNum,
+                                }
+                            });
 
-                //     }
-                // } else {
-                //     //그 외의 경우 마지막으로 orderSortNum 업데이트
-                //     await tx.order.update({
-                //         where: { id: order.id },
-                //         data: { orderSortNum: orderSortNum }
-                //     });
-                // }
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: {
+                                    orderSortNum: orderSortNum,
+                                    remark: remark
+                                }
+                            });
+                        } else {
+                            //지인을 입력했을 때 지인 확인이 안될 때
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: { routeFlag: true }
+                            });
+                        }
+
+                    }
+                } else {
+                    //그 외의 경우 마지막으로 orderSortNum 업데이트
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { orderSortNum: orderSortNum }
+                    });
+                }
             });
 
             return { success: true, status: HttpStatus.CREATED };
@@ -3716,6 +3719,30 @@ export class ErpService {
         }
     }
 
+    /**
+     * 입금상담목록에서 지인 확인 체크 안된 거 색칠 처리
+     * @param routeFlagDto 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async updateRouteFlag(routeFlagDto:RouteFlagDto) {
+        try{
+            await this.prisma.order.update({
+                where:{id:routeFlagDto.id},
+                data:{routeFlag: !routeFlagDto.routeFlag}
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
 
 
 
