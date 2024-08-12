@@ -526,13 +526,13 @@ export class ErpController {
         return res;
     }
 
-    //테스트 용 api
-    @ApiOperation({summary:'가격 일괄 업데이트'})
-    @Get('/update/price')
-    async updatePrice(){
-        this.logger.log('가격 일괄 업데이트');
-        return await this.erpService.updatePrice();
-    }
+    // //테스트 용 api
+    // @ApiOperation({summary:'가격 일괄 업데이트'})
+    // @Get('/update/price')
+    // async updatePrice(){
+    //     this.logger.log('가격 일괄 업데이트');
+    //     return await this.erpService.updatePrice();
+    // }
 
     @ApiOperation({summary:'발송목록 완료 안 된 전체 리스트 가져오기'})
     @Get('/getAllSendList')
@@ -820,16 +820,16 @@ export class ErpController {
         return res;
     }
 
-    @Get('/sendNumTestExcel/:id')
-    async sendNumTestExcel(@Param("id") id: number){
-        console.log(id);
-        return await this.sendService.sendNumExcelTest(id);
-    }
+    // @Get('/sendNumTestExcel/:id')
+    // async sendNumTestExcel(@Param("id") id: number){
+    //     console.log(id);
+    //     return await this.sendService.sendNumExcelTest(id);
+    // }
 
-    @Get('/ffff')
-    async ffff(){
-        await this.erpService.updateAddr();
-    }
+    // @Get('/ffff')
+    // async ffff(){
+    //     await this.erpService.updateAddr();
+    // }
 
     @ApiOperation({summary:'지인 확인 체크'})
     @Patch('/updateRouteFlag')

@@ -21,17 +21,20 @@ const getPriorityInfo = (orderItems: any[]): PriorityInfo => {
 
   for (const item of orderItems) {
     const months = extractMonths(item.item);
-    if (item.type === 'yoyo') {
-      yoCount++;
-      yoMonths += months;
-    } else {
-      if (item.item.includes('쎈')) {
+    if (item.type === 'common') {
+      if(item.item.includes('쎈')) {
+        // 쎈 개월수 추가
         cenCount++;
         cenMonths += months;
       } else {
+        // 감 개월수 추가
         gamCount++;
         gamMonths += months;
       }
+    } else if (item.type === 'yoyo') {
+      // 요 개월수 추가
+      yoCount++;
+      yoMonths += months;
     }
   }
 
