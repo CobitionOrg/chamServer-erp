@@ -49,12 +49,12 @@ export class TalkController {
 
     private readonly logger = new Logger(TalkController.name);
 
-    @Get('/')
-    test() {
-        const currentTime = moment().tz('Asia/Seoul').format();
-        this.logger.debug(`Current time in Seoul: ${currentTime}`);
-        return currentTime;
-    }
+    // @Get('/')
+    // test() {
+    //     const currentTime = moment().tz('Asia/Seoul').format();
+    //     this.logger.debug(`Current time in Seoul: ${currentTime}`);
+    //     return currentTime;
+    // }
         
     @ApiOperation({summary:'접수 알림톡 엑셀 데이터 출력'})
     @Get('/orderInsertTalk')
@@ -175,43 +175,43 @@ export class TalkController {
         return {success:true,status:res.status,url:res.url};
     }
 
-    @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
-    //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
-    @Get('/test')
-    async completeTalkCron(){
-        this.logger.log('발송 알림톡 자동 발송 처리');
-        const res = await this.talkService.completeSendTalkCron();
-    }
+    // @ApiOperation({summary:'발송 알림톡 자동 발송 처리'})
+    // //    @Cron('0 11 * * 1,2,4,5',{timeZone:"Asia/Seoul"})
+    // @Get('/test')
+    // async completeTalkCron(){
+    //     this.logger.log('발송 알림톡 자동 발송 처리');
+    //     const res = await this.talkService.completeSendTalkCron();
+    // }
   
-    @Public()
-    @Get('/logTest')
-    async sendErrorLog(){
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth()+1;
-        const day = date.getDate();
+    // @Public()
+    // @Get('/logTest')
+    // async sendErrorLog(){
+    //     const date = new Date();
+    //     const year = date.getFullYear();
+    //     const month = date.getMonth()+1;
+    //     const day = date.getDate();
 
-        const monthTemp = month > 9 ? month : '0'+month;
-        const dayTemp = day > 9 ? day : "0"+day;
+    //     const monthTemp = month > 9 ? month : '0'+month;
+    //     const dayTemp = day > 9 ? day : "0"+day;
 
-        const logFileName = `${year}-${monthTemp}-${dayTemp}.error.log`;
-        const filePath = `../../logs/error/${logFileName}`
-        const absoluteFilePath = path.resolve(__dirname, filePath);
-        console.log(absoluteFilePath);
-        await this.mailerService.sendMail({
-            to: 'qudqud97@naver.com',
-            from: 'noreply@gmail.com',
-            subject: '에러로그',
-            text: '에러로그',
-            attachments : [
-                {
-                    path: absoluteFilePath
-                }
-            ]
-        }).then((result) => {
-            this.logger.log(result);
-        });
-    }
+    //     const logFileName = `${year}-${monthTemp}-${dayTemp}.error.log`;
+    //     const filePath = `../../logs/error/${logFileName}`
+    //     const absoluteFilePath = path.resolve(__dirname, filePath);
+    //     console.log(absoluteFilePath);
+    //     await this.mailerService.sendMail({
+    //         to: 'qudqud97@naver.com',
+    //         from: 'noreply@gmail.com',
+    //         subject: '에러로그',
+    //         text: '에러로그',
+    //         attachments : [
+    //             {
+    //                 path: absoluteFilePath
+    //             }
+    //         ]
+    //     }).then((result) => {
+    //         this.logger.log(result);
+    //     });
+    // }
  
 
     //     @ApiOperation({summary:'접수 알림톡 자동 발송 처리'})

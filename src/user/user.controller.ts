@@ -21,16 +21,16 @@ export class UserController {
     ){}
     private readonly logger = new Logger(UserController.name);
 
-    @Get('/')
-    async get(){
-        return await this.userService.findUserById('test');
-    }
+    // @Get('/')
+    // async get(){
+    //     return await this.userService.findUserById('test');
+    // }
 
-    @UseGuards(AuthGuard)
-    @Get('/loginTest')
-    async loginTest() {
-        return {success:true};
-    }
+    // @UseGuards(AuthGuard)
+    // @Get('/loginTest')
+    // async loginTest() {
+    //     return {success:true};
+    // }
 
     @ApiOperation({summary:'회원가입'})
     @HttpCode(HttpStatus.CREATED)
@@ -113,8 +113,8 @@ export class UserController {
         return res;
     }
 
-    @Get('/test')
-    async test(){
-        return await this.userService.requestReview();
-    }
+    // @Get('/test')
+    // async test(){
+    //     return await this.userService.requestReview();
+    // }
 }
