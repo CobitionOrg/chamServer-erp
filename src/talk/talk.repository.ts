@@ -165,7 +165,8 @@ export class TalkRepositoy {
                     //talkFlag: true //이거 지워도 되지 않을까 해서 주석으로 남겨놓습니다
                 },
                 data: {
-                    consultingFlag: true
+                    consultingFlag: true,
+                    talkFlag: true, //상담연결 되서 굳이 알람톡 안보내도 된다고 함
                 }
             });
 
