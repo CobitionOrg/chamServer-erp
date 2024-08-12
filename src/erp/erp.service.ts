@@ -223,6 +223,7 @@ export class ErpService {
                         assistantFlag = true;
                     } else {
                         if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                            console.log('별도 주문 외에 주문이 있음')
                             commonFlag = true;
                         }
                     }
@@ -232,6 +233,9 @@ export class ErpService {
                     }
                     
                 }
+
+                console.log(assistantFlag);
+                console.log(commonFlag);
 
                 //별도 주문만 있을 때 - orderSortNum - 0
                 if (assistantFlag && !commonFlag) {
@@ -303,7 +307,7 @@ export class ErpService {
                         data: { orderSortNum: orderSortNum }
                     });
                 }
-            });
+            },{timeout:10000});
 
             return { success: true, status: HttpStatus.CREATED };
 
@@ -458,10 +462,14 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if (getListDto.searchKeyword !== "") {
-                //검색어 O
-                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
-            }
+            // if (getListDto.searchKeyword !== "") {
+            //     //검색어 O
+            //     patientConditions = { 
+            //         patient: { 
+            //             name: { contains: getListDto.searchKeyword } 
+            //         }
+            //     };
+            // }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
                 select: {
@@ -514,6 +522,7 @@ export class ErpService {
             //console.log(list);
 
             const sortedList = sortItems(list);
+            let resList = [];
 
             for (let row of sortedList) {
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
@@ -522,9 +531,20 @@ export class ErpService {
                 row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
+
+                if(getListDto.searchKeyword !== ""){
+                    if(
+                        row.patient.name.includes(getListDto.searchKeyword) 
+                        ||row.patient.phoneNum.includes(getListDto.searchKeyword)
+                    ){
+                        resList.push(row)
+                    }
+                }else{
+                    resList.push(row);
+                }
             }
 
-            return { success: true, list: sortedList };
+            return { success: true, list: resList };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -713,7 +733,7 @@ export class ErpService {
                         assistantFlag = true;
                     } else {
                         if (tempObj.item.length > 0) {
-                            commonFlag = true;
+                            
                         }
                         for (let j = 0; j < tempObj.item.length; j++) {
                             temp = {
@@ -723,8 +743,13 @@ export class ErpService {
                             }
 
                             //console.log(temp);
+                            if(tempObj.item[j] !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                                console.log("별도 주문 외 주문이 있음")
 
-                            items.push(temp);
+                                items.push(temp);
+                                commonFlag = true;
+                            }
+
                         }
                     }
 
@@ -810,7 +835,7 @@ export class ErpService {
                         data: { orderSortNum: orderSortNum }
                     });
                 }
-            });
+            },{timeout: 20000});
 
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {

@@ -204,7 +204,7 @@ export class TasksService {
 
     //접수 확인 알람톡
     // 매일 9시 12시 15시
-    @Cron('0 0 9,12,15 * * *', { timeZone: "Asia/Seoul" })
+    @Cron('0 0 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -217,9 +217,27 @@ export class TasksService {
         const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        await this.sendTalk(excelFilePath, '접수확인알림톡');
-        await this.tasksRepository.updateTalkFlag(res.list);
+        // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+        // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
     }
+
+    @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })
+    async orderInsertTalkSaturday() {
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        const hour = kstDate.getHours();
+        const excelFileName = `orderInsertTalk${hour}`;
+
+        const res = await this.tasksRepository.orderInsertTalk();
+        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+        //엑셀 파일 생성
+        const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
+        console.log(excelFilePath);
+        //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+        // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+        // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+    }
+
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
     // 매주 토요일 오전 9시
@@ -502,7 +520,7 @@ export class TasksService {
         try {
             // 브라우저 실행
             const browser = await puppeteer.launch({
-                //headless: false
+                // headless: false
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             }); // headless: false는 브라우저 UI를 표시합니다.
@@ -635,7 +653,7 @@ export class TasksService {
                 }
             }, sendButton);
 
-
+            return {success:true};
             // await page.waitForSelector('a.msg_link10', { visible: true })
             // await page.click('a.msg_link10');
             // await new Promise(resolve => setTimeout(resolve, 3000));
