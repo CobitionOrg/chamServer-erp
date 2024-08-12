@@ -2276,10 +2276,6 @@ export class ErpService {
                     consultingType: false,
                     isComplete: false,
                     payType: '계좌이체',
-                    date: {
-                        gte: startDate,
-                        lt: endDate,
-                    }
                 },
                 select: {
                     id: true,
@@ -2504,7 +2500,7 @@ export class ErpService {
                                 cash:cash
                             }
                         });
-                        
+
                         const res = await tx.tempOrder.create({
                             data: {
                                 route: orders[i].route,

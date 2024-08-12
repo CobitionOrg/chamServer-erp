@@ -367,7 +367,7 @@ export class AppService {
       const presignedUrl = await generateUploadURL();
 
       console.log(presignedUrl);
-      await this.saveS3Data(presignedUrl.uploadURL, presignedUrl.imageName);
+      await this.saveS3Data(presignedUrl.uploadURL.split('?')[0], presignedUrl.imageName);
 
       await axios.put(presignedUrl.uploadURL, {
         body: file
@@ -401,6 +401,7 @@ export class AppService {
     */
      async saveS3Data(url: string, objectName: string) {
       try {
+        console.log(url)
           await this.prisma.urlData.create({
               data: {
                   url: url,
