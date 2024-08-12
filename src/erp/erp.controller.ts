@@ -80,7 +80,7 @@ export class ErpController {
        const res = await this.erpService.getReciptList(getListDto); 
        return res;
     }
-
+ 
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
     @Post('/callConsulting')
     async callConsulting(@Body() callConsultingDto : CallConsultingDto, @Headers() header){

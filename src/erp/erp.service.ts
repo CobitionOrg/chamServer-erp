@@ -458,10 +458,14 @@ export class ErpService {
                 }
             }
             let patientConditions = {};
-            if (getListDto.searchKeyword !== "") {
-                //검색어 O
-                patientConditions = { patient: { name: { contains: getListDto.searchKeyword } } };
-            }
+            // if (getListDto.searchKeyword !== "") {
+            //     //검색어 O
+            //     patientConditions = { 
+            //         patient: { 
+            //             name: { contains: getListDto.searchKeyword } 
+            //         }
+            //     };
+            // }
             const list = await this.prisma.order.findMany({
                 where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
                 select: {
@@ -514,6 +518,7 @@ export class ErpService {
             //console.log(list);
 
             const sortedList = sortItems(list);
+            let resList = [];
 
             for (let row of sortedList) {
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
@@ -522,9 +527,20 @@ export class ErpService {
                 row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
+
+                if(getListDto.searchKeyword !== ""){
+                    if(
+                        row.patient.name.includes(getListDto.searchKeyword) 
+                        ||row.patient.phoneNum.includes(getListDto.searchKeyword)
+                    ){
+                        resList.push(row)
+                    }
+                }else{
+                    resList.push(row);
+                }
             }
 
-            return { success: true, list: sortedList };
+            return { success: true, list: resList };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({

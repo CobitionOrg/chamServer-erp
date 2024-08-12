@@ -217,8 +217,8 @@ export class TasksService {
         const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        await this.sendTalk(excelFilePath, '접수확인알림톡');
-        await this.tasksRepository.updateTalkFlag(res.list);
+        const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+        if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
@@ -501,7 +501,7 @@ export class TasksService {
         try {
             // 브라우저 실행
             const browser = await puppeteer.launch({
-                //headless: false
+                // headless: false
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             }); // headless: false는 브라우저 UI를 표시합니다.
@@ -634,7 +634,7 @@ export class TasksService {
                 }
             }, sendButton);
 
-
+            return {success:true};
             // await page.waitForSelector('a.msg_link10', { visible: true })
             // await page.click('a.msg_link10');
             // await new Promise(resolve => setTimeout(resolve, 3000));
