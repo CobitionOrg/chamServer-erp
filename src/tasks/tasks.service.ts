@@ -218,7 +218,7 @@ export class TasksService {
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
         await this.sendTalk(excelFilePath, '접수확인알림톡');
-        await this.tasksRepository.updateTalkFlag(res);
+        await this.tasksRepository.updateTalkFlag(res.list);
     }
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
