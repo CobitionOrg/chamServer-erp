@@ -361,6 +361,53 @@ export class ErpService {
     }
 
     /**
+     * 지인 할인 적용 여부
+     * @param id 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+    async friendDiscount(id:number) {
+        try{
+            const exOrder = await this.prisma.order.findUnique({
+                where:{id:id},
+                select:{
+                    friendDiscount:true,
+                    price:true
+                }
+            });
+
+            let price = 0;
+
+            if(exOrder.friendDiscount){
+                //할인 한다고 했다가 취소하는 경우
+                price = (exOrder.price/9)*10;    
+            }else{
+                //할인 적용하는 경우
+                price = exOrder.price * 0.9;
+            }
+
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{
+                    friendDiscount:!exOrder.friendDiscount,
+                    price: price
+                }
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+            
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**
      * 오더리스트 조회
      * @returns {
         patient: {
