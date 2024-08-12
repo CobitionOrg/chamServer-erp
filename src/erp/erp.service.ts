@@ -2494,6 +2494,17 @@ export class ErpService {
                         });
                     } else {
                         // 아니면 create
+                        let card = orders[i].payType == "카드결제" ? orders[i].price : 0;
+                        let cash = orders[i].payType == "계좌이체" ? orders[i].price : 0;
+
+                        await tx.order.update({
+                            where:{id:orders[i].id},
+                            data:{
+                                card:card,
+                                cash:cash
+                            }
+                        });
+                        
                         const res = await tx.tempOrder.create({
                             data: {
                                 route: orders[i].route,
