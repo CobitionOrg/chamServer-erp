@@ -1816,6 +1816,7 @@ export class ErpService {
                     id: true,
                     addr: true,
                     route: true,
+                    newPatientFlag:true,
                 }
             });
 
@@ -1851,6 +1852,7 @@ export class ErpService {
                     id: true,
                     // addr: true,
                     route: true,
+                    newPatientFlag: true,
                 }
             });
 
@@ -1895,8 +1897,18 @@ export class ErpService {
                     e.route
                 ];
                 const appendRow = sheet.addRow(rowDatas);
+                if(e.newPatientFlag){
+                    appendRow.fill = {
+                        type: 'pattern',
+                        pattern:'solid',
+                        fgColor:{argb:'dcdcdc'}
+                      };
+    
+                }
+
             });
 
+            
             const sheet2 = wb.addWorksheet("재진");
             const headers2 = ['이름', '휴대폰 번호', '특이사항(추천인)'];
             const headerWidths2 = [10, 20, 20];
@@ -1920,10 +1932,31 @@ export class ErpService {
                     e.route
                 ];
                 const appendRow = sheet2.addRow(rowDatas);
+
+                if(e.newPatientFlag) {
+                    appendRow.fill = {
+                        type: 'pattern',
+                        pattern:'solid',
+                        fgColor:{argb:'dcdcdc'}
+                      };
+    
+                }
             });
+
+          
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.uploadFile(fileData);
+
+            await this.prisma.order.update({
+                where:{id:list[list.length-1].id},
+                data:{newPatientFlag:true}
+            });
+
+            await this.prisma.order.update({
+                where:{id:returnList[returnList.length-1].id},
+                data: {newPatientFlag:true}
+            });
 
             return { success: true, status: HttpStatus.OK, url };
         } catch (err) {
