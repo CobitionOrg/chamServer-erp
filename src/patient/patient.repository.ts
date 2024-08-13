@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import { PatientNoteDto } from "./Dto/patientNote.dto";
 import { UpdatePatientDto } from "./Dto/updatePatient.dto";
 import { UpdateNoteDto } from "./Dto/updateNote.dto";
+import { CreatePatientDto } from "./Dto/createPatient.dto";
 
 @Injectable()
 export class PatientRepository {
@@ -301,6 +302,48 @@ export class PatientRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    async createPatient(createPatientDto:CreatePatientDto) {
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                const patient = await tx.patient.create({
+                    data:{
+                        name:createPatientDto.name,
+                        phoneNum: createPatientDto.phoneNum,
+                        addr: createPatientDto.addr,
+                        socialNum:createPatientDto.socialNum,
+                        useFlag: true
+                    }
+                });
+
+                await tx.patientBodyType.create({
+                    data:{
+                        tallWeight: createPatientDto.tallWeight,
+                        digestion:createPatientDto.digestion,
+                        sleep:createPatientDto.sleep,
+                        constipation:createPatientDto.constipation,
+                        nowDrug:createPatientDto.nowDrug,
+                        pastDrug:createPatientDto.pastDrug,
+                        pastSurgery:createPatientDto.pastSurgery,
+                        useFlag:true,
+                        patientId:patient.id
+                    }
+                })
+            });
+
+            return {success:true,status:HttpStatus.CREATED,msg:'환자 저장 완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 
