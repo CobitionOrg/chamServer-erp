@@ -230,6 +230,8 @@ model order {
   reviewFlag       Boolean?         @default(false)
   /// 지인입력 시 지인확인이 안됐을 시 여부 체크(확인이 안되면 true 확인되면 false)
   routeFlag        Boolean?         @default(false)
+  /// 신환 엑셀 처음 표시 용
+  newPatientFlag   Boolean?         @default(false)
   friendRecommends friendRecommend?
   patient          patient          @relation(fields: [patientId], references: [id])
   orderBodyType    orderBodyType?
