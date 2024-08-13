@@ -222,16 +222,16 @@ export class ErpService {
                         //별도 주문이 있을 때
                         assistantFlag = true;
                     } else {
-                        if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                        if (e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) ') {
                             console.log('별도 주문 외에 주문이 있음')
                             commonFlag = true;
                         }
                     }
 
-                    if(e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                    if (e.item !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) ') {
                         items.push(item);
                     }
-                    
+
                 }
 
                 console.log(assistantFlag);
@@ -300,14 +300,14 @@ export class ErpService {
                         }
 
                     }
-                }else{
+                } else {
                     //그 외의 경우 마지막으로 orderSortNum 업데이트
                     await tx.order.update({
                         where: { id: order.id },
                         data: { orderSortNum: orderSortNum }
                     });
                 }
-            },{timeout:10000});
+            }, { timeout: 10000 });
 
             return { success: true, status: HttpStatus.CREATED };
 
@@ -369,37 +369,37 @@ export class ErpService {
      * @param id 
      * @returns {success:boolean, status:HttpStatus}
      */
-    async friendDiscount(id:number) {
-        try{
+    async friendDiscount(id: number) {
+        try {
             const exOrder = await this.prisma.order.findUnique({
-                where:{id:id},
-                select:{
-                    friendDiscount:true,
-                    price:true
+                where: { id: id },
+                select: {
+                    friendDiscount: true,
+                    price: true
                 }
             });
 
             let price = 0;
 
-            if(exOrder.friendDiscount){
+            if (exOrder.friendDiscount) {
                 //할인 한다고 했다가 취소하는 경우
-                price = (exOrder.price/9)*10;    
-            }else{
+                price = (exOrder.price / 9) * 10;
+            } else {
                 //할인 적용하는 경우
                 price = exOrder.price * 0.9;
             }
 
             await this.prisma.order.update({
-                where:{id:id},
-                data:{
-                    friendDiscount:!exOrder.friendDiscount,
+                where: { id: id },
+                data: {
+                    friendDiscount: !exOrder.friendDiscount,
                     price: price
                 }
             });
 
-            return {success:true, status:HttpStatus.CREATED};
-            
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -532,14 +532,14 @@ export class ErpService {
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
 
-                if(getListDto.searchKeyword !== ""){
-                    if(
-                        row.patient.name.includes(getListDto.searchKeyword) 
-                        ||row.patient.phoneNum.includes(getListDto.searchKeyword)
-                    ){
+                if (getListDto.searchKeyword !== "") {
+                    if (
+                        row.patient.name.includes(getListDto.searchKeyword)
+                        || row.patient.phoneNum.includes(getListDto.searchKeyword)
+                    ) {
                         resList.push(row)
                     }
-                }else{
+                } else {
                     resList.push(row);
                 }
             }
@@ -733,7 +733,7 @@ export class ErpService {
                         assistantFlag = true;
                     } else {
                         if (tempObj.item.length > 0) {
-                            
+
                         }
                         for (let j = 0; j < tempObj.item.length; j++) {
                             temp = {
@@ -743,7 +743,7 @@ export class ErpService {
                             }
 
                             //console.log(temp);
-                            if(tempObj.item[j] !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) '){
+                            if (tempObj.item[j] !== '개월수선택안함(상담후선택원하는 분/ 별도구매원하는 분) ') {
                                 console.log("별도 주문 외 주문이 있음")
 
                                 items.push(temp);
@@ -796,7 +796,21 @@ export class ErpService {
                     if (routeName !== null && routePhoneNum !== null) {
                         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
 
-                        if (checkRecommend.success) {
+                        //기존에 이 추천인으로 할인 받은 내역 있나 체크
+                        const existRecommendCheck = await tx.friendRecommend.findMany({
+                            where: { patientId: checkRecommend.patientId },
+                            select: { order: true }
+                        });
+
+                        let existRecommendCheckFlag = true;
+
+                        for (const e of existRecommendCheck) {
+                            if (e.order.patientId == patient.patient.id) {
+                                existRecommendCheckFlag = false
+                            }
+                        }
+
+                        if (checkRecommend.success && existRecommendCheckFlag) {
                             //지인 확인 되었을 시
                             orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
                             remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
@@ -835,7 +849,7 @@ export class ErpService {
                         data: { orderSortNum: orderSortNum }
                     });
                 }
-            },{timeout: 20000});
+            }, { timeout: 20000 });
 
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
@@ -1412,10 +1426,10 @@ export class ErpService {
                     //오더 개수
                     const orderAmount = orderItems.length;
                     console.log('////////////////////////');
-                    
+
                     console.log(orderAmount);
                     const sendListId = await this.insertToSendList(tx, orderAmount);
-                    console.log('sendListId: '+ sendListId);
+                    console.log('sendListId: ' + sendListId);
                     const res = await this.createTempOrder(sendOne, id, sendListId, tx);
 
                     if (!res.success) throw error();
@@ -1707,9 +1721,9 @@ export class ErpService {
 
             await this.prisma.$transaction(async (tx) => {
                 const exOrder = await tx.order.findUnique({
-                    where:{id:orderId},
-                    select:{
-                        price:true
+                    where: { id: orderId },
+                    select: {
+                        price: true
                     }
                 });
 
@@ -1934,7 +1948,7 @@ export class ErpService {
             const presignedUrl = await generateUploadURL();
 
             console.log(presignedUrl);
-            await this.saveS3Data(presignedUrl.uploadURL.split('?')[0], presignedUrl.imageName);
+            await this.saveS3Data(presignedUrl.uploadURL.split("?")[0], presignedUrl.imageName);
 
             await axios.put(presignedUrl.uploadURL, {
                 body: file
@@ -2235,7 +2249,7 @@ export class ErpService {
             //console.log(cashList);
             //console.log(insertCashDto);
             const cashMatcher = new CashExcel(insertCashDto.cashExcelDto, cashList.list, itemList);
-            const results = cashMatcher.compare(); 
+            const results = cashMatcher.compare();
             // console.log('=========================');
             // console.log(results);
             //엑셀 생성
@@ -2244,20 +2258,20 @@ export class ErpService {
             const objectName = createExcel.objectName;
 
             await this.saveS3Data(url, objectName);
-           
+
             //발송목록 이동 처리 & cash column 업데이트(계좌이체로 금액 전부 결제한 사람들)
-            for(const e of results.matches) {
+            for (const e of results.matches) {
                 await this.completeConsulting(e.id);
                 await this.cashUpdate(e.id, e.price);
             }
-          
+
 
             // const firstTenMatches = results.matches.slice(0, 10);
             // const promises = firstTenMatches.map(async (e) => {
             //     await this.completeConsulting(e.id);
             //     await this.cashUpdate(e.id, e.price);
             //   });
-              
+
             //   await Promise.all(promises).then((value) => {
             //     //console.log(value);
             //     return { success: true, status: HttpStatus.OK };
@@ -2551,10 +2565,10 @@ export class ErpService {
                         let cash = orders[i].payType == "계좌이체" ? orders[i].price : 0;
 
                         await tx.order.update({
-                            where:{id:orders[i].id},
-                            data:{
-                                card:card,
-                                cash:cash
+                            where: { id: orders[i].id },
+                            data: {
+                                card: card,
+                                cash: cash
                             }
                         });
 
@@ -3067,7 +3081,7 @@ export class ErpService {
     }
 
     async getOutageCount(getDateDto: GetDateDto) {
-        try{
+        try {
             let orderConditions = {};
             if (getDateDto.date !== undefined) {
                 //날짜 조건 O
@@ -3103,9 +3117,9 @@ export class ErpService {
 
             let len = list.length;
 
-            return {success:true, status:HttpStatus.OK, len};
+            return { success: true, status: HttpStatus.OK, len };
 
-        }catch(err){
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -3440,6 +3454,24 @@ export class ErpService {
         try {
             const check = await this.checkRecommend(checkDiscountDto.name, checkDiscountDto.phoneNum);
 
+            //기존에 이 추천인으로 할인 받은 내역 있나 체크
+            const existRecommendCheck = await this.prisma.friendRecommend.findMany({
+                where: { patientId: check.patientId },
+                select: { order: true }
+            });
+
+            let existRecommendCheckFlag = true;
+
+            for (const e of existRecommendCheck) {
+                if (e.order.patientId == checkDiscountDto.patientId) {
+                    existRecommendCheckFlag = false;
+                }
+            }
+
+            if(!existRecommendCheckFlag){
+                return {success:false, status:HttpStatus.CONFLICT, msg:'이미 추천 받은 적 있는 지인입니다'};
+            }
+            
             if (check.success) {
                 await this.prisma.$transaction(async (tx) => {
                     await tx.friendRecommend.create({
@@ -3860,15 +3892,15 @@ export class ErpService {
      * @param routeFlagDto 
      * @returns {success:boolean, status:HttpStatus}
      */
-    async updateRouteFlag(routeFlagDto:RouteFlagDto) {
-        try{
+    async updateRouteFlag(routeFlagDto: RouteFlagDto) {
+        try {
             await this.prisma.order.update({
-                where:{id:routeFlagDto.id},
-                data:{routeFlag: !routeFlagDto.routeFlag}
+                where: { id: routeFlagDto.id },
+                data: { routeFlag: !routeFlagDto.routeFlag }
             });
 
-            return {success:true, status:HttpStatus.CREATED};
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+        } catch (err) {
             this.logger.error(err);
             throw new HttpException({
                 success: false,
@@ -4223,7 +4255,7 @@ export class ErpService {
 
     // // validWs에 헤더 추가
     // validWs.addRow(['주민번호', '이름', '전화번호', '주소', '소화상태', '수면상태', '변비유무', '현재 복용 중인 약', '과거 다이어트약 복용 경험', '수술이력', '키/몸무게']);
-    
+
     // // invalidWs에 헤더 추가
     // invalidWs.addRow(['주민번호', '이름', '전화번호', '주소', '필터사유']);
 
@@ -4469,7 +4501,7 @@ export class ErpService {
     //     const outputSheet = outputWorkbook.addWorksheet('Merged Data');
 
     //     const uniqueEntries = new Set<string>();
-        
+
     //     for (let i = 1; i <= 45; i++) {
     //         const filePath = ``;
     //         const workbook = new Excel.Workbook();
@@ -4485,9 +4517,9 @@ export class ErpService {
     //                 const rowData = row.values as any[];
     //                 const name = rowData[1]?.toString().trim() || '';
     //                 const phone = rowData[2]?.toString().trim() || '';
-    
+
     //                 const uniqueKey = `${name}-${phone}`;
-    
+
     //                 if (name && phone && !uniqueEntries.has(uniqueKey)) {
     //                     uniqueEntries.add(uniqueKey);
     //                     outputSheet.addRow([name, phone]);
@@ -4509,12 +4541,12 @@ export class ErpService {
     //     const BWorkbook = new Excel.Workbook();
     //     await AWorkbook.xlsx.readFile(AFilePath);
     //     await BWorkbook.xlsx.readFile(BFilePath);
-    
+
     //     const ASheet = AWorkbook.getWorksheet(1);
     //     const BSheet = BWorkbook.getWorksheet(1);
-    
+
     //     const AEntries = new Set<string>();
-    
+
     //     // A 파일의 이름과 전화번호를 Set에 저장
     //     ASheet.eachRow((row, rowNumber) => {
     //         if (rowNumber > 1) { // 헤더 제외
@@ -4524,23 +4556,23 @@ export class ErpService {
     //             AEntries.add(uniqueKey);
     //         }
     //     });
-    
+
     //     const BValidWorkbook = new Excel.Workbook();
     //     const BInvalidWorkbook = new Excel.Workbook();
     //     const BValidSheet = BValidWorkbook.addWorksheet('Valid Data');
     //     const BInvalidSheet = BInvalidWorkbook.addWorksheet('Invalid Data');
-    
+
     //     // B 파일의 헤더를 그대로 복사
     //     BValidSheet.addRow((BSheet.getRow(1).values as any[]).slice(1));
     //     BInvalidSheet.addRow((BSheet.getRow(1).values as any[]).slice(1));
-    
+
     //     // B 파일에서 데이터를 비교하고 BValid와 BInvalid로 분류
     //     BSheet.eachRow((row, rowNumber) => {
     //         if (rowNumber > 1) { // 헤더 제외
     //             const name = row.getCell(2).value?.toString().trim() || '';
     //             const phone = row.getCell(3).value?.toString().trim() || '';
     //             const uniqueKey = `${name}-${phone}`;
-    
+
     //             if (AEntries.has(uniqueKey)) {
     //                 BValidSheet.addRow((row.values as any[]).slice(1));
     //             } else {
@@ -4548,7 +4580,7 @@ export class ErpService {
     //             }
     //         }
     //     });
-    
+
     //     await BValidWorkbook.xlsx.writeFile(validOutputFilePath);
     //     await BInvalidWorkbook.xlsx.writeFile(invalidOutputFilePath);
 
@@ -4619,7 +4651,7 @@ export class ErpService {
     //     const maxRow = 9282;
 
     //     let count = 0;
-        
+
     //     for(let i = 2; i <= maxRow; i++) {
     //         const row = worksheet.getRow(i);
 

@@ -396,6 +396,7 @@ export class SendService {
                             price: true,
                             card: true,
                             cash: true,
+                            remark:true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }

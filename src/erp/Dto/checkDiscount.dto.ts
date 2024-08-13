@@ -3,4 +3,5 @@ export interface CheckDiscountDto {
     name: string;
     phoneNum: string;
     date: Date;
+    patientId: number;
 }

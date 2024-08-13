@@ -204,7 +204,7 @@ export class TasksService {
 
     //접수 확인 알람톡
     // 매일 9시 12시 15시
-    @Cron('0 10 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
+    @Cron('0 28 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -217,8 +217,8 @@ export class TasksService {
         const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
-        if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        //const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+        //if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
     }
 
     @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })
