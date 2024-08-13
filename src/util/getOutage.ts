@@ -28,6 +28,10 @@ export const getOutage = (list) => {
                     }
                 }
             }
+
+            if(outage == '후기대상목록에서 생성'){
+                outageList.push(list[i]);
+            }
         }catch(err){
             console.log(err);
         }
