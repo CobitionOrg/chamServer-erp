@@ -9,6 +9,7 @@ import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { patientBodyType } from '@prisma/client';
 import { UpdatePatientDto } from './Dto/updatePatient.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreatePatientDto } from './Dto/createPatient.dto';
 
 @Controller('patient')
 @UseFilters(new HttpExceptionFilter())
@@ -68,6 +69,14 @@ export class PatientController {
         return res;
     }
     
+    @ApiOperation({summary:"환자 데이터 생성"})
+    @Post('/create')
+    async createPatient(@Body() createPatientDto: CreatePatientDto) {
+        this.logger.log('환자 데이터 생성');
+        const res = await this.patientService.createPatient(createPatientDto);
+
+        return res;
+    }
     
 }
  

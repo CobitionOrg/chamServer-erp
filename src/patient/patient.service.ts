@@ -5,6 +5,7 @@ import { PatientNoteDto } from './Dto/patientNote.dto';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
 import { UpdatePatientDto } from './Dto/updatePatient.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
+import { CreatePatientDto } from './Dto/createPatient.dto';
 
 @Injectable()
 export class PatientService {
@@ -137,6 +138,21 @@ export class PatientService {
      */
     async updateNote(updateNoteDto: UpdateNoteDto) {
         const res = await this.patientRepository.updateNote(updateNoteDto);
+        return res;
+    }
+
+
+    async createPatient(createPatientDto: CreatePatientDto) {
+        const encryptedPhoneNum = this.crypto.encrypt(createPatientDto.phoneNum);
+        const encryptedAddr = this.crypto.encrypt(createPatientDto.addr);
+        const encryptedSocialNum = this.crypto.encrypt(createPatientDto.socialNum);
+
+        createPatientDto.phoneNum = encryptedPhoneNum;
+        createPatientDto.addr = encryptedAddr;
+        createPatientDto.socialNum = encryptedSocialNum;
+
+        const res = await this.patientRepository.createPatient(createPatientDto);
+
         return res;
     }
     
