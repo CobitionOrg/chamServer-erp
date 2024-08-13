@@ -1797,7 +1797,6 @@ export class ErpService {
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
-                    consultingType: false,
                     isComplete: false,
                     isFirst: true,
                     date: {
@@ -1829,6 +1828,39 @@ export class ErpService {
                 row.addr = decryptedAddr;
                 row.patient.phoneNum = decryptedPhoneNum;
                 row.patient.socialNum = decryptedSocialNum;
+            }
+
+            const returnList = await this.prisma.order.findMany({
+                where: {
+                    isComplete: false,
+                    isFirst: false,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                },
+                select: {
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phoneNum: true,
+                            // socialNum: true,
+                        }
+                    },
+                    id: true,
+                    // addr: true,
+                    route: true,
+                }
+            });
+
+            for (let row of returnList) {
+                // const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                // const decryptedSocialNum = this.crypto.decrypt(row.patient.socialNum);
+                // row.addr = decryptedAddr;
+                row.patient.phoneNum = decryptedPhoneNum;
+                // row.patient.socialNum = decryptedSocialNum;
             }
 
             const wb = new Excel.Workbook();
@@ -1863,6 +1895,31 @@ export class ErpService {
                     e.route
                 ];
                 const appendRow = sheet.addRow(rowDatas);
+            });
+
+            const sheet2 = wb.addWorksheet("재진");
+            const headers2 = ['이름', '휴대폰 번호', '특이사항(추천인)'];
+            const headerWidths2 = [10, 20, 20];
+
+            //상단 헤더 추가
+            const headerRow2 = sheet2.addRow(headers2);
+            //헤더의 높이값 지정
+            headerRow2.height = 30.75;
+            // 각 헤더 cell에 스타일 지정
+            headerRow2.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet2.getColumn(colNum).width = headerWidths2[colNum - 1];
+            });
+
+            //각 data cell에 데이터 삽입
+            returnList.forEach((e) => {
+                const { name, phoneNum } = e.patient;
+                const rowDatas = [
+                    name,
+                    hyphen.phoneNumHyphen(phoneNum),
+                    e.route
+                ];
+                const appendRow = sheet2.addRow(rowDatas);
             });
 
             const fileData = await wb.xlsx.writeBuffer();
