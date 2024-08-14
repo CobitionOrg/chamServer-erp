@@ -834,20 +834,30 @@ export class SendService {
             const orderId = updateSendPriceDto.id;
             const price = updateSendPriceDto.price;
 
-            const order = await this.prisma.order.findUnique({
-                where: {id:orderId},
-                select:{
-                    payType:true
-                }
+            await this.prisma.$transaction(async (tx) => {
+                const order = await tx.order.findUnique({
+                    where: {id:orderId},
+                    select:{
+                        payType:true,
+                        price: true
+                    }
+                });
+    
+                let card = order.payType =="카드결제" ? price:0;
+                let cash = order.payType=='계좌이체' ? price:0;
+                let updateCheck = price === order.price;
+                await tx.order.update({
+                    where: { id: orderId },
+                    data: { price: price, card:card, cash:cash }
+                });
+    
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{updatePrciecFlag:!updateCheck}
+                })
+    
             });
 
-            let card = order.payType =="카드결제" ? price:0;
-            let cash = order.payType=='계좌이체' ? price:0;
-
-            await this.prisma.order.update({
-                where: { id: orderId },
-                data: { price: price, card:card, cash:cash }
-            });
 
             return { success: true, status: HttpStatus.CREATED, msg: '업데이트 완료' }
         } catch (err) {
