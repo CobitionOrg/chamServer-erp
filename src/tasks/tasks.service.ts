@@ -217,8 +217,8 @@ export class TasksService {
         const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
         console.log(excelFilePath);
         //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
-        if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+        // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
     }
 
     @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })

@@ -22,7 +22,7 @@ const getPriorityInfo = (orderItems: any[]): PriorityInfo => {
   for (const item of orderItems) {
     const months = extractMonths(item.item);
     if (item.type === 'common') {
-      if(item.item.includes('쎈')) {
+      if (item.item.includes('쎈')) {
         // 쎈 개월수 추가
         cenCount++;
         cenMonths += months;
@@ -123,6 +123,10 @@ const compareItems = (a: any, b: any) => {
 
   if (a.orderSortNum !== b.orderSortNum) {
     return a.orderSortNum - b.orderSortNum;
+  }
+
+  if (a.orderSortNum >= 1 && a.orderSortNum <= 5 && a.payType === b.payType) {
+    return a.order.price - b.order.price;
   }
 
   const aPayTypeOrder = payTypeOrder[a.payType] || 4;
