@@ -1216,8 +1216,10 @@ export class SendService {
      */
     async updateSendTitle(updateTitleDto: UpdateTitleDto) {
         try {
+            console.log(updateTitleDto.date)
             let check = await this.checkSendTitle(updateTitleDto.title);
             const date = new Date(updateTitleDto.date)
+            console.log(date);
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
             console.log(kstDate);
 
