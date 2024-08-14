@@ -359,7 +359,7 @@ erDiagram
   - `notCall`: 유선 상담 시 상담 미연결 플래그
   - `reviewFlag`: 후기 유무 플래그
   - `routeFlag`: 지인입력 시 지인확인이 안됐을 시 여부 체크(확인이 안되면 true 확인되면 false)
-  - `newPatientFlag`: 
+  - `newPatientFlag`: 신환 엑셀 처음 표시 용
 
 ### `friendRecommend`
 
