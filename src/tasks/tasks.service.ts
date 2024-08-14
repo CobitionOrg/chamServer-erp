@@ -204,7 +204,7 @@ export class TasksService {
 
     //접수 확인 알람톡
     // 매일 9시 12시 15시
-    @Cron('0 10 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
+    @Cron('0 0 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);

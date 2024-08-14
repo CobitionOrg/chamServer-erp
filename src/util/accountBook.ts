@@ -175,3 +175,94 @@ const getItemLen = (orderItems) => {
 
     return {gam,ssen,yoyo}
 }
+
+
+export const getItemOnlyLen = (orderItems) => {
+    let gam = 0;
+    let ssen = 0;    
+    let yoyo = 0;
+
+    orderItems.forEach(e => {
+        switch (e.item) {
+            case '1개월 방문수령시 79,000원 (택배 발송시 82,500원)':
+                gam+=1;
+                return true
+            case '2개월(+ 감비환 10포 더 드림) 158,000원 (택배무료)':
+                gam+=2;
+                return true
+            case '3개월(+ 감비환 20포 더 드림) 237,000원 (택배무료)':
+                gam+=3;
+                return true
+            case '4개월(+ 감비환 30포 더 드림) 316,000원  (택배무료)':
+                gam+=4;
+                return true
+            case '5개월(+ 감비환 40포 더 드림) 395,000원  (택배무료)':
+                gam+=5;
+                return true
+            case '6개월(+ 감비환 50포 더 드림) 474,000원  (택배무료)':
+                gam+=6;
+                return true
+            case '7개월(+ 감비환 60포 더 드림) 553,000원 (택배무료)':
+                gam+=7;
+                return true
+            case '8개월(+ 감비환 70포 더 드림) 632,000원 (택배무료)':
+                gam+=8;
+                return true
+            case '9개월(+ 감비환 80포 더 드림) 711,000원 (택배무료)':
+                gam+=9;
+                return true
+            case '10개월(+ 감비환 90포 더 드림) 790,000원 (택배무료)':
+                gam+=10;
+                return true
+            case '11개월(+ 감비환 100포 더 드림) 869,000원 (택배무료)':
+                gam+=11;
+                return true
+            case '12개월(+ 감비환 110포 더 드림) 948,000원 (택배무료)':
+                gam+=12;
+                return true
+            case '쎈1개월 방문수령시 99,000원(택배 발송시 102,500원)':
+                ssen+=1;
+                return true
+            case '쎈2개월(+ 감비환10포 더 드림) 198,000원 (택배무료)':
+                ssen+=2;
+                return true
+            case '쎈3개월(+ 감비환20포 더 드림) 297,000원 (택배무료)':
+                ssen+=3;
+                return true
+            case '쎈4개월(+ 감비환 30포 더 드림) 396,000원 (택배무료)':
+                ssen+=4;
+                return true
+            case '쎈5개월(+ 감비환 40포 더 드림) 495,000원 (택배무료)':
+                ssen+=5;
+                return true
+            case '쎈6개월(+ 감비환 50포 더 드림) 594,000원 (택배무료)':
+                ssen+=6;
+                return true
+            case '쎈7개월(+ 감비환 60포 더 드림) 693,000원 (택배무료)':
+                ssen+=7;
+                return true
+            case '쎈8개월(+ 감비환 70포 더 드림) 792,000원 (택배무료)':
+                ssen+=8;
+                return true
+            case '쎈9개월(+ 감비환 80포 더 드림) 891,000원 (택배무료)':
+                ssen+=9;
+                return true
+            case '쎈10개월(+ 감비환 90포 더 드림) 990,000원 (택배무료)':
+                ssen+=10;
+                return true
+            case '요요방지환 3개월분 방문수령시 99,000원 (택배발송시 102,500원)':
+                yoyo+=1;
+                return true
+            case '요요방지환 6개월분 198,000원 (택배무료)':
+                yoyo+=2;
+                return true
+            case '요요방지환 9개월분 297,000원 (택배무료)':
+                yoyo+=3;
+                return true
+            default:
+                return false;
+        }
+    });
+
+    return gam+ssen+yoyo;
+}

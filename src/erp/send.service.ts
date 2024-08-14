@@ -13,7 +13,7 @@ import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
-import { getFooter, orderItemLen } from "src/util/accountBook";
+import { getFooter, getItemOnlyLen, orderItemLen } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
 import { sortItems } from "src/util/sortItems";
 import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
@@ -359,6 +359,73 @@ export class SendService {
         }
     }
 
+    async updateCheck() {
+        try{
+            let sendListId = 234 
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where:{id:sendListId},
+                    data:{amount:0}
+                });
+
+                const tempOrders = await tx.tempOrder.findMany({
+                    where:{sendListId:sendListId},
+                    select:{
+                        id:true,
+                        order:{
+                            select:{orderItems:true}
+                        }
+                    }
+                });
+
+                for(const e of tempOrders) {
+                    const amount = getItemOnlyLen(e.order.orderItems);
+                    const send = await tx.sendList.findUnique({
+                        where:{id:sendListId},
+                        select:{amount:true}
+                    });
+
+                    const amountSum = amount + send.amount;
+
+                    if(amountSum < 350){
+                        await tx.sendList.update({
+                            where:{id:sendListId},
+                            data:{amount:amountSum}
+                        });
+
+                        await tx.tempOrder.update({
+                            where:{id:e.id},
+                            data:{sendListId:sendListId}
+                        })
+                    }else{
+                        await tx.sendList.update({
+                            where:{id:sendListId},
+                            data:{fixFlag:true, full:true}
+                        });
+
+                        sendListId+=1;
+                        await tx.tempOrder.update({
+                            where:{id:e.id},
+                            data:{sendListId:sendListId}
+                        })
+
+                    }
+                }
+            });
+
+            return {success:true}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
     /**
      * tempOrder 테이블에서 하나만 조회
      * @param id 
@@ -396,6 +463,7 @@ export class SendService {
                             price: true,
                             card: true,
                             cash: true,
+                            remark:true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -489,6 +557,7 @@ export class SendService {
                                 orderItems: true,
                                 payFlag: true,
                                 combineNum: true,
+                                payType:true
                             }
                         }
                     }
@@ -600,12 +669,15 @@ export class SendService {
 
                 let cash = 0;
                 let card = 0;
-                let checkPrcieFlag = false;
+                let checkPriceFlag = false;
 
                 if(price!=exTempOrder[0].order.price) {
-                    checkPrcieFlag = true;
+                    checkPriceFlag = true;
                 }
 
+                if(objOrder.payType !== exTempOrder[0].order.payType){
+                    checkPriceFlag = true;
+                }
                
 
                 if(objOrder.payType ==='계좌이체'){
@@ -646,8 +718,9 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
-                        updatePrciecFlag: checkPrcieFlag,
+                        updatePrciecFlag: checkPriceFlag,
                         orderSortNum: parseInt(objOrder.orderSortNum),
+                        
                     }
                 });
 
@@ -668,7 +741,9 @@ export class SendService {
                         }
                         items.push(obj);
 
-                        assistantFlag = true;
+                        if(e.item !== ''){
+                            assistantFlag = true;
+                        }
                     } else {
                         //나머지는 array
                         const arr = [...e.item];
@@ -687,6 +762,7 @@ export class SendService {
 
                 if(assistantFlag && objOrder.orderSortNum === 1) {
                     //별도 주문이 추가 되어 orderSortNum이 특이로 바뀌어야 될 때
+                    console.log('하이루')
                     await tx.tempOrder.updateMany({
                         where:{orderId:orderId},
                         data:{orderSortNum:2}
@@ -696,7 +772,7 @@ export class SendService {
                         where:{id:orderId},
                         data:{orderSortNum:2}
                     });
-                }
+                } 
 
                 //기존 order items 제거
                 await tx.orderItem.deleteMany({
@@ -1207,8 +1283,10 @@ export class SendService {
      */
     async updateSendTitle(updateTitleDto: UpdateTitleDto) {
         try {
+            console.log(updateTitleDto.date)
             let check = await this.checkSendTitle(updateTitleDto.title);
             const date = new Date(updateTitleDto.date)
+            console.log(date);
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
             console.log(kstDate);
 
