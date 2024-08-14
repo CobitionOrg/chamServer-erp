@@ -3188,11 +3188,13 @@ export class ErpService {
 
             for (let row of sortedList) {
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
                 row.patient.phoneNum = decryptedPhoneNum;
-                row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
+                if(row.addr !== '') {
+                    const decryptedAddr = this.crypto.decrypt(row.addr);
+                    row.addr = decryptedAddr;
+                }
             }
 
             return { success: true, list: sortedList };
