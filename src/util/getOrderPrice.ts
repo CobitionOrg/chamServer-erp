@@ -12,6 +12,18 @@ export class GetOrderSendPrice{
         this.isPickup = isPickup;
     }
 
+    getTenDiscount() {
+        let priceSum = this.getOnlyPrice();
+        let discount = priceSum * 0.9;
+        console.log(discount);
+        console.log(checkSend);
+        if(this.checkSend()){
+            discount+=3500;
+        }
+
+        return discount;
+    }
+
     //일단 주문 내역 금액만 합계
     getPrice(orderSortNum?: number){
         let priceSum = 0;
