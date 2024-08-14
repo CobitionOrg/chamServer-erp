@@ -935,7 +935,7 @@ export class SendService {
      */
     async sendNumExcel(id: number) {
         try {
-            const send = await this.getOrderTempList(id);
+            const send = await this.getFixOrderTempList(id);
             const list = send.list;
 
             const wb = new Excel.Workbook();
@@ -959,14 +959,20 @@ export class SendService {
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
                 let service = 0;
-
+                let assistant = '';
                 for (let i = 0; i < orderItemList.length; i++) {
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
                         const { onlyItem, serviceItem } = getServiceItem(item);
                         service += parseInt(serviceItem);
-                        if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
-                        else orderStr += `${onlyItem}+`
+                        if(e.type !== 'assistant'){
+                            if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
+                            else orderStr += `${onlyItem}+`
+    
+                        }else{
+                            if (i == orderItemList.length - 1) assistant += `${onlyItem}`
+                            else assistant += `${onlyItem}+`
+                        }
                     }
                 }
 
@@ -976,6 +982,10 @@ export class SendService {
 
                 if (orderStr == '감1개월+쎈1개월') {
                     orderStr += ` s(10)`;
+                }
+
+                if(assistant !== ''){
+                    orderStr += assistant;
                 }
 
                 orderStr += ` ${e.order.remark}`;
