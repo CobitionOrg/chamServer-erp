@@ -834,10 +834,30 @@ export class SendService {
             const orderId = updateSendPriceDto.id;
             const price = updateSendPriceDto.price;
 
-            await this.prisma.order.update({
-                where: { id: orderId },
-                data: { price: price }
+            await this.prisma.$transaction(async (tx) => {
+                const order = await tx.order.findUnique({
+                    where: {id:orderId},
+                    select:{
+                        payType:true,
+                        price: true
+                    }
+                });
+    
+                let card = order.payType =="카드결제" ? price:0;
+                let cash = order.payType=='계좌이체' ? price:0;
+                let updateCheck = price === order.price;
+                await tx.order.update({
+                    where: { id: orderId },
+                    data: { price: price, card:card, cash:cash }
+                });
+    
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{updatePrciecFlag:!updateCheck}
+                })
+    
             });
+
 
             return { success: true, status: HttpStatus.CREATED, msg: '업데이트 완료' }
         } catch (err) {
@@ -935,7 +955,7 @@ export class SendService {
      */
     async sendNumExcel(id: number) {
         try {
-            const send = await this.getOrderTempList(id);
+            const send = await this.getFixOrderTempList(id);
             const list = send.list;
 
             const wb = new Excel.Workbook();
@@ -951,23 +971,35 @@ export class SendService {
                 styleHeaderCell(cell);
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
-
-            list.forEach((e) => {
+            console.log('---------------------')
+            console.log(list);
+            for(const e of list){
                 const { name, phoneNum } = e.patient;
                 const addr = e.addr;
                 const message = e.order.message;
                 const orderItemList = e.order.orderItems;
                 let orderStr = '';
                 let service = 0;
-
+                let assistant = '';
                 for (let i = 0; i < orderItemList.length; i++) {
+                    console.log(orderItemList[i]);
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
                         const { onlyItem, serviceItem } = getServiceItem(item);
                         service += parseInt(serviceItem);
-                        if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
-                        else orderStr += `${onlyItem}+`
+                        if(orderItemList[i].type !== 'assistant'){
+                            if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
+                            else orderStr += `${onlyItem}+`
+    
+                        }else{
+                            if (i == orderItemList.length - 1) assistant += `${onlyItem}`
+                            else assistant += `${onlyItem}+`
+                        }
                     }
+                }
+                if (orderStr.endsWith('+')) {
+                    // 마지막 문자를 제거한 새로운 문자열 반환
+                    orderStr = orderStr.slice(0, -1);
                 }
 
                 if (service != 0) {
@@ -978,12 +1010,22 @@ export class SendService {
                     orderStr += ` s(10)`;
                 }
 
+                if(assistant !== ''){
+                    console.log('tlqkf');
+                    if(orderStr !== ''){
+                        orderStr+='+';
+                    }
+
+                    orderStr += ` ${assistant}`;
+                }
+
                 orderStr += ` ${e.order.remark}`;
 
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
-            });
+
+            }
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
@@ -2305,4 +2347,36 @@ export class SendService {
     }
   }
 
+
+  /**
+   * 후기 취소
+   * @param id 
+   * @returns {success:boolean,status:HttpStatus}
+   */
+  async reviewFlag(id: number){
+    try{
+        await this.prisma.$transaction(async (tx) => {
+            await tx.tempOrder.updateMany({
+                where:{orderId:id},
+                data:{outage:''}
+            });
+
+            await tx.order.update({
+                where:{id:id},
+                data:{reviewFlag:false}
+            });
+        });
+
+        return {success:true, status:HttpStatus.CREATED};
+    }catch(err){
+        this.logger.error(err);
+        throw new HttpException({
+            success: false,
+            status: HttpStatus.INTERNAL_SERVER_ERROR
+        },
+            HttpStatus.INTERNAL_SERVER_ERROR
+        );
+
+    }
+  }
 }
