@@ -77,6 +77,14 @@ export class PatientController {
 
         return res;
     }
+
+    @ApiOperation({summary:'환자 정보 삭제'})
+    @Patch('/delete/:id')
+    async deletePatient(@Param("id") id: number){
+        this.logger.log('환자 정보 삭제');
+        const res = await this.patientService.deletePatient(id);
+        return res;
+    }
     
 }
  
