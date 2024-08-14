@@ -961,11 +961,12 @@ export class SendService {
                 let service = 0;
                 let assistant = '';
                 for (let i = 0; i < orderItemList.length; i++) {
+                    console.log(orderItemList[i]);
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
                         const { onlyItem, serviceItem } = getServiceItem(item);
                         service += parseInt(serviceItem);
-                        if(e.type !== 'assistant'){
+                        if(orderItemList[i].type !== 'assistant'){
                             if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
                             else orderStr += `${onlyItem}+`
     
@@ -985,7 +986,7 @@ export class SendService {
                 }
 
                 if(assistant !== ''){
-                    orderStr += assistant;
+                    orderStr += ` ${assistant}`;
                 }
 
                 orderStr += ` ${e.order.remark}`;
