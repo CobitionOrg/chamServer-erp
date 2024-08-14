@@ -834,9 +834,19 @@ export class SendService {
             const orderId = updateSendPriceDto.id;
             const price = updateSendPriceDto.price;
 
+            const order = await this.prisma.order.findUnique({
+                where: {id:orderId},
+                select:{
+                    payType:true
+                }
+            });
+
+            let card = order.payType =="카드결제" ? price:0;
+            let cash = order.payType=='계좌이체' ? price:0;
+
             await this.prisma.order.update({
                 where: { id: orderId },
-                data: { price: price }
+                data: { price: price, card:card, cash:cash }
             });
 
             return { success: true, status: HttpStatus.CREATED, msg: '업데이트 완료' }
