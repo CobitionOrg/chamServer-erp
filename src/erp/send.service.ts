@@ -951,8 +951,9 @@ export class SendService {
                 styleHeaderCell(cell);
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
-
-            list.forEach((e) => {
+            console.log('---------------------')
+            console.log(list);
+            for(const e of list){
                 const { name, phoneNum } = e.patient;
                 const addr = e.addr;
                 const message = e.order.message;
@@ -976,6 +977,10 @@ export class SendService {
                         }
                     }
                 }
+                if (orderStr.endsWith('+')) {
+                    // 마지막 문자를 제거한 새로운 문자열 반환
+                    orderStr = orderStr.slice(0, -1);
+                }
 
                 if (service != 0) {
                     orderStr += ` s(${service})`
@@ -986,6 +991,11 @@ export class SendService {
                 }
 
                 if(assistant !== ''){
+                    console.log('tlqkf');
+                    if(orderStr !== ''){
+                        orderStr+='+';
+                    }
+
                     orderStr += ` ${assistant}`;
                 }
 
@@ -994,7 +1004,8 @@ export class SendService {
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
                 const appendRow = sheet.addRow(rowDatas);
-            });
+
+            }
 
             const fileData = await wb.xlsx.writeBuffer();
             const url = await this.erpService.uploadFile(fileData);
