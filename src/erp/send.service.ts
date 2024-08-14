@@ -490,6 +490,7 @@ export class SendService {
                                 orderItems: true,
                                 payFlag: true,
                                 combineNum: true,
+                                payType:true
                             }
                         }
                     }
@@ -601,12 +602,15 @@ export class SendService {
 
                 let cash = 0;
                 let card = 0;
-                let checkPrcieFlag = false;
+                let checkPriceFlag = false;
 
                 if(price!=exTempOrder[0].order.price) {
-                    checkPrcieFlag = true;
+                    checkPriceFlag = true;
                 }
 
+                if(objOrder.payType !== exTempOrder[0].order.payType){
+                    checkPriceFlag = true;
+                }
                
 
                 if(objOrder.payType ==='계좌이체'){
@@ -647,8 +651,9 @@ export class SendService {
                         sendNum: objOrder.sendNum,
                         addr: encryptedAddr,
                         payType: objOrder.payType,
-                        updatePrciecFlag: checkPrcieFlag,
+                        updatePrciecFlag: checkPriceFlag,
                         orderSortNum: parseInt(objOrder.orderSortNum),
+                        
                     }
                 });
 
@@ -669,7 +674,9 @@ export class SendService {
                         }
                         items.push(obj);
 
-                        assistantFlag = true;
+                        if(e.item !== ''){
+                            assistantFlag = true;
+                        }
                     } else {
                         //나머지는 array
                         const arr = [...e.item];
@@ -688,6 +695,7 @@ export class SendService {
 
                 if(assistantFlag && objOrder.orderSortNum === 1) {
                     //별도 주문이 추가 되어 orderSortNum이 특이로 바뀌어야 될 때
+                    console.log('하이루')
                     await tx.tempOrder.updateMany({
                         where:{orderId:orderId},
                         data:{orderSortNum:2}
@@ -697,7 +705,7 @@ export class SendService {
                         where:{id:orderId},
                         data:{orderSortNum:2}
                     });
-                }
+                } 
 
                 //기존 order items 제거
                 await tx.orderItem.deleteMany({
