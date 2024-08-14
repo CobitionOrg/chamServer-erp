@@ -376,18 +376,23 @@ export class ErpService {
                 where: { id: id },
                 select: {
                     friendDiscount: true,
-                    price: true
+                    price: true,
+                    orderItems:true
                 }
             });
 
             let price = 0;
+            const itemList = await this.getItems();
 
+            const getOrderPrice = new GetOrderSendPrice(exOrder.orderItems, itemList);
+
+            
             if (exOrder.friendDiscount) {
                 //할인 한다고 했다가 취소하는 경우
-                price = (exOrder.price / 9) * 10;
+                price = getOrderPrice.getPrice();
             } else {
                 //할인 적용하는 경우
-                price = exOrder.price * 0.9;
+                price = getOrderPrice.getTenDiscount();
             }
 
             await this.prisma.order.update({
@@ -658,12 +663,17 @@ export class ErpService {
                 console.log(recommendList);
                 if (recommendList.length !== 0 && (recommendList.length) % 3 == 0) {
                     checkFlag = true;
-                    price = price * 0.9;
+                    console.log('++++++++++++++++++++++++++++');
+                    price = getOrderPrice.getTenDiscount();
+                    console.log(price);
+
                     remark = '지인 10% 할인/'
                     await tx.friendRecommend.updateMany({
                         where: { patientId: patient.patient.id, checkFlag: true, useFlag: true },
                         data: { useFlag: false }
                     })
+
+                    
                 }
 
                 const noteData = await tx.patientNote.findMany({
