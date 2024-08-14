@@ -13,7 +13,7 @@ import { getSortedList } from "src/util/sortSendList";
 import { AddSendDto } from "./Dto/addSend.dto";
 import { InsertUpdateInfoDto } from "./Dto/insertUpdateInfo.dto";
 import { CancelSendOrderDto } from "./Dto/cancelSendOrder.dto";
-import { getFooter, orderItemLen } from "src/util/accountBook";
+import { getFooter, getItemOnlyLen, orderItemLen } from "src/util/accountBook";
 import { Crypto } from "src/util/crypto.util";
 import { sortItems } from "src/util/sortItems";
 import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
@@ -356,6 +356,73 @@ export class SendService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    async updateCheck() {
+        try{
+            let sendListId = 234 
+            await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where:{id:sendListId},
+                    data:{amount:0}
+                });
+
+                const tempOrders = await tx.tempOrder.findMany({
+                    where:{sendListId:sendListId},
+                    select:{
+                        id:true,
+                        order:{
+                            select:{orderItems:true}
+                        }
+                    }
+                });
+
+                for(const e of tempOrders) {
+                    const amount = getItemOnlyLen(e.order.orderItems);
+                    const send = await tx.sendList.findUnique({
+                        where:{id:sendListId},
+                        select:{amount:true}
+                    });
+
+                    const amountSum = amount + send.amount;
+
+                    if(amountSum < 350){
+                        await tx.sendList.update({
+                            where:{id:sendListId},
+                            data:{amount:amountSum}
+                        });
+
+                        await tx.tempOrder.update({
+                            where:{id:e.id},
+                            data:{sendListId:sendListId}
+                        })
+                    }else{
+                        await tx.sendList.update({
+                            where:{id:sendListId},
+                            data:{fixFlag:true, full:true}
+                        });
+
+                        sendListId+=1;
+                        await tx.tempOrder.update({
+                            where:{id:e.id},
+                            data:{sendListId:sendListId}
+                        })
+
+                    }
+                }
+            });
+
+            return {success:true}
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 
@@ -1216,8 +1283,10 @@ export class SendService {
      */
     async updateSendTitle(updateTitleDto: UpdateTitleDto) {
         try {
+            console.log(updateTitleDto.date)
             let check = await this.checkSendTitle(updateTitleDto.title);
             const date = new Date(updateTitleDto.date)
+            console.log(date);
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
             console.log(kstDate);
 
