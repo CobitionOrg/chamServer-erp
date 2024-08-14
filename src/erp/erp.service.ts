@@ -35,6 +35,7 @@ import { getOutage } from 'src/util/getOutage';
 import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
 import { RouteFlagDto } from './Dto/routeFlag.dto';
+import { getItemOnlyLen } from 'src/util/accountBook';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -1424,7 +1425,7 @@ export class ErpService {
                     // console.log(orderItems);
 
                     //오더 개수
-                    const orderAmount = orderItems.length;
+                    const orderAmount = getItemOnlyLen(orderItems);
                     console.log('////////////////////////');
 
                     console.log(orderAmount);
