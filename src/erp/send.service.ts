@@ -2347,4 +2347,36 @@ export class SendService {
     }
   }
 
+
+  /**
+   * 후기 취소
+   * @param id 
+   * @returns {success:boolean,status:HttpStatus}
+   */
+  async reviewFlag(id: number){
+    try{
+        await this.prisma.$transaction(async (tx) => {
+            await tx.tempOrder.updateMany({
+                where:{orderId:id},
+                data:{outage:''}
+            });
+
+            await tx.order.update({
+                where:{id:id},
+                data:{reviewFlag:false}
+            });
+        });
+
+        return {success:true, status:HttpStatus.CREATED};
+    }catch(err){
+        this.logger.error(err);
+        throw new HttpException({
+            success: false,
+            status: HttpStatus.INTERNAL_SERVER_ERROR
+        },
+            HttpStatus.INTERNAL_SERVER_ERROR
+        );
+
+    }
+  }
 }

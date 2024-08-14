@@ -141,7 +141,11 @@ export class PatientService {
         return res;
     }
 
-
+    /**
+     * 환자 정보 생성
+     * @param createPatientDto 
+     * @returns {success:boolean}
+     */
     async createPatient(createPatientDto: CreatePatientDto) {
         const encryptedPhoneNum = this.crypto.encrypt(createPatientDto.phoneNum);
         const encryptedAddr = this.crypto.encrypt(createPatientDto.addr);
@@ -153,6 +157,11 @@ export class PatientService {
 
         const res = await this.patientRepository.createPatient(createPatientDto);
 
+        return res;
+    }
+
+    async deletePatient(id: number){
+        const res = await this.patientRepository.deletePatient(id);
         return res;
     }
     

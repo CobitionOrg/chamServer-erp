@@ -161,7 +161,7 @@ export class PatientRepository {
         try {
 
             const res = await this.prisma.patient.findMany({
-                where: { ...patientConditions },
+                where: { ...patientConditions,useFlag:true },
                 select: {
                     id: true,
                     name: true,
@@ -334,6 +334,33 @@ export class PatientRepository {
             });
 
             return {success:true,status:HttpStatus.CREATED,msg:'환자 저장 완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+
+        
+    }
+
+    async deletePatient(id:number){
+        try{
+            await this.prisma.patient.update({
+                where:{
+                    id:id
+                },
+                data:{
+                    useFlag:false
+                }
+            });
+
+            return {success:true,status:HttpStatus.CREATED,msg:'환자 삭제 완료'};
         }catch(err){
             this.logger.error(err);
             throw new HttpException({
