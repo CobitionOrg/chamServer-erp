@@ -9,6 +9,8 @@ import * as Excel from 'exceljs'
 import { getDateString } from 'src/util/date.util';
 import { Crypto } from 'src/util/crypto.util';
 import puppeteer, { Browser, Dialog } from 'puppeteer';
+import { HolidayService } from 'src/holiday/holiday.service';
+import { HolidayRepository } from 'src/holiday/holiday.repository';
 const fs = require('fs');
 const path = require('path');
 
@@ -19,10 +21,33 @@ export class TasksService {
         private readonly logService: LogService,
         private readonly mailerService: MailerService,
         private crypto: Crypto,
-
+        private readonly holidayService: HolidayService,
+        private readonly holidayRepository: HolidayRepository,
     ) { }
 
     private readonly logger = new Logger(TasksService.name);
+
+    async IsHoliday() {
+        // 휴일 적용
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        const year = kstDate.getUTCFullYear().toString();
+        const month = (kstDate.getUTCMonth() + 1).toString().padStart(2, '0');
+        const nextMonth = (Number(month) + 1).toString().padStart(2, '0');
+        const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
+        const endDate = new Date(`${year}-${nextMonth}-01T00:00:00.000Z`);
+        const { list: holidays } = await this.holidayRepository.getHolidaysByYearMonth(startDate, endDate);
+        const kstDateFormatted = kstDate.toISOString().split('T')[0];
+        const holidaysFormatted = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
+        
+        if(holidaysFormatted.includes(kstDateFormatted)) {
+            // 오늘이 휴일일 시
+            return true;
+        } else {
+            // 오늘이 휴일 아닐 시
+            return false;
+        }
+    }
 
     // 매일 23시 59분
     @Cron('0 59 23 * * *', { timeZone: "Asia/Seoul" })
@@ -211,14 +236,22 @@ export class TasksService {
         const hour = kstDate.getHours();
         const excelFileName = `orderInsertTalk${hour}`;
 
-        const res = await this.tasksRepository.orderInsertTalk();
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
-        console.log(excelFilePath);
-        //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
-        // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        const isHoliday = await this.IsHoliday();
+
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            const res = await this.tasksRepository.orderInsertTalk();
+            if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+            //엑셀 파일 생성
+            const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
+            console.log(excelFilePath);
+            //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+            // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+            // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        }
     }
 
     @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })
@@ -228,14 +261,22 @@ export class TasksService {
         const hour = kstDate.getHours();
         const excelFileName = `orderInsertTalk${hour}`;
 
-        const res = await this.tasksRepository.orderInsertTalk();
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
-        console.log(excelFilePath);
-        //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
-        // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        const isHoliday = await this.IsHoliday();
+
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            const res = await this.tasksRepository.orderInsertTalk();
+            if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+            //엑셀 파일 생성
+            const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
+            console.log(excelFilePath);
+            //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+            // const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+            // if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
+        }
     }
 
 
@@ -244,36 +285,45 @@ export class TasksService {
     @Cron('0 0 9 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        // 한국 시간 기준으로 변경 (UTC+9)
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const koreaTime = new Date(utc + (9 * 60 * 60000));
+        const isHoliday = await this.IsHoliday();
 
-        // 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
-        const dayOfWeek = koreaTime.getDay();
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            // 한국 시간 기준으로 변경 (UTC+9)
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const koreaTime = new Date(utc + (9 * 60 * 60000));
 
-        // 해당 주의 월요일 계산
-        const diffToMonday = 1 - dayOfWeek;
-        const monday = new Date(koreaTime);
-        monday.setDate(koreaTime.getDate() + diffToMonday);
-        monday.setUTCHours(0, 0, 0, 0);
+            // 한국 시간 기준의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+            const dayOfWeek = koreaTime.getDay();
 
-        // 해당 주의 금요일 계산
-        const diffToFriday = 5 - dayOfWeek;
-        const friday = new Date(koreaTime);
-        friday.setDate(koreaTime.getDate() + diffToFriday);
-        friday.setUTCHours(23, 59, 59, 999);
+            // 해당 주의 월요일 계산
+            const diffToMonday = 1 - dayOfWeek;
+            const monday = new Date(koreaTime);
+            monday.setDate(koreaTime.getDate() + diffToMonday);
+            monday.setUTCHours(0, 0, 0, 0);
 
-        // 주의: 일요일에 실행 시 다음주 월, 금이 됨. 지금은 토요일에 실행해서 상관 없음
-        const list = await this.tasksRepository.payReview(monday, friday);
-        if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
-        console.log(excelFilePath);
+            // 해당 주의 금요일 계산
+            const diffToFriday = 5 - dayOfWeek;
+            const friday = new Date(koreaTime);
+            friday.setDate(koreaTime.getDate() + diffToFriday);
+            friday.setUTCHours(23, 59, 59, 999);
 
-        //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        //await this.sendTalk(excelFilePath,'구매후기');
+            // 주의: 일요일에 실행 시 다음주 월, 금이 됨. 지금은 토요일에 실행해서 상관 없음
+            const list = await this.tasksRepository.payReview(monday, friday);
+            if (!list.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+            //엑셀 파일 생성
+            const excelFilePath = await this.getTalkExcelPayReview(list.list, '구매후기');
+            console.log(excelFilePath);
+
+            //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+            //await this.sendTalk(excelFilePath,'구매후기');
+        }
     }
 
     //유선 상담 연결 안 될 시
@@ -283,27 +333,35 @@ export class TasksService {
         const today = new Date();
         const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
 
-        const yesterdayKstDate = new Date(kstDate);
-        yesterdayKstDate.setDate(kstDate.getDate() - 1);
-        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        const isHoliday = await this.IsHoliday();
 
-        const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
-        twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
-        twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
-
-        // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
-        // console.log(yesterdayKstDate);
-        // console.log(twoWeeksAgoKstDate);
-
-        const res = await this.tasksRepository.notCall(yesterdayKstDate, twoWeeksAgoKstDate);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-
-        //엑셀 파일 생성
-        const excelFilePath = await this.getTalkExcel(res.list, '상담미연결');
-        console.log(excelFilePath);
-
-        //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-        //await this.sendTalk(excelFilePath,'유선상담연결안될시');
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            const yesterdayKstDate = new Date(kstDate);
+            yesterdayKstDate.setDate(kstDate.getDate() - 1);
+            yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+    
+            const twoWeeksAgoKstDate = new Date(yesterdayKstDate);
+            twoWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 14);
+            twoWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+    
+            // // 2주전 목요일 00시 00분 00초, 이번주 목요일 23시 59분 59초
+            // console.log(yesterdayKstDate);
+            // console.log(twoWeeksAgoKstDate);
+    
+            const res = await this.tasksRepository.notCall(yesterdayKstDate, twoWeeksAgoKstDate);
+            if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    
+            //엑셀 파일 생성
+            const excelFilePath = await this.getTalkExcel(res.list, '상담미연결');
+            console.log(excelFilePath);
+    
+            //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
+            //await this.sendTalk(excelFilePath,'유선상담연결안될시');
+        }
     }
 
     //발송 알림톡 발송
@@ -313,56 +371,62 @@ export class TasksService {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        const fileName = kstDate.toISOString();
-        const completeSendDate = getDateString(fileName);
+        const isHoliday = await this.IsHoliday();
 
-        //////////// 테스트
-        console.log("fileName", fileName);
-        console.log("completeSendDate", completeSendDate);
-        ////////////
-
-        //당일 발송되는 발송목록 id
-        const completeSendRes = await this.tasksRepository.completeSendTalkGetList(completeSendDate);
-        console.log(completeSendRes);
-
-        if (!completeSendRes.cid) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-
-        //초진
-        const firstTalk = await this.tasksRepository.completeSendTalkFirst(completeSendRes.cid.id);
-        //재진
-        const returnTalk = await this.tasksRepository.completeSendTalkReturn(completeSendRes.cid.id);
-
-        if ((!returnTalk.success) && (!firstTalk.success)) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-
-        for (let row of firstTalk.list) {
-            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-            row.patient.phoneNum = decryptedPhoneNum;
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            const fileName = kstDate.toISOString();
+            const completeSendDate = getDateString(fileName);
+    
+            //////////// 테스트
+            console.log("fileName", fileName);
+            console.log("completeSendDate", completeSendDate);
+            ////////////
+    
+            //당일 발송되는 발송목록 id
+            const completeSendRes = await this.tasksRepository.completeSendTalkGetList(completeSendDate);
+            console.log(completeSendRes);
+    
+            if (!completeSendRes.cid) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    
+            //초진
+            const firstTalk = await this.tasksRepository.completeSendTalkFirst(completeSendRes.cid.id);
+            //재진
+            const returnTalk = await this.tasksRepository.completeSendTalkReturn(completeSendRes.cid.id);
+    
+            if ((!returnTalk.success) && (!firstTalk.success)) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+    
+            for (let row of firstTalk.list) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+    
+            for (let row of returnTalk.list) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                row.patient.phoneNum = decryptedPhoneNum;
+            }
+    
+            let fName = completeSendDate.replaceAll('/', '-');
+    
+            //초진 엑셀 파일
+            if (firstTalk.list.length > 0) {
+                const fristExcelPath = await this.completeSendExcel(firstTalk.list, `${fName}-first`);
+    
+                //알람통 발송 ㄱㄱ
+                //await this.sendTalk(fristExcelPath,'발송알림톡');
+            }
+    
+            //재진 엑셀 파일
+            if (returnTalk.list.length > 0) {
+                const returnExcelPath = await this.completeSendExcel(returnTalk.list, `${fName}-return`);
+    
+                //알람톡 발송 ㄱㄱ
+                //await this.sendTalk(returnExcelPath,'발송알림톡');
+            }
         }
-
-        for (let row of returnTalk.list) {
-            const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-            row.patient.phoneNum = decryptedPhoneNum;
-        }
-
-        let fName = completeSendDate.replaceAll('/', '-');
-
-        //초진 엑셀 파일
-        if (firstTalk.list.length > 0) {
-            const fristExcelPath = await this.completeSendExcel(firstTalk.list, `${fName}-first`);
-
-            //알람통 발송 ㄱㄱ
-            //await this.sendTalk(fristExcelPath,'발송알림톡');
-        }
-
-        //재진 엑셀 파일
-        if (returnTalk.list.length > 0) {
-            const returnExcelPath = await this.completeSendExcel(returnTalk.list, `${fName}-return`);
-
-            //알람톡 발송 ㄱㄱ
-            //await this.sendTalk(returnExcelPath,'발송알림톡');
-
-        }
-
     }
 
     //미결제
@@ -372,28 +436,36 @@ export class TasksService {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-        // 하루 전
-        const yesterdayKstDate = new Date(kstDate);
-        yesterdayKstDate.setDate(kstDate.getDate() - 1);
-        yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+        const isHoliday = await this.IsHoliday();
 
-        // 4주 전
-        const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
-        fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
-        fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            // 하루 전
+            const yesterdayKstDate = new Date(kstDate);
+            yesterdayKstDate.setDate(kstDate.getDate() - 1);
+            yesterdayKstDate.setUTCHours(23, 59, 59, 999);
 
-        console.log("yesterdayKstDate", yesterdayKstDate);
-        console.log("fourWeeksAgoKstDate", fourWeeksAgoKstDate);
+            // 4주 전
+            const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
+            fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
+            fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+
+            console.log("yesterdayKstDate", yesterdayKstDate);
+            console.log("fourWeeksAgoKstDate", fourWeeksAgoKstDate);
 
 
-        const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
-        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+            const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
+            if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-        const fileName = 'notPay';
-        const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
+            const fileName = 'notPay';
+            const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
 
-        //발송 알람톡 ㄱㄱ
-        //await this.sendTalk(notPayExcelPath,'미입금');
+            //발송 알람톡 ㄱㄱ
+            //await this.sendTalk(notPayExcelPath,'미입금');
+        }
     }
 
     /**
@@ -759,6 +831,18 @@ export class TasksService {
     //     await this.notCallTimeTest();
     //     await this.completeSendTimeTest();
     //     await this.notPayTimeTest();
+    // }
+
+    // // 휴일 미실행 테스트
+    // @Cron('32 14 * * *', { timeZone: "Asia/Seoul" })
+    // async holidayTest() {
+    //     const isHoliday = await this.IsHoliday();
+        
+    //     if(isHoliday) {
+    //         console.log('포함');
+    //     } else {
+    //         console.log('미포함');
+    //     }
     // }
 }
 

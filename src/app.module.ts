@@ -18,6 +18,7 @@ import { VisitModule } from './visit/visit.module';
 import { PatientModule } from './patient/patient.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PrismaService } from './prisma.service';
+import { HolidayModule } from './holiday/holiday.module';
 @Module({
 
   imports: [
@@ -45,6 +46,7 @@ import { PrismaService } from './prisma.service';
         },
       },
     }),
+    HolidayModule,
   ],
   controllers: [AppController],
   providers: [
