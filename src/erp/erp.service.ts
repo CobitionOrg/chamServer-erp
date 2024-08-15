@@ -446,6 +446,8 @@ export class ErpService {
     async getReciptList(getListDto: GetListDto) {
         try {
             let orderConditions = {};
+            let firstCount = 0;
+            let returnCount = 0;
             if (getListDto.date === undefined) {
                 //날짜 조건 X
                 orderConditions = {
@@ -456,6 +458,9 @@ export class ErpService {
             } else {
                 //날짜 조건 O
                 const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                
+                firstCount = await this.getOrderCount(startDate,endDate,true);
+                returnCount = await this.getOrderCount(startDate,endDate,false);
 
                 orderConditions = {
                     consultingType: false,
@@ -550,7 +555,7 @@ export class ErpService {
                 }
             }
 
-            return { success: true, list: resList };
+            return { success: true, list: resList, firstCount, returnCount };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
@@ -561,6 +566,36 @@ export class ErpService {
             );
         }
     }
+
+
+    async getOrderCount(startDate,endDate,isFirst) {
+        try{
+            const res = await this.prisma.order.findMany({
+                where:{
+                    useFlag:true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    },
+                    isFirst:isFirst
+                },
+                select:{
+                    id:true
+                }
+            });
+
+            return res.length;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
 
     /**
      * 재진 오더 접수
