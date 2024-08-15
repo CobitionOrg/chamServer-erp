@@ -463,9 +463,15 @@ model urlData {
   /// index key
   id         Int    @id @default(autoincrement())
   /// url
-  url        String @db.VarChar(291)
+  url        String
   /// object 이름
   objectName String
+}
+
+model holiday {
+  id      Int       @id @default(autoincrement())
+  date    DateTime? @db.Date
+  useFlag Boolean?
 }
 
 enum Role {

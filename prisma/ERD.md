@@ -215,6 +215,11 @@ erDiagram
   String url
   String objectName
 }
+"holiday" {
+  Int id PK
+  DateTime date "nullable"
+  Boolean useFlag "nullable"
+}
 "log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
 "answer" }o--|| "question" : question
@@ -488,3 +493,10 @@ erDiagram
   - `id`: index key
   - `url`: url
   - `objectName`: object 이름
+
+### `holiday`
+
+**Properties**
+  - `id`: 
+  - `date`: 
+  - `useFlag`: 
