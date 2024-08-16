@@ -2297,7 +2297,7 @@ export class ErpService {
 
             //지인 10퍼센트 할인 시 할인 처리
             if (order.friendDiscount) {
-                price = price * 0.9;
+                price = getOrderPrice.getTenDiscount();
             }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;

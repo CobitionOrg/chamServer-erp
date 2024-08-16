@@ -649,7 +649,7 @@ export class SendService {
 
                 //지인 할인 여부 확인 시 10퍼센트 할인 처리
                 if (checkDiscount.friendDiscount) {
-                    price = price * 0.9;
+                    price = getOrderPrice.getTenDiscount();
                 }
 
                 console.log('---------------' + price + '-----------------')
