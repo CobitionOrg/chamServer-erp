@@ -80,6 +80,15 @@ export class ErpController {
        const res = await this.erpService.getReciptList(getListDto); 
        return res;
     }
+
+    @ApiOperation({summary:'해당 날짜 전체 오더 데이터 가져오기'})
+    @Get('/getAllOrder')
+    async getAllOrderAtDay(@Query() getListDto: GetListDto) {
+        this.logger.log('해당 날짜 전체 오더 데이터 가져오기');
+        const res = await this.erpService.getAllOrderAtDay(getListDto);
+
+        return res;
+    }
  
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
     @Post('/callConsulting')
