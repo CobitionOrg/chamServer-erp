@@ -1223,6 +1223,7 @@ export class ErpService {
                     phoneConsulting: true,
                     isFirst: true,
                     date: true,
+                    orderSortNum: true,
                     remark: true,
                     isPickup: true,
                     price: true,
