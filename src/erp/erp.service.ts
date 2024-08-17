@@ -1957,8 +1957,8 @@ export class ErpService {
 
             
             const sheet2 = wb.addWorksheet("재진");
-            const headers2 = ['이름', '휴대폰 번호', '특이사항(추천인)'];
-            const headerWidths2 = [10, 20, 20];
+            const headers2 = ['이름', '휴대폰 번호', '특이사항(추천인)', '설문지번호'];
+            const headerWidths2 = [10, 20, 20, 15];
 
             //상단 헤더 추가
             const headerRow2 = sheet2.addRow(headers2);
@@ -1976,7 +1976,8 @@ export class ErpService {
                 const rowDatas = [
                     name,
                     hyphen.phoneNumHyphen(phoneNum),
-                    e.route
+                    e.route,
+                    e.id
                 ];
                 const appendRow = sheet2.addRow(rowDatas);
 
