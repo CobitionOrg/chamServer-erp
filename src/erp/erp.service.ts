@@ -568,6 +568,144 @@ export class ErpService {
     }
 
 
+    /**
+     * 해당 날짜 전체 오더 데이터 가져오기
+     * @param getListDto 
+     * @returns 
+     */
+    async getAllOrderAtDay(getListDto: GetListDto){
+        try{
+            let orderConditions = {};
+            let firstCount = 0;
+            let returnCount = 0;
+            if (getListDto.date === undefined) {
+                //날짜 조건 X
+                orderConditions = {
+                    // consultingType: false,
+                    // isComplete: false,
+                    useFlag: true,
+                }
+            } else {
+                //날짜 조건 O
+                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                
+                firstCount = await this.getOrderCount(startDate,endDate,true);
+                returnCount = await this.getOrderCount(startDate,endDate,false);
+
+                orderConditions = {
+                    // consultingType: false,
+                    // isComplete: false,
+                    useFlag: true,
+                    date: {
+                        gte: startDate,
+                        lt: endDate,
+                    }
+                }
+            }
+            let patientConditions = {};
+            // if (getListDto.searchKeyword !== "") {
+            //     //검색어 O
+            //     patientConditions = { 
+            //         patient: { 
+            //             name: { contains: getListDto.searchKeyword } 
+            //         }
+            //     };
+            // }
+            const list = await this.prisma.order.findMany({
+                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
+                select: {
+                    id: true,
+                    route: true,
+                    message: true,
+                    cachReceipt: true,
+                    typeCheck: true,
+                    consultingTime: true,
+                    payType: true,
+                    outage: true,
+                    consultingFlag: true,
+                    consultingType: true,
+                    phoneConsulting: true,
+                    isFirst: true,
+                    date: true,
+                    orderSortNum: true,
+                    remark: true,
+                    isPickup: true,
+                    price: true,
+                    card: true,
+                    cash: true,
+                    addr: true,
+                    routeFlag: true,
+                    friendDiscount: true,
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                            addr: true,
+                            phoneNum: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            item: true,
+                            type: true,
+                        }
+                    },
+                    friendRecommends: {
+                        select: {
+                            checkFlag: true,
+                            name: true,
+                            phoneNum: true,
+                        }
+                    }
+                }
+            });
+
+            //console.log(list);
+
+            const sortedList = sortItems(list);
+            let resList = [];
+
+            for (let row of sortedList) {
+                const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
+                const decryptedAddr = this.crypto.decrypt(row.addr);
+                const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
+                row.patient.phoneNum = decryptedPhoneNum;
+                row.addr = decryptedAddr;
+                row.patient.addr = decryptedPatientAddr;
+
+                if (getListDto.searchKeyword !== "") {
+                    if (
+                        row.patient.name.includes(getListDto.searchKeyword)
+                        || row.patient.phoneNum.includes(getListDto.searchKeyword)
+                    ) {
+                        resList.push(row)
+                    }
+                } else {
+                    resList.push(row);
+                }
+            }
+
+            return { success: true, list: resList, firstCount, returnCount };
+
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**
+     * 그 날 초재진 개수 가져오기
+     * @param startDate 
+     * @param endDate 
+     * @param isFirst 
+     * @returns 
+     */
     async getOrderCount(startDate,endDate,isFirst) {
         try{
             const res = await this.prisma.order.findMany({
@@ -2161,7 +2299,7 @@ export class ErpService {
 
             //지인 10퍼센트 할인 시 할인 처리
             if (order.friendDiscount) {
-                price = price * 0.9;
+                price = getOrderPrice.getTenDiscount();
             }
             let orderSortNum = updateSurveyDto.isPickup ? -1
                 : updateSurveyDto.orderSortNum === -1 ? 1 : updateSurveyDto.orderSortNum;

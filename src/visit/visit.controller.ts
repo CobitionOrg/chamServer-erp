@@ -61,4 +61,13 @@ export class VisitController {
         
     }
 
+    @ApiOperation({summary: '방문수령목록에서 주문 완료 처리'})
+    @Patch('/complete/:id')
+    async complete(@Param("id") id: number) {
+        this.logger.log("방문수령 완료 처리");
+        const res = await this.visitService.complete(id);
+
+        return res;
+    }
+
 }

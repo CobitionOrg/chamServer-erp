@@ -80,6 +80,15 @@ export class ErpController {
        const res = await this.erpService.getReciptList(getListDto); 
        return res;
     }
+
+    @ApiOperation({summary:'해당 날짜 전체 오더 데이터 가져오기'})
+    @Get('/getAllOrder')
+    async getAllOrderAtDay(@Query() getListDto: GetListDto) {
+        this.logger.log('해당 날짜 전체 오더 데이터 가져오기');
+        const res = await this.erpService.getAllOrderAtDay(getListDto);
+
+        return res;
+    }
  
     @ApiOperation({summary:'유선 상담 목록으로 변경'})
     @Post('/callConsulting')
@@ -278,7 +287,7 @@ export class ErpController {
         const res = await this.sendService.getOrderTemp(id);
         return res; 
     }
-
+    
     @ApiOperation({summary:'발송 단일 데이터 조회'})
     @Get('/sendOne/:id')
     async sendOne(@Param("id") id:number, @Headers() header){
@@ -328,6 +337,7 @@ export class ErpController {
         return res;
     }
 
+  
     // 이 api는 아예 주문을 날려버리는 api이므로 나중에 다시 확인하도록 하겠습니다.
     // @ApiOperation({summary:'발송 목록에서 주문 취소 처리'})
     // @Delete('/cancelSend')

@@ -120,4 +120,9 @@ export class VisitService {
     async visitPay(id: number) {
         return await this.visitRepository.visitPay(id);
     }
+
+
+    async complete(id: number) {
+        return await this.visitRepository.complete(id);
+    }
 }

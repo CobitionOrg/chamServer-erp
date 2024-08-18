@@ -39,12 +39,15 @@ export class VisitRepository {
      */
     async visitOrder(id: number, price: number) {
         try{
+            console.log('sibal');
             await this.prisma.order.update({
                 where:{id:id},
                 data:{
                     orderSortNum:-1,
                     consultingFlag: true,
-                    price: price
+                    price: price,
+                    consultingType: false,
+                    notCall:false
                 }
             });
 
@@ -188,6 +191,33 @@ export class VisitRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             )
+        }
+    }
+
+
+    /**
+     * 방문수령에서 완료 처리
+     * @param id 
+     * @returns 
+     */
+    async complete(id: number) {
+        try{
+            await this.prisma.order.update({
+                where:{id:id},
+                data:{useFlag:false,isComplete:true}
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success:false,
+                status:HttpStatus.INTERNAL_SERVER_ERROR,
+                msg:'내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+
         }
     }
 }
