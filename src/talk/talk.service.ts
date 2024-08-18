@@ -409,9 +409,11 @@ export class TalkService {
             }
 
             orderStr += ` ${e.order.remark}`;
+            orderStr = orderStr.replaceAll("+"," ");
 
             const sendNum = e.sendNum;
             const isFirst = e.isFirst ? '초진' : '';
+
 
             const rowDatas = [name, phoneNum, name, orderStr, '로젠택배', sendNum, isFirst];
             const appendRow = sheet.addRow(rowDatas);

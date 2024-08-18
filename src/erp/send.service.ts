@@ -1028,6 +1028,7 @@ export class SendService {
                 }
 
                 orderStr += ` ${e.order.remark}`;
+                orderStr = orderStr.replaceAll("+"," ");
 
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
