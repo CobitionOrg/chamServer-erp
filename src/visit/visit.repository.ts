@@ -217,7 +217,6 @@ export class VisitRepository {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             )
-
         }
     }
 }
