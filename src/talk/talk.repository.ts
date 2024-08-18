@@ -557,6 +557,7 @@ export class TalkRepositoy {
                             orderSortNum: true,
                             isFirst: true,
                             combineNum: true,
+                            remark:true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
@@ -631,6 +632,7 @@ export class TalkRepositoy {
                             orderSortNum: true,
                             isFirst: true,
                             combineNum: true,
+                            remark: true,
                             orderItems: {
                                 select: { item: true, type: true }
                             }
