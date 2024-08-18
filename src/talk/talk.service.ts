@@ -10,6 +10,7 @@ const fs = require('fs');
 import puppeteer, { Browser, Dialog } from 'puppeteer';
 import { createExcelFile } from 'src/util/createFile';
 import { getCurrentWeeksOfMondayStartAndFridayEnd } from 'src/util/kstDate.util';
+import { getItem, getServiceItem } from 'src/util/getItem';
 const path = require('path');
 const constants = require('fs').constants;
 
@@ -363,11 +364,58 @@ export class TalkService {
         list.forEach(e => {
             const name = e.patient.name;
             const phoneNum = e.patient.phoneNum;
-            const orderItem = e.order.orderItems.length > 0 ? e.order.orderItems[0].item : ''; //수정 예정
+            const orderItemList = e.order.orderItems;
+
+            let orderStr = '';
+            let service = 0;
+            let assistant = '';
+
+            for (let i = 0; i < orderItemList.length; i++) {
+                console.log(orderItemList[i]);
+                let item = getItem(orderItemList[i].item);
+                if (item !== '') {
+                    const { onlyItem, serviceItem } = getServiceItem(item);
+                    service += parseInt(serviceItem);
+                    if(orderItemList[i].type !== 'assistant'){
+                        if (i == orderItemList.length - 1) orderStr += `${onlyItem}`
+                        else orderStr += `${onlyItem}+`
+
+                    }else{
+                        if (i == orderItemList.length - 1) assistant += `${onlyItem}`
+                        else assistant += `${onlyItem}+`
+                    }
+                }
+            }
+            if (orderStr.endsWith('+')) {
+                // 마지막 문자를 제거한 새로운 문자열 반환
+                orderStr = orderStr.slice(0, -1);
+            }
+
+            if (service != 0) {
+                orderStr += ` s(${service})`
+            }
+
+            if (orderStr == '감1개월+쎈1개월') {
+                orderStr += ` s(10)`;
+            }
+
+            if(assistant !== ''){
+                console.log('tlqkf');
+                if(orderStr !== ''){
+                    orderStr+='+';
+                }
+
+                orderStr += ` ${assistant}`;
+            }
+
+            orderStr += ` ${e.order.remark}`;
+            orderStr = orderStr.replaceAll("+"," ");
+
             const sendNum = e.sendNum;
             const isFirst = e.isFirst ? '초진' : '';
 
-            const rowDatas = [name, phoneNum, name, orderItem, '로젠택배', sendNum, isFirst];
+
+            const rowDatas = [name, phoneNum, name, orderStr, '로젠택배', sendNum, isFirst];
             const appendRow = sheet.addRow(rowDatas);
             appendRow.getCell(2).value = phoneNum.toString();
             appendRow.getCell(2).numFmt = '@';

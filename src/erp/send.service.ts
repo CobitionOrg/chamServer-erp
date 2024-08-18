@@ -1028,6 +1028,7 @@ export class SendService {
                 }
 
                 orderStr += ` ${e.order.remark}`;
+                orderStr = orderStr.replaceAll("+"," ");
 
                 const rowDatas = [name, '', addr, '', phoneNum, '1', '', '10', orderStr, '', message, '참명인한의원', '서울시 은평구 은평로 104 3층 참명인한의원', '02-356-8870'];
 
@@ -1166,6 +1167,60 @@ export class SendService {
         }
     }
 
+
+    /**발송목록 복구 */
+    async sibal() {
+        try{
+            await this.prisma.$transaction(async (tx) => {
+                
+                const list = await tx.tempOrder.findMany({
+                    where: { sendListId: 234 },
+                    select: {
+                        order: {
+                            select: {
+                                id: true
+                            }
+                        }
+                    }
+                });
+
+                const qryArr = list.map(async (e) => {
+                    return tx.order.update({
+                        where: { id: e.order.id },
+                        data: { useFlag: true }
+                    });
+                });
+
+                await Promise.all([...qryArr]).then((value) => {
+                    return { success: true, status: HttpStatus.CREATED };
+                }).catch((err) => {
+                    this.logger.error(err);
+                    throw new HttpException({
+                        success: false,
+                        status: HttpStatus.INTERNAL_SERVER_ERROR
+                    },
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                });
+
+            },{timeout:10000});
+
+
+            return { success: true, status: HttpStatus.OK };
+
+        }catch(err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
     /**
      * 발송목록 완료 처리
      * @param id 
@@ -1217,7 +1272,7 @@ export class SendService {
                     );
                 });
 
-            })
+            });
 
 
             return { success: true, status: HttpStatus.OK };
