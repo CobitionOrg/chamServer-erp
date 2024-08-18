@@ -287,7 +287,7 @@ export class ErpController {
         const res = await this.sendService.getOrderTemp(id);
         return res; 
     }
-
+    
     @ApiOperation({summary:'발송 단일 데이터 조회'})
     @Get('/sendOne/:id')
     async sendOne(@Param("id") id:number, @Headers() header){

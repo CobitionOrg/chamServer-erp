@@ -466,7 +466,15 @@ export class SendService {
                             remark:true,
                             orderItems: {
                                 select: { item: true, type: true }
-                            }
+                            },
+                            friendRecommends:{
+                                select:{
+                                    checkFlag: true,
+                                    name: true,
+                                    phoneNum: true,
+        
+                                }
+                            },
                         }
                     },
                     tempOrderItems: {
