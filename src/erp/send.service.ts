@@ -2180,7 +2180,7 @@ export class SendService {
                     const { common, yoyo, assistant } = getItemAtAccount(e.order.orderItems);
                     const cash = e.order.cash == 0 ? '' : e.order.cash;
                     const card = e.order.card == 0 ? '' : e.order.card;
-                    const message = (e.order.remark ? e.order.remark + '/' : '') + e.order.message;
+                    const message = (e.order.remark ? e.order.remark + '/' : '');
 
                     const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
 
