@@ -5,7 +5,7 @@ import { error } from "winston";
 import * as Excel from 'exceljs'
 import { styleHeaderCell, styleCell, setColor } from "src/util/excelUtil";
 import { ErpService } from "./erp.service";
-import { getItem, getItemAtAccount, getServiceItem } from "src/util/getItem";
+import { getAssistantItem, getCommonItem, getItem, getItemAtAccount, getServiceItem, getYoyoItem } from "src/util/getItem";
 import { SendOrder } from "./Dto/sendExcel.dto";
 import { UpdateTitleDto } from "./Dto/updateTitle.dto";
 import { GetOrderSendPrice, checkSend, getOnlyPrice } from "src/util/getOrderPrice";
@@ -20,6 +20,8 @@ import { UpdateSendPriceDto } from "./Dto/updateSendPrice.dto";
 import { generateUploadURL } from "src/util/s3";
 import axios from "axios";
 import { getPhoneNum } from "src/util/getPhoneNum";
+import { orderUpdateInfo } from "src/util/orderUpdateInfo";
+import { checkOutage } from "src/util/getOutage";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -171,6 +173,81 @@ export class SendService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
 
+        }
+    }
+
+    /**
+     * 발송목록 엑셀 데이터 다운
+     * @param id 
+     * @returns 
+     */
+    async sendListExcel(id: number) {
+        try{
+            const sendOne = await this.getOrderTemp(id);
+            const list = sendOne.list;
+
+            const wb = new Excel.Workbook();
+            const sheet = wb.addWorksheet("발송목록");
+
+            const headers = ["주문수정","감량킬로수","설문지번호","이름","휴대폰 번호","감&쎈","요요","현금","현금영수증&카드","카드","별도구매","특이","초진/재진","송장번호"];
+            const headerWidths = [17,13,11,10,12,8,8,10,12,10,13,20,12,11];
+
+            const headerRow = sheet.addRow(headers);
+            headerRow.height = 30.75;
+
+            headerRow.eachCell((cell, colNum) => {
+                styleHeaderCell(cell);
+                sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+            });
+
+            for(const e of list) {
+                const updateInfo = orderUpdateInfo(e.orderUpdateInfos);
+                const outage = checkOutage(e.outage) ? e.outage : "";
+                const id = e.order.id;
+                const {name,phoneNum} = e.patient;
+                const commonItem = getCommonItem(e.order.orderItems);
+                const yoyoItem = getYoyoItem(e.order.orderItems);
+                const cash = e.order.cash;
+                const cashReceipt =  e.order.cachReceipt != "" ? e.order.cachReceipt : "x";
+                const card = e.order.card;
+                const assistantItem = getAssistantItem(e.order.orderItems);
+                const remark = e.order.remark;
+                const isFirst = e.order.isFirst == true ? '초진' : '재진';
+                const sendNum = e.sendNum;
+
+                const rowData = [
+                    updateInfo,
+                    outage, 
+                    id, 
+                    name, 
+                    phoneNum, 
+                    commonItem,
+                    yoyoItem,
+                    cash,
+                    cashReceipt,
+                    card,
+                    assistantItem,
+                    remark,
+                    isFirst,
+                    sendNum
+                ];
+
+                const appendRow = sheet.addRow(rowData);
+
+            }
+
+            const fileData = await wb.xlsx.writeBuffer();
+            const url = await this.erpService.uploadFile(fileData);
+
+            return { success:true, status: HttpStatus.OK, url };
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 

@@ -156,3 +156,39 @@ export const getItemAtAccount = (orderItems) => {
 
     return { common, yoyo, assistant };
 }
+
+export const getCommonItem = (orderItem) => {
+    const arr = [];
+    for (let i = 0; i < orderItem.length; i++) {
+        if (orderItem[i].type == 'common') {
+            arr.push(getItem(orderItem[i].item));
+        }
+    }
+
+    return arr.join('+');
+}
+
+export const getYoyoItem = (orderItem) => {
+    const arr = [];
+    for (let i = 0; i < orderItem.length; i++) {
+        if (orderItem[i].type == 'yoyo') {
+            arr.push(getItem(orderItem[i].item));
+        }
+    }
+
+    return arr.join('+');
+}
+
+export const getAssistantItem = (orderItem: any) => {
+    const arr = [];
+    //console.log(orderItem);
+    if (orderItem == undefined) return '';
+
+    for (let i = 0; i < orderItem.length; i++) {
+        if (orderItem[i].type == 'assistant') {
+            arr.push(orderItem[i].item);
+        }
+    }
+
+    return arr.join('+');
+}
