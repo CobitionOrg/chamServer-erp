@@ -2218,16 +2218,17 @@ export class SendService {
             });
 
             //footer 부분
-            const footer = ['', '로젠', '총인원', '총갯수', '세부', '현금', '카드', '비고'];
+            const footer = ['', '로젠', '총인원', '총갯수', '감&쎈','요요', '현금', '카드', '비고'];
             // const footerWidths = [5,25,9,16,15,10,16,16,12,25,18];
 
-            const { logen, orderCount, fullCount, detail, card, cash, note } = getFooter(tempOrderList, sendList.addSends);
+            const { logen, orderCount, fullCount, detail, yoyo, card, cash, note } = getFooter(tempOrderList, sendList.addSends);
             const rowDatas = [
                 '',
                 logen,
                 orderCount,
                 fullCount,
                 detail,
+                yoyo,
                 cash,
                 card,
                 note

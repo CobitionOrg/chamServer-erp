@@ -57,7 +57,7 @@ export const getFooter = (list:Array<any>,addSend) => {
     logen-=(combine/2);
     logen+=addSend.length;
     fullCount = gam + ssen + yoyo;
-    detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}`;
+    detail =`감 ${gam}, 쎈 ${ssen}`;
     orderCount-=separate; //분리 배송으로 더해진 인원 제거
 
     addSend.forEach(e => {
@@ -66,7 +66,7 @@ export const getFooter = (list:Array<any>,addSend) => {
         note+=str;
     }) 
 
-    return {logen, orderCount, fullCount, detail, card, cash, note };
+    return {logen, orderCount, fullCount, detail, yoyo, card, cash, note };
 }
 
 //총 개월 수 수량
