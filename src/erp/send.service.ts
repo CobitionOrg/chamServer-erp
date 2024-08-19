@@ -2185,12 +2185,12 @@ export class SendService {
                     const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
 
                     const appendRow = sheet.addRow(rowDatas);
-                    appendRow.eachCell((cell, colNum) => {
-                        styleCell(cell);
-                    });
-                    if (e.orderSortNum > 1 && e.orderSortNum < 6) {
-                        setColor(appendRow, e.orderSortNum);
-                    }
+                    // appendRow.eachCell((cell, colNum) => {
+                    //     styleCell(cell);
+                    // });
+                    // if (e.orderSortNum > 1 && e.orderSortNum < 6) {
+                    //     setColor(appendRow, e.orderSortNum);
+                    // }
                 } else if (e.orderSortNum == 7) { //분래 배송일 시
                     if (isSeparteId == e.order.id) {
                         console.log('already insert data');
@@ -2208,9 +2208,9 @@ export class SendService {
                         const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
 
                         const appendRow = sheet.addRow(rowDatas);
-                        appendRow.eachCell((cell, colNum) => {
-                            styleCell(cell);
-                        });
+                        // appendRow.eachCell((cell, colNum) => {
+                        //     styleCell(cell);
+                        // });
                     }
 
                 }
