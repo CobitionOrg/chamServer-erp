@@ -602,17 +602,9 @@ export class ErpService {
                     }
                 }
             }
-            let patientConditions = {};
-            // if (getListDto.searchKeyword !== "") {
-            //     //검색어 O
-            //     patientConditions = { 
-            //         patient: { 
-            //             name: { contains: getListDto.searchKeyword } 
-            //         }
-            //     };
-            // }
+            
             const list = await this.prisma.order.findMany({
-                where: { ...orderConditions, ...patientConditions, orderSortNum: { gte: 0 } },
+                where: { ...orderConditions, orderSortNum: { gte: 0 } },
                 select: {
                     id: true,
                     route: true,
@@ -715,7 +707,8 @@ export class ErpService {
                         gte: startDate,
                         lt: endDate,
                     },
-                    isFirst:isFirst
+                    isFirst:isFirst,
+                    orderSortNum: { gte: 0 }
                 },
                 select:{
                     id:true

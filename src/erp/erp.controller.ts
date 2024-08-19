@@ -287,6 +287,15 @@ export class ErpController {
         const res = await this.sendService.getOrderTemp(id);
         return res; 
     }
+
+    @ApiOperation({summary:'발송 목록 엑셀 데이터 출력'})
+    @Get('/sendListExcel/:id')
+    async sendListExcel(@Param("id") id: number) {
+        this.logger.log('발송 목록 엑셀 데이터 출력');
+        const res = await this.sendService.sendListExcel(id);
+
+        return res;
+    }
     
     @ApiOperation({summary:'발송 단일 데이터 조회'})
     @Get('/sendOne/:id')

@@ -40,3 +40,33 @@ export const getOutage = (list) => {
 
     return outageList;
 }
+
+
+export const checkOutage = (outage: string) => {
+    let tempOutage = outage.split(' ');
+
+    let month;
+    let weight;
+    let outageFlag = false;
+
+    try {
+        month = parseInt(tempOutage[0].replace('달', ''));
+        weight = parseInt(tempOutage[1].replace('kg', ''));
+
+        if (weight > 6) {
+            outageFlag = true;
+        } else {
+            if (month === 1) {
+                if (weight >= 4) outageFlag = true;
+            } else if (month === 2) {
+                if (weight >= 5) outageFlag = true;
+            } else if (month === 3) {
+                if (weight >= 7) outageFlag = true;
+            }
+        }
+    } catch (err) {
+        //console.log(err);
+    }
+
+    return outageFlag;
+}
