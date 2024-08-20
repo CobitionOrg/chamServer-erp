@@ -114,9 +114,9 @@ const getItemShortName = (item: string) => {
 }
  
 export const getServiceItem = (item) => {
-    console.log(item);
+    // console.log(item);
     const arr = item.split('(s');
-    console.log(arr);
+    // console.log(arr);
     const onlyItem = arr[0];
     const serviceItem = arr[1] != undefined ? arr[1].replace(')','') : '0'
 
