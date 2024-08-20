@@ -257,7 +257,7 @@ export class SendService {
      */
     async getFixOrderTempList(id: number) {
         try {
-            console.log('this is fixed list');
+            // console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
@@ -349,7 +349,7 @@ export class SendService {
      */
     async getOrderTempList(id: number) {
         try {
-            console.log('this list is not fixed');
+            // console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id
@@ -599,11 +599,11 @@ export class SendService {
             const objOrder: any = {};
             const objOrderItem: any = [];
 
-            //console.log(insertOrder);
+            // console.log(insertOrder);
 
             //테이블 별 객체로 분리
             insertOrder.forEach(e => {
-                //console.log(e)
+                // console.log(e)
                 if (e.orderType == 'order') {
                     objOrder[`${e.code}`] = e.answer;
                 } else if (e.orderType == 'patient') {
@@ -656,7 +656,7 @@ export class SendService {
                     //합배송, 분리 배송이 아닐 시
                     price = getOrderPrice.getPrice(exTempOrder[0].orderSortNum);
                 } else if (exTempOrder[0].orderSortNum == 6) {
-                    console.log('합배송일 시')
+                    // console.log('합배송일 시')
 
                     const combineOrders = await tx.order.findMany({
                         where: {
@@ -679,7 +679,7 @@ export class SendService {
                     anotherOrder[0].orderItems.forEach(e => tempObjOrder.push(e));
 
                     let sendTaxFlag = checkSend(tempObjOrder); //수정 되는 주문이 택배비 부과 주문인지
-                    console.log('sendTaxFlag : ' + sendTaxFlag);
+                    // console.log('sendTaxFlag : ' + sendTaxFlag);
                     if (sendTaxFlag) {
                         //택배비 부과 주문일 시
                         price = getOnlyPrice(objOrderItem, itemList);
@@ -687,8 +687,8 @@ export class SendService {
 
                         price > anotherPrice ? anotherPrice += 3500 : price += 3500; //일단 가격이 적은 쪽으로 택배비 책정
 
-                        console.log('-------------' + anotherPrice);
-                        console.log('///////////////' + price);
+                        // console.log('-------------' + anotherPrice);
+                        // console.log('///////////////' + price);
                         await tx.order.update({
                             where: { id: anotherOrder[0].id },
                             data: { price: anotherPrice }
@@ -717,7 +717,7 @@ export class SendService {
                         if (surveyDto.separateOrder.sendTax) price += 3500;
 
                         exTempOrder.forEach((e) => {
-                            console.log(e);
+                            // console.log(e);
                             if (e.tempOrderItems.id !== surveyDto.separateOrder.id && e.tempOrderItems.sendTax) {
                                 //각 분리 배송 데이터가 택배비를 받아야 할 때
                                 price += 3500; //제품 가격에 택배비 합산
@@ -737,7 +737,7 @@ export class SendService {
                     price = getOrderPrice.getTenDiscount();
                 }
 
-                console.log('---------------' + price + '-----------------')
+                // console.log('---------------' + price + '-----------------')
 
                 const encryptedAddr = this.crypto.encrypt(objPatient.addr);
                 const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
@@ -809,14 +809,14 @@ export class SendService {
                     }
                 });
 
-                console.log('----------------')
-                console.log(objOrderItem)
+                // console.log('----------------')
+                // console.log(objOrderItem)
                 const items = [];
                 
                 let assistantFlag = false;
 
                 objOrderItem.forEach((e) => {
-                    console.log(e);
+                    // console.log(e);
                     if (e.type == 'assistant') {
                         //assistant는 string
                         const obj = {
@@ -847,7 +847,7 @@ export class SendService {
 
                 if(assistantFlag && objOrder.orderSortNum === 1) {
                     //별도 주문이 추가 되어 orderSortNum이 특이로 바뀌어야 될 때
-                    console.log('하이루')
+                    // console.log('하이루')
                     await tx.tempOrder.updateMany({
                         where:{orderId:orderId},
                         data:{orderSortNum:2}
@@ -1056,8 +1056,8 @@ export class SendService {
                 styleHeaderCell(cell);
                 sheet.getColumn(colNum).width = headerWidths[colNum - 1];
             });
-            console.log('---------------------')
-            console.log(list);
+            // console.log('---------------------')
+            // console.log(list);
             for(const e of list){
                 const { name, phoneNum } = e.patient;
                 const addr = e.addr;
@@ -1067,7 +1067,7 @@ export class SendService {
                 let service = 0;
                 let assistant = '';
                 for (let i = 0; i < orderItemList.length; i++) {
-                    console.log(orderItemList[i]);
+                    // console.log(orderItemList[i]);
                     let item = getItem(orderItemList[i].item);
                     if (item !== '') {
                         const { onlyItem, serviceItem } = getServiceItem(item);
@@ -1096,7 +1096,7 @@ export class SendService {
                 }
 
                 if(assistant !== ''){
-                    console.log('tlqkf');
+                    // console.log('tlqkf');
                     if(orderStr !== ''){
                         orderStr+='+';
                     }
@@ -1138,11 +1138,11 @@ export class SendService {
      */
     async setSendNum(sendExcelDto: SendOrder[]) {
         try {
-            console.log(sendExcelDto);
+            // console.log(sendExcelDto);
             const qryArr = [];
 
             sendExcelDto.forEach((e) => {
-                console.log(e);
+                // console.log(e);
                 const qry = this.prisma.tempOrder.update({
                     where: {
                         id: e.id
@@ -1157,7 +1157,7 @@ export class SendService {
             });
 
             await Promise.all([...qryArr]).then((value) => {
-                console.log(value);
+                // console.log(value);
                 return { success: true, status: HttpStatus.OK };
             }).catch((err) => {
                 this.logger.error(err);
@@ -1408,7 +1408,7 @@ export class SendService {
 
             // console.log(list);
             for (let i = 0; i < list.length; i++) {
-                console.log(list[i]);
+                // console.log(list[i]);
                 await tx.tempOrder.update({
                     where: { id: list[i].id },
                     data: { sortFixNum: i + 1 }
@@ -1465,12 +1465,12 @@ export class SendService {
      */
     async updateSendTitle(updateTitleDto: UpdateTitleDto) {
         try {
-            console.log(updateTitleDto.date)
+            // console.log(updateTitleDto.date)
             let check = await this.checkSendTitle(updateTitleDto.title);
             const date = new Date(updateTitleDto.date)
-            console.log(date);
+            // console.log(date);
             const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-            console.log(kstDate);
+            // console.log(kstDate);
 
             if (check.success) {
                 await this.prisma.sendList.update({
@@ -1547,7 +1547,7 @@ export class SendService {
                 select: { title: true, id: true, amount: true, fixFlag: true }
             });
 
-            console.log(response);
+            // console.log(response);
             return { success: true, list: response, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
@@ -1610,8 +1610,8 @@ export class SendService {
             const res = await this.getOrderTempList(id);
             const list = res.list;
 
-            console.log('==================');
-            console.log(list);
+            // console.log('==================');
+            // console.log(list);
             const wb = new Excel.Workbook();
             const sheet = wb.addWorksheet("챠팅 엑셀");
             const header = ['이름', '핸드폰 번호', '주문수량', '별도구매','특이사항','현금','카드'];
@@ -1637,11 +1637,11 @@ export class SendService {
                 let { name, phoneNum } = e.patient;
                 phoneNum = getPhoneNum(phoneNum);
 
-                console.log(e.tempOrderItems);
+                // console.log(e.tempOrderItems);
                 let items = '';
                 let assistants = '';
                 for (let i = 0; i < e.order.orderItems.length; i++) {
-                    console.log(e.order.orderItems[i].item)
+                    // console.log(e.order.orderItems[i].item)
                     if(e.order.orderItems[i].type === 'assistant') {
                         const assistant = getItem(e.order.orderItems[i].item);
                         assistants += `${assistant}/`;
@@ -1722,14 +1722,14 @@ export class SendService {
      */
     async getUpdateInfo(id: number) {
         try {
-            console.log(id);
+            // console.log(id);
             const list = await this.prisma.updateInfo.findMany();
 
             const checked = await this.prisma.orderUpdateInfo.findMany({
                 where: { tempOrderId: id }
             });
 
-            console.log(checked);
+            // console.log(checked);
 
             return { success: true, status: HttpStatus.OK, list, checked }
         } catch (err) {
@@ -1762,8 +1762,8 @@ export class SendService {
                     data: { updateInfoCheck: false, updateInfoCheckGam: false }
                 });
                 const qryArr = insertUpdateInfoDto.infoData.map(async e => {
-                    console.log('------------------');
-                    console.log(e);
+                    // console.log('------------------');
+                    // console.log(e);
                     return tx.orderUpdateInfo.create({
                         data: {
                             info: e.info,
@@ -2049,6 +2049,7 @@ export class SendService {
                             id: true,
                             isFirst: true,
                             orderSortNum: true,
+                            payType: true,
                             patient: {
                                 select: {
                                     id: true,
@@ -2065,6 +2066,7 @@ export class SendService {
                                     card: true,
                                     cash: true,
                                     remark: true,
+                                    combineNum: true,
                                     orderItems: {
                                         select: { item: true, type: true }
                                     }
@@ -2117,14 +2119,14 @@ export class SendService {
                 }
             });
 
-            //console.log(sendList);
+            // console.log(sendList);
 
             const tempOrderList = sendList.tempOrders;
 
             const sortItemsList = sortItems(tempOrderList, true);
             const sortedList = getSortedList(sortItemsList);
 
-            console.log(sortedList);
+            // console.log(sortedList);
 
             const wb = new Excel.Workbook();
             
@@ -2134,7 +2136,7 @@ export class SendService {
             const sheet = wb.addWorksheet(`${title} 감비환장부`);
             styleHeaderCell(wb);
             //헤더 부분
-            sheet.mergeCells('A1:K1');
+            sheet.mergeCells('A1:J1');
             sheet.getCell('G1').value = sendList.title + ' 감비환 장부'
             sheet.getCell('A1').font = { size: 24, bold: true };
             sheet.getCell('A1').alignment = {
@@ -2143,8 +2145,8 @@ export class SendService {
                 wrapText: true,
             };
             //주문 내역 부분
-            const headers = ["", "설문지번호", "초/재", "이름", "감&쎈", "요요", "입금", "카드", "별도구매", "특이사항", "현금영수증"];
-            const headerWidths = [5, 16, 9, 16, 15, 10, 16, 16, 12, 25, 18];
+            const headers = ["", "설문지번호", "초/재", "이름", "감&쎈", "요요", "입금", "카드", "별도구매", "특이사항"];
+            const headerWidths = [5, 16, 9, 16, 15, 10, 16, 16, 12, 25];
 
             const headerRow = sheet.addRow(headers);
             headerRow.height = 30.75;
@@ -2158,21 +2160,22 @@ export class SendService {
             let isSeparteId = 0;
 
             sortedList.forEach((e, i) => {
-                // 현금 영수증 관련
-                let cashReceipt = e.order.cachReceipt;
-                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
-                if (e.order.payType === "계좌이체"
-                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
-                    && e.order.cash < 100000) {
-                    cashReceipt = 'x';
-                }
-                // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 이상이면 빈 칸으로
-                if (e.order.payType === "계좌이체"
-                    && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
-                    && e.order.cash >= 100000
-                ) {
-                    cashReceipt = '';
-                }
+                // // 현금 영수증 관련
+                // let cashReceipt = e.order.cachReceipt;
+                // // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 미만이면 x로 나오고
+                // if (e.order.payType === "계좌이체"
+                //     && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                //     && e.order.cash < 100000) {
+                //     cashReceipt = 'x';
+                // }
+                // // 계좌 이체, 현금 영수증 요청 x 혹은 빈 칸, 10만원 이상이면 빈 칸으로
+                // if (e.order.payType === "계좌이체"
+                //     && (e.order.cachReceipt === "x" || e.order.cachReceipt === '')
+                //     && e.order.cash >= 100000
+                // ) {
+                //     cashReceipt = '';
+                // }
+
                 if (e.orderSortNum != 7) { //분리 배송이 아닐 때
                     const orderId = e.order.id;
                     const isFirst = e.isFirst ? '초진' : '재진';
@@ -2182,7 +2185,7 @@ export class SendService {
                     const card = e.order.card == 0 ? '' : e.order.card;
                     const message = (e.order.remark ? e.order.remark + '/' : '');
 
-                    const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
+                    const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message];
 
                     const appendRow = sheet.addRow(rowDatas);
                     // appendRow.eachCell((cell, colNum) => {
@@ -2193,7 +2196,7 @@ export class SendService {
                     // }
                 } else if (e.orderSortNum == 7) { //분래 배송일 시
                     if (isSeparteId == e.order.id) {
-                        console.log('already insert data');
+                        // console.log('already insert data');
                     } else {
                         isSeparteId = e.order.id;
 
@@ -2205,7 +2208,7 @@ export class SendService {
                         const card = e.order.card == 0 ? '' : e.order.card;
                         const message = e.order.remark ?? '' + '/' + e.order.message;
 
-                        const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message, cashReceipt];
+                        const rowDatas = [i + 1, orderId, isFirst, name, common, yoyo, cash, card, assistant, message];
 
                         const appendRow = sheet.addRow(rowDatas);
                         // appendRow.eachCell((cell, colNum) => {
@@ -2408,7 +2411,7 @@ export class SendService {
     try {
       const presignedUrl = await generateUploadURL();
 
-      console.log(presignedUrl);
+    //   console.log(presignedUrl);
       await this.saveS3Data(presignedUrl.uploadURL, presignedUrl.imageName);
 
       await axios.put(presignedUrl.uploadURL, {

@@ -10,7 +10,7 @@
 // 합배송(5)
 // 분리배송(6)
 export const getFooter = (list:Array<any>,addSend) => {
-    console.log(list);
+    // console.log(list);
     let logen = 0; //로젠 수
     let combine = 0; //합배송 수
     let orderCount = 0; //총 인원
