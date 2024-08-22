@@ -1246,12 +1246,16 @@ export class SendService {
 
 
     /**발송목록 복구 */
-    async sibal() {
+    async backSend(id: number) {
         try{
             await this.prisma.$transaction(async (tx) => {
+                await tx.sendList.update({
+                    where:{id:id},
+                    data:{useFlag:true},
+                });
                 
                 const list = await tx.tempOrder.findMany({
-                    where: { sendListId: 234 },
+                    where: { sendListId: id },
                     select: {
                         order: {
                             select: {
