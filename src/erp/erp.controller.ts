@@ -885,7 +885,6 @@ export class ErpController {
         
     }
 
-    @Public()
     @ApiOperation({summary:'발송목록 복구'})
     @Patch('/backSend/:id')
     async backSend(@Param("id") id: number) {
