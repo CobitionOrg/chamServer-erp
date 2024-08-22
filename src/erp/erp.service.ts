@@ -1366,7 +1366,7 @@ export class ErpService {
                             name: true,
                             addr: true,
                             phoneNum: true,
-                            socialNum: true,
+                            // socialNum: true,
                             patientBodyType: {
                                 select: {
                                     tallWeight: true,
@@ -1396,12 +1396,12 @@ export class ErpService {
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPatientAddr = this.crypto.decrypt(row.patient.addr);
-                const decryptedPatientSocialNum = this.crypto.decrypt(row.patient.socialNum);
+                // const decryptedPatientSocialNum = this.crypto.decrypt(row.patient.socialNum);
 
                 row.patient.phoneNum = decryptedPhoneNum;
                 row.addr = decryptedAddr;
                 row.patient.addr = decryptedPatientAddr;
-                row.patient.socialNum = decryptedPatientSocialNum;
+                // row.patient.socialNum = decryptedPatientSocialNum;
             }
             
             return { success: true, list: sortedList };
