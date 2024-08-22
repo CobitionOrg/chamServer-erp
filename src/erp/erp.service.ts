@@ -2361,8 +2361,9 @@ export class ErpService {
         try {
             const encryptedPhoneNum = this.crypto.encrypt(updateSurveyDto.patient.phoneNum);
             const encryptedAddr = this.crypto.encrypt(updateSurveyDto.addr);
+            const encryptedSocialNum = this.crypto.encrypt(updateSurveyDto.patient.socialNum);
 
-            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr };
+            const patientData = { ...updateSurveyDto.patient, phoneNum: encryptedPhoneNum, addr: encryptedAddr, socialNum: encryptedSocialNum };
             const orderItemsData = updateSurveyDto.orderItems.filter((item) => {
                 return item.item !== '';
             });
