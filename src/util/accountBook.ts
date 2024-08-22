@@ -74,11 +74,14 @@ export const orderItemLen = (list) => {
     let gam = 0;
     let ssen = 0;
     let yoyo = 0;
+
     list.forEach(e => {
-        const itemLen = getItemLen(e.order.orderItems);
-        gam += itemLen.gam;
-        ssen += itemLen.ssen;
-        yoyo += itemLen.yoyo;
+        if(!e.cancelFlag) { //발송목록에서 주문 취소된 애들 제외
+            const itemLen = getItemLen(e.order.orderItems);
+            gam += itemLen.gam;
+            ssen += itemLen.ssen;
+            yoyo += itemLen.yoyo;
+        }
     });
 
     let detail =`감 ${gam}, 쎈 ${ssen}, 요 ${yoyo}, 전체 ${gam+ssen+yoyo}`;
