@@ -795,19 +795,22 @@ export class SendService {
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
-
-                await tx.tempOrder.updateMany({
-                    where: { orderId: orderId },
-                    data: {
-                        cachReceipt: objOrder.cashReceipt,
-                        sendNum: objOrder.sendNum,
-                        addr: encryptedAddr,
-                        payType: objOrder.payType,
-                        updatePrciecFlag: checkPriceFlag,
-                        orderSortNum: parseInt(objOrder.orderSortNum),
-                        
-                    }
-                });
+                if(exTempOrder[0].orderSortNum>-1 && exTempOrder[0].orderSortNum<6){
+                    //합배송 분리배송 교환 누락 제외만 순서 바뀌게
+                    await tx.tempOrder.updateMany({
+                        where: { orderId: orderId },
+                        data: {
+                            cachReceipt: objOrder.cashReceipt,
+                            sendNum: objOrder.sendNum,
+                            addr: encryptedAddr,
+                            payType: objOrder.payType,
+                            updatePrciecFlag: checkPriceFlag,
+                            orderSortNum: parseInt(objOrder.orderSortNum),
+                            
+                        }
+                    });
+    
+                }
 
                 // console.log('----------------')
                 // console.log(objOrderItem)
@@ -1253,7 +1256,7 @@ export class SendService {
                     where:{id:id},
                     data:{useFlag:true},
                 });
-                
+
                 const list = await tx.tempOrder.findMany({
                     where: { sendListId: id },
                     select: {
