@@ -1925,45 +1925,50 @@ export class SendService {
      */
     async cancelSendOrderFlag(id: number) {
         try {
-            const tempOrder = await this.prisma.tempOrder.update({
-                where: { id: id },
-                data: { cancelFlag: true }
-            });
-
-            await this.prisma.order.update({
-                where:{
-                    id: tempOrder.orderId
-                },
-                data:{
-                    cash: 0,
-                    card: 0
-                }
-            });
-
-            const exOrder = await this.prisma.tempOrder.findUnique({
-                where: { id: id },
-                select: {
-                    order: {
-                        select: {
-                            friendDiscount: true,
-                        }
-                    },
-                    patient: {
-                        select: {
-                            id: true
-                        }
-                    },
-
-                }
-            });
-
-            //지인 10퍼 할인 주문일 시 주문 체크 원 상태로 복구
-            if (exOrder.order.friendDiscount) {
-                await this.prisma.friendRecommend.updateMany({
-                    where: { patientId: exOrder.patient.id },
-                    data: { useFlag: true }
+            await this.prisma.$transaction(async (tx) => {
+                const tempOrder = await tx.tempOrder.update({
+                    where: { id: id },
+                    data: { cancelFlag: true }
                 });
-            }
+    
+                await tx.order.update({
+                    where:{
+                        id: tempOrder.orderId
+                    },
+                    data:{
+                        cash: 0,
+                        card: 0
+                    }
+                });
+    
+                const exOrder = await tx.tempOrder.findUnique({
+                    where: { id: id },
+                    select: {
+                        order: {
+                            select: {
+                                friendDiscount: true,
+                            }
+                        },
+                        patient: {
+                            select: {
+                                id: true
+                            }
+                        },
+    
+                    }
+                });
+    
+                //지인 10퍼 할인 주문일 시 주문 체크 원 상태로 복구
+                if (exOrder.order.friendDiscount) {
+                    await tx.friendRecommend.updateMany({
+                        where: { patientId: exOrder.patient.id },
+                        data: { useFlag: true }
+                    });
+                }
+    
+    
+            });
+
 
             return { success: true, status: HttpStatus.OK, msg: '주문 취소' }
 
@@ -2049,8 +2054,8 @@ export class SendService {
                         where: {
                             NOT: {
                                 orderSortNum: -4, //환불 데이터 제외
-                                cancelFlag: true
                             },
+                            cancelFlag: null
                         },
                         orderBy: { orderSortNum: 'asc' },
                         select: {
