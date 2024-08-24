@@ -1979,7 +1979,7 @@ export class ErpService {
             //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
-                    isComplete: false,
+                    // isComplete: false,
                     isFirst: true,
                     date: {
                         gte: startDate,
@@ -2015,7 +2015,7 @@ export class ErpService {
 
             const returnList = await this.prisma.order.findMany({
                 where: {
-                    isComplete: false,
+                    // isComplete: false,
                     isFirst: false,
                     date: {
                         gte: startDate,

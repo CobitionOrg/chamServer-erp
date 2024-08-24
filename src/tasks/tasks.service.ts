@@ -282,7 +282,7 @@ export class TasksService {
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
     // 매주 토요일 오전 9시
-    @Cron('0 0 9 * * 6', { timeZone: "Asia/Seoul" })
+    @Cron('0 0 11 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -322,7 +322,7 @@ export class TasksService {
             console.log(excelFilePath);
 
             //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-            //await this.sendTalk(excelFilePath,'구매후기');
+            await this.sendTalk(excelFilePath,'구매후기');
         }
     }
 
