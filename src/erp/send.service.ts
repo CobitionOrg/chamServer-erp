@@ -2048,9 +2048,9 @@ export class SendService {
                     tempOrders: {
                         where: {
                             NOT: {
-                                orderSortNum: -4 //환불 데이터 제외
+                                orderSortNum: -4, //환불 데이터 제외
+                                cancelFlag: true
                             },
-                            cancelFlag: false
                         },
                         orderBy: { orderSortNum: 'asc' },
                         select: {
@@ -2127,7 +2127,7 @@ export class SendService {
                 }
             });
 
-            // console.log(sendList);
+            console.log(sendList);
 
             const tempOrderList = sendList.tempOrders;
 
