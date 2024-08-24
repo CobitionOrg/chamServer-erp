@@ -2049,7 +2049,8 @@ export class SendService {
                         where: {
                             NOT: {
                                 orderSortNum: -4 //환불 데이터 제외
-                            }
+                            },
+                            cancelFlag: false
                         },
                         orderBy: { orderSortNum: 'asc' },
                         select: {
