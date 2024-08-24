@@ -2127,7 +2127,7 @@ export class SendService {
                 }
             });
 
-            console.log(sendList);
+            // console.log(sendList);
 
             const tempOrderList = sendList.tempOrders;
 
