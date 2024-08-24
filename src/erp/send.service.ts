@@ -1969,7 +1969,7 @@ export class SendService {
     
             });
 
-            
+
             return { success: true, status: HttpStatus.OK, msg: '주문 취소' }
 
         } catch (err) {
@@ -2054,8 +2054,8 @@ export class SendService {
                         where: {
                             NOT: {
                                 orderSortNum: -4, //환불 데이터 제외
-                                cancelFlag: true
                             },
+                            cancelFlag: null
                         },
                         orderBy: { orderSortNum: 'asc' },
                         select: {
