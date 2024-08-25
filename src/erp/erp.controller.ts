@@ -34,6 +34,7 @@ import { zip } from 'rxjs/operators';
 import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
 import { RouteFlagDto } from './Dto/routeFlag.dto';
+import { CancelFriendDto } from './Dto/cancelFriend.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -893,6 +894,16 @@ export class ErpController {
 
         return res;
     }
+
+    @ApiOperation({summary:'지인 10포 취소'})
+    @Delete('/cancelFriendRecommend')
+    async cancelFriendRecommend(@Body() cancelRecommendDto: CancelFriendDto) {
+        this.logger.log('지인 10포 취소 처리');
+        const res = await this.erpService.cancelFriendRecommend(cancelRecommendDto);
+
+        return res;
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
     /////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////

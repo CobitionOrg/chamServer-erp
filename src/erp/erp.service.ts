@@ -36,6 +36,7 @@ import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
 import { RouteFlagDto } from './Dto/routeFlag.dto';
 import { getItemOnlyLen } from 'src/util/accountBook';
+import { CancelFriendDto } from './Dto/cancelFriend.dto';
 const Prisma = require('@prisma/client').Prisma;
 
 @Injectable()
@@ -522,6 +523,7 @@ export class ErpService {
                     },
                     friendRecommends: {
                         select: {
+                            id: true,
                             checkFlag: true,
                             name: true,
                             phoneNum: true,
@@ -4131,6 +4133,43 @@ export class ErpService {
         }
     }
 
+    /**
+     * 지인 10포 취소
+     * @param friendRecommendId 
+     * @returns {success:boolean,status:HttpStatus}
+     */
+    async cancelFriendRecommend(cancelRecommendDto: CancelFriendDto) {
+        try{
+            let dataCondition : { orderSortNum: number; remark?: string }= {orderSortNum:cancelRecommendDto.orderSortNum}
+            console.log(cancelRecommendDto.detail)
+            if(cancelRecommendDto.detail !== undefined){    
+                dataCondition = {...dataCondition, remark: cancelRecommendDto.detail}
+            }
+
+            await this.prisma.$transaction(async (tx) =>{
+                await tx.friendRecommend.delete({
+                    where:{id:cancelRecommendDto.friendRecommendId}
+                });
+
+                await tx.order.update({
+                    where:{id:cancelRecommendDto.orderId},
+                    data:{...dataCondition}
+                });
+
+            });
+
+            return {success:true, status:HttpStatus.CREATED};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    } 
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
