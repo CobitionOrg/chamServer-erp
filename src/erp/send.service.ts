@@ -546,6 +546,7 @@ export class SendService {
                             },
                             friendRecommends:{
                                 select:{
+                                    id:true,
                                     checkFlag: true,
                                     name: true,
                                     phoneNum: true,
