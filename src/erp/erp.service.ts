@@ -2030,7 +2030,7 @@ export class ErpService {
                             id: true,
                             name: true,
                             phoneNum: true,
-                            // socialNum: true,
+                            socialNum: true,
                         }
                     },
                     id: true,
@@ -2043,10 +2043,10 @@ export class ErpService {
             for (let row of returnList) {
                 // const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
-                // const decryptedSocialNum = this.crypto.decrypt(row.patient.socialNum);
+                const decryptedSocialNum = this.crypto.decrypt(row.patient.socialNum);
                 // row.addr = decryptedAddr;
                 row.patient.phoneNum = decryptedPhoneNum;
-                // row.patient.socialNum = decryptedSocialNum;
+                row.patient.socialNum = decryptedSocialNum;
             }
 
             const wb = new Excel.Workbook();
@@ -2094,8 +2094,8 @@ export class ErpService {
 
             
             const sheet2 = wb.addWorksheet("재진");
-            const headers2 = ['이름', '휴대폰 번호', '특이사항(추천인)', '설문지번호'];
-            const headerWidths2 = [10, 20, 20, 15];
+            const headers2 = ['이름', '주민번호', '휴대폰 번호', '특이사항(추천인)', '설문지번호'];
+            const headerWidths2 = [10, 30, 20, 20, 15];
 
             //상단 헤더 추가
             const headerRow2 = sheet2.addRow(headers2);
@@ -2109,9 +2109,10 @@ export class ErpService {
 
             //각 data cell에 데이터 삽입
             returnList.forEach((e) => {
-                const { name, phoneNum } = e.patient;
+                const { name, phoneNum, socialNum } = e.patient;
                 const rowDatas = [
                     name,
+                    socialNum,
                     hyphen.phoneNumHyphen(phoneNum),
                     e.route,
                     e.id
