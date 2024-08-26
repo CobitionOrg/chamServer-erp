@@ -25,11 +25,9 @@ export class LogService {
         const date = new Date();
         let res;
         if(header!=null){
-        const token = await this.jwtService.decode(getToken(header));
-        res = await this.logRepository.createLog(log,date,stage,token.sub);
-        }
-        else
-        {
+            const token = await this.jwtService.decode(getToken(header));
+            res = await this.logRepository.createLog(log,date,stage,token.sub);
+        } else {
             // const id = await this.prisma.user.findFirst({
             //     where: {
             //         grade: "admin"
