@@ -360,7 +360,7 @@ export class TasksService {
             console.log(excelFilePath);
     
             //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-            //await this.sendTalk(excelFilePath,'유선상담연결안될시');
+            await this.sendTalk(excelFilePath,'유선상담연결안될시');
         }
     }
 
@@ -416,7 +416,7 @@ export class TasksService {
                 const fristExcelPath = await this.completeSendExcel(firstTalk.list, `${fName}-first`);
     
                 //알람통 발송 ㄱㄱ
-                //await this.sendTalk(fristExcelPath,'발송알림톡');
+                await this.sendTalk(fristExcelPath,'발송알림톡');
             }
     
             //재진 엑셀 파일
@@ -424,7 +424,7 @@ export class TasksService {
                 const returnExcelPath = await this.completeSendExcel(returnTalk.list, `${fName}-return`);
     
                 //알람톡 발송 ㄱㄱ
-                //await this.sendTalk(returnExcelPath,'발송알림톡');
+                await this.sendTalk(returnExcelPath,'발송알림톡');
             }
         }
     }
@@ -464,9 +464,51 @@ export class TasksService {
             const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
 
             //발송 알람톡 ㄱㄱ
-            //await this.sendTalk(notPayExcelPath,'미입금');
+            await this.sendTalk(notPayExcelPath,'미입금');
         }
     }
+
+    //////////////////////////////////////////////////// 미결제 24-08-27(화) 하루만 발송
+    //////////////////////////////////////////////////// 발송 이후 코드 지우기
+    @Cron('0 0 9 * * 2', { timeZone: "Asia/Seoul" })
+    async notPayOneDay() {
+        const date = new Date();
+        const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+        const isHoliday = await this.IsHoliday();
+        console.log("Is holiday?", isHoliday);
+
+        if(isHoliday) {
+            // 휴일일 시
+            return;
+        } else {
+            // 휴일 아닐 시
+            // 하루 전
+            const yesterdayKstDate = new Date(kstDate);
+            yesterdayKstDate.setDate(kstDate.getDate() - 1);
+            yesterdayKstDate.setUTCHours(23, 59, 59, 999);
+
+            // 4주 전
+            const fourWeeksAgoKstDate = new Date(yesterdayKstDate);
+            fourWeeksAgoKstDate.setDate(yesterdayKstDate.getDate() - 28);
+            fourWeeksAgoKstDate.setUTCHours(0, 0, 0, 0);
+
+            console.log("미입금!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            console.log("yesterdayKstDate", yesterdayKstDate);
+            console.log("fourWeeksAgoKstDate", fourWeeksAgoKstDate);
+
+            const res = await this.tasksRepository.notPay(yesterdayKstDate, fourWeeksAgoKstDate);
+            if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+
+            const fileName = 'notPay';
+            const notPayExcelPath = await this.getTalkExcel(res.list, fileName);
+
+            //발송 알람톡 ㄱㄱ
+            await this.sendTalk(notPayExcelPath,'미입금');
+        }
+    }
+    ////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////
 
     /**
     * 접수 알람톡 용 엑셀 파일 만들기
