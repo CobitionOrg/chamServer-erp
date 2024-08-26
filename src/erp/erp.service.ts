@@ -585,19 +585,19 @@ export class ErpService {
                 orderConditions = {
                     // consultingType: false,
                     // isComplete: false,
-                    useFlag: true,
+                    //useFlag: true,
                 }
             } else {
                 //날짜 조건 O
                 const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
                 
-                firstCount = await this.getOrderCount(startDate,endDate,true);
-                returnCount = await this.getOrderCount(startDate,endDate,false);
+                firstCount = await this.getOrderCount(startDate,endDate,true, true);
+                returnCount = await this.getOrderCount(startDate,endDate,false, true);
 
                 orderConditions = {
                     // consultingType: false,
                     // isComplete: false,
-                    useFlag: true,
+                    //useFlag: true,
                     date: {
                         gte: startDate,
                         lt: endDate,
@@ -698,13 +698,20 @@ export class ErpService {
      * @param startDate 
      * @param endDate 
      * @param isFirst 
+     * @param useFlag
      * @returns 
      */
-    async getOrderCount(startDate,endDate,isFirst) {
+    async getOrderCount(startDate,endDate,isFirst,useFlag?) {
         try{
+            let condition = {}
+            if(useFlag == undefined) {
+                condition = {useFlag:true}
+            }
+
+            console.log(condition);
             const res = await this.prisma.order.findMany({
                 where:{
-                    useFlag:true,
+                    ...condition,
                     date: {
                         gte: startDate,
                         lt: endDate,
