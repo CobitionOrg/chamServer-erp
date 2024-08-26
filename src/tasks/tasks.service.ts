@@ -470,7 +470,7 @@ export class TasksService {
 
     //////////////////////////////////////////////////// 미결제 24-08-27(화) 하루만 발송
     //////////////////////////////////////////////////// 발송 이후 코드 지우기
-    @Cron('0 0 9 * * 2', { timeZone: "Asia/Seoul" })
+    @Cron('0 0 10 * * 2', { timeZone: "Asia/Seoul" })
     async notPayOneDay() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
