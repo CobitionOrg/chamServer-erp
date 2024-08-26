@@ -2761,12 +2761,34 @@ export class ErpService {
                     }
                 }
 
-                const sendListId = await this.insertToSendList(tx, orderItems);
+                let sendListIdCheck = [];
+                for (let i = 0; i < orders.length; i++) {
+                    const isInTempOrderRes = await this.isInTempOrder(orders[i].id);
+                    const check = isInTempOrderRes.check;
+                    const sendListId = isInTempOrderRes.sendListId;
+
+                    if(check) {
+                        sendListIdCheck.push(sendListId);
+                    }
+                }
+
+                let sendListId;
+
+                if(sendListIdCheck.length === 0) {
+                    // 입금 + 입금 합배송 시 발송 목록 현황에 따라 snedListId 할당
+                    sendListId = await this.insertToSendList(tx, orderItems);
+                } else {
+                    // 입금 + 발송 합배송 시 발송 목록에 포함된 주문의 발송일자에 추가
+                    sendListId = sendListIdCheck[0];
+                }
+
+                // const sendListId = await this.insertToSendList(tx, orderItems);
 
                 const encryptedAddr = this.crypto.encrypt(combineOrderDto.addr);
 
                 for (let i = 0; i < orders.length; i++) {
-                    const check = await this.isInTempOrder(orders[i].id);
+                    const isInTempOrderRes = await this.isInTempOrder(orders[i].id);
+                    const check = isInTempOrderRes.check;
                     if (check) {
                         // 발송 목록에 있는 항목이면 update
                         const tempOrder = await tx.tempOrder.updateMany({
@@ -2888,7 +2910,11 @@ export class ErpService {
 
             console.log(res);
 
-            return res === null ? false : true;
+            if(res === null) {
+                return { check: false, sendListId: null };
+            } else {
+                return { check: true, sendListId: res.sendListId };
+            }
         } catch (err) {
             this.logger.error(err);
             throw new HttpException({
