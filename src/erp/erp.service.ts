@@ -3145,12 +3145,19 @@ export class ErpService {
                 const patientId = cancelOrderDto.patientId;
 
                 await this.prisma.$transaction(async (tx) => {
-                    //orderBodyType soft delete
-                    await tx.orderBodyType.update({
-                        where: { orderId: orderId },
-                        data: { useFlag: false }
+                    // orderBodyType 있는지 조회
+                    const orderBodyType = await tx.orderBodyType.findUnique({
+                        where: { orderId: orderId }
                     });
 
+                    if(orderBodyType) {
+                        //orderBodyType soft delete
+                        await tx.orderBodyType.update({
+                            where: { orderId: orderId },
+                            data: { useFlag: false }
+                        });
+                    }
+                    
                     //orderItem soft delete
                     await tx.orderItem.updateMany({
                         where: { orderId: orderId },
