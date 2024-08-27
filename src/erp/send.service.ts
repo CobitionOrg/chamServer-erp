@@ -625,10 +625,6 @@ export class SendService {
                 }
             });
 
-            console.log('------------------');
-            console.log(objOrder.sendNum)
-
-
             await this.prisma.$transaction(async (tx) => {
                 const exTempOrder = await tx.tempOrder.findMany({
                     where: { orderId: orderId },
