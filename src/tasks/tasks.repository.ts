@@ -593,7 +593,9 @@ export class TasksRepository {
                     useFlag: true,
                     isFirst: true,
                     payFlag: 0,
-
+                    consultingType:false,
+                    phoneConsulting:true,
+                    isComplete:false,
                 },
                 select: {
                     id: true,
@@ -624,7 +626,8 @@ export class TasksRepository {
                     // consultingFlag: false,
                     useFlag: true,
                     payFlag: 0,
-                    isFirst: false
+                    isFirst: false,
+                    consultingFlag:false,
                 },
                 select: {
                     id: true,
