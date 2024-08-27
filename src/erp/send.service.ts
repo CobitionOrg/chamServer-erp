@@ -625,7 +625,6 @@ export class SendService {
                 }
             });
 
-
             await this.prisma.$transaction(async (tx) => {
                 const exTempOrder = await tx.tempOrder.findMany({
                     where: { orderId: orderId },
@@ -796,6 +795,8 @@ export class SendService {
                         payFlag: exTempOrder[0].order.price == price ? exTempOrder[0].order.payFlag : 0, //주문이 수정 되었으므로 결제 미완료 처리
                     }
                 });
+
+                //이 부분 이슈 생성 예정
                 if(exTempOrder[0].orderSortNum>-1 && exTempOrder[0].orderSortNum<6){
                     //합배송 분리배송 교환 누락 제외만 순서 바뀌게
                     await tx.tempOrder.updateMany({
@@ -812,6 +813,14 @@ export class SendService {
                     });
     
                 }
+
+                //임시 조치용
+                await tx.tempOrder.updateMany({
+                    where:{orderId:orderId},
+                    data:{
+                        sendNum: objOrder.sendNum,
+                    }
+                })
 
                 // console.log('----------------')
                 // console.log(objOrderItem)
