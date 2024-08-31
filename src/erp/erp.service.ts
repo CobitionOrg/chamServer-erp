@@ -3695,14 +3695,14 @@ export class ErpService {
             const res = await this.prisma.patient.findMany({
                 where: { name: name }
             });
-
+            console.log(res);
             let flag = false;
             let id = 0;
             for (const e of res) {
                 const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
 
                 if (
-                    e.name === name
+                    e.name.replaceAll(" ","") === name
                     && checkPhoneNum.includes(phoneNum)
                 ) {
                     flag = true;

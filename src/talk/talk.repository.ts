@@ -328,7 +328,10 @@ export class TalkRepositoy {
                         useFlag: true,
                         isFirst:true,
                         payFlag:0, 
-
+                        consultingType:false,
+                        phoneConsulting:true,
+                        isComplete:false,
+    
                      },
                     select: {
                         id: true,
@@ -359,7 +362,8 @@ export class TalkRepositoy {
                         consultingFlag: false, 
                         useFlag: true, 
                         payFlag:0, 
-                        isFirst:false
+                        isFirst:false,
+                        
                     },
                     select: {
                         id: true,
