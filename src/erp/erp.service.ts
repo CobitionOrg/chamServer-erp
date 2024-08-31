@@ -3695,7 +3695,7 @@ export class ErpService {
             const res = await this.prisma.patient.findMany({
                 where: { name: name }
             });
-            console.log(res);
+
             let flag = false;
             let id = 0;
             for (const e of res) {
