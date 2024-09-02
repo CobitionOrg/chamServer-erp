@@ -3702,7 +3702,7 @@ export class ErpService {
                 const checkPhoneNum = this.crypto.decrypt(e.phoneNum);
 
                 if (
-                    e.name === name
+                    e.name.replaceAll(" ","") === name
                     && checkPhoneNum.includes(phoneNum)
                 ) {
                     flag = true;
