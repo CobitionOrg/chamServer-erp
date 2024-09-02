@@ -19,18 +19,23 @@ export class HolidayService {
    * @returns {success:boolean, status:HttpStatus, list }
    */
   async getHolidaysByYearMonth(getDateDto: GetDateDto) {
-    const year = getDateDto.year;
-    const month = getDateDto.month.padStart(2, '0');
-    const nextMonth = (Number(getDateDto.month) + 1)
-      .toString()
-      .padStart(2, '0');
+    let year = Number(getDateDto.year);
+    let month = Number(getDateDto.month);
 
-    // console.log('year', year);
-    // console.log('month', month);
-    // console.log('nextMonth', nextMonth);
+    let nextYear = year;
+    let nextMonth = month + 1;
+    if (nextMonth > 12) {
+      nextYear++;
+      nextMonth = 1;
+    }
 
-    const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
-    const endDate = new Date(`${year}-${nextMonth}-01T00:00:00.000Z`);
+    const yearString = year.toString();
+    const nextYearString = nextYear.toString();
+    const monthString = month.toString().padStart(2, '0');
+    const nextMonthString = nextMonth.toString().padStart(2, '0');
+
+    const startDate = new Date(`${yearString}-${monthString}-01T00:00:00.000Z`);
+    const endDate = new Date(`${nextYearString}-${nextMonthString}-01T00:00:00.000Z`);
 
     const res = await this.holidayRepository.getHolidaysByYearMonth(
       startDate,
@@ -48,16 +53,23 @@ export class HolidayService {
   async postHolidays(postDateDto: PostDateDto) {
     let res;
 
-    const year = postDateDto.year.toString();
-    const month = postDateDto.month.toString().padStart(2, '0');
-    const nextMonth = (postDateDto.month + 1).toString().padStart(2, '0');
+    let year = postDateDto.year;
+    let month = postDateDto.month;
 
-    // console.log(year, typeof year);
-    // console.log(month, typeof month);
-    // console.log(nextMonth, typeof nextMonth);
+    let nextYear = postDateDto.year;
+    let nextMonth = postDateDto.month + 1;
+    if (nextMonth > 12) {
+      nextYear++;
+      nextMonth = 1;
+    }
 
-    const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
-    const endDate = new Date(`${year}-${nextMonth}-01T00:00:00.000Z`);
+    const yearString = year.toString();
+    const nextYearString = nextYear.toString();
+    const monthString = month.toString().padStart(2, '0');
+    const nextMonthString = nextMonth.toString().padStart(2, '0');
+
+    const startDate = new Date(`${yearString}-${monthString}-01T00:00:00.000Z`);
+    const endDate = new Date(`${nextYearString}-${nextMonthString}-01T00:00:00.000Z`);
 
     let days = [];
     if (postDateDto.days.length === 0) {
