@@ -229,7 +229,7 @@ export class TasksService {
 
     //접수 확인 알람톡
     // 매일 9시 12시 15시
-    @Cron('0 0 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 9,12,15 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async orderInsertTalk() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -254,7 +254,7 @@ export class TasksService {
         }
     }
 
-    @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 9,12 * * 6', { timeZone: "Asia/Seoul" })
     async orderInsertTalkSaturday() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -282,7 +282,7 @@ export class TasksService {
 
     //구매 후기 (당주 월-금 초진만 - 발송목록 날짜 별로 가져와서 월요일부터 계산)
     // 매주 토요일 오전 9시
-    @Cron('0 0 11 * * 6', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 11 * * 6', { timeZone: "Asia/Seoul" })
     async payReview() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -328,7 +328,7 @@ export class TasksService {
 
     //유선 상담 연결 안 될 시
     // 매주 금요일 오전 10시
-    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notCall() {
         const today = new Date();
         const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000);
@@ -366,7 +366,7 @@ export class TasksService {
 
     //발송 알림톡 발송
     // 매주 월, 화, 목, 금 오전 11시
-    @Cron('0 0 11 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 11 * * 1,2,4,5', { timeZone: "Asia/Seoul" })
     async completeSend() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -431,7 +431,7 @@ export class TasksService {
 
     //미결제
     // 매주 금요일 오전 10시
-    @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
+    // @Cron('0 0 10 * * 5', { timeZone: "Asia/Seoul" })
     async notPay() {
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
