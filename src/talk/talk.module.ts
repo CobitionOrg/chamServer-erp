@@ -8,6 +8,7 @@ import { ErpService } from 'src/erp/erp.service';
 import { AdminService } from 'src/admin/admin.service';
 import { UserService } from 'src/user/user.service';
 import { Crypto } from 'src/util/crypto.util';
+import { LogRepository } from 'src/log/log.repository';
 
 @Module({
     providers:[
@@ -18,7 +19,8 @@ import { Crypto } from 'src/util/crypto.util';
         AdminService,
         UserService,
         Crypto,
-        
+        LogService,
+        LogRepository
     ],
     controllers: [TalkController]
 }) 

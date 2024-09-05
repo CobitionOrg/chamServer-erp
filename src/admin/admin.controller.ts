@@ -6,6 +6,7 @@ import { getToken } from 'src/util/token';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { PermitListDto } from './Dto/permitUser.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
+import { LogService } from 'src/log/log.service';
 
 @Controller('admin')
 @UseFilters(new HttpExceptionFilter())
@@ -13,6 +14,7 @@ import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 export class AdminController {
     constructor(
         private adminService : AdminService,
+        private logServie: LogService
     ){}
     private readonly logger = new Logger(AdminController.name);
 
@@ -37,6 +39,11 @@ export class AdminController {
     @Patch('/permit')
     async permitUser(@Headers() header, @Body() body:PermitListDto){
         this.logger.log('유저 허용');
+        await this.logServie.createLog(
+            '유저 허용',
+            '관리자 페이지',
+            header
+        );
         return await this.adminService.permitUser(getToken(header), body);
     }
 

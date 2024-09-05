@@ -4,6 +4,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { VisitService } from './visit.service';
 import { GetListDto } from 'src/erp/Dto/getList.dto';
+import { LogService } from 'src/log/log.service';
 
 @Controller('visit')
 @UseFilters(new HttpExceptionFilter())
@@ -11,17 +12,25 @@ import { GetListDto } from 'src/erp/Dto/getList.dto';
 @UseGuards(AuthGuard)
 export class VisitController {
     constructor(
-        private readonly visitService: VisitService
+        private readonly visitService: VisitService,
+        private readonly logService: LogService
     ) { }
 
     private readonly logger = new Logger(VisitController.name);
 
     @ApiOperation({ summary: '방문수령 주문으로 변경' })
     @Patch('/visitOrder/:id')
-    async visitOrder(@Param('id') id: number) {
+    async visitOrder(@Param('id') id: number, @Headers() header) {
         this.logger.log('방문수령 주문으로 변경');
         const res = await this.visitService.visitOrder(id);
 
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 주문 방문수령 주문으로 변경`,
+                '입금상담목록/유선상담목록',
+                header
+            );
+        }
         return res;
     }
 
@@ -44,29 +53,51 @@ export class VisitController {
 
     @ApiOperation({ summary: '방문 수령 계좌 결제 처리' })
     @Patch('/accountPay/:id')
-    async accountPay(@Param('id') id: number) {
+    async accountPay(@Param('id') id: number, @Headers() header) {
         this.logger.log('방문 수령 계좌 결제 처리');
         const res = await this.visitService.accountPay(id);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 주문 방문 수령 계좌 결제 처리`,
+                '방문수령목록',
+                header
+            );
+        }
 
         return res;
     }
 
     @ApiOperation({summary:'방문 수령 방문 결제 처리'})
     @Patch('/visitPay/:id')
-    async visitPay(@Param("id") id: number) {
+    async visitPay(@Param("id") id: number, @Headers() header) {
         this.logger.log('방문 수령 방문 결제 처리');
         const res = await this.visitService.visitPay(id);
 
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 주문 방문 수령 방문 결제 처리`,
+                '방문수령목록',
+                header
+            );
+        }
         return res;
         
     }
 
     @ApiOperation({summary: '방문수령목록에서 주문 완료 처리'})
     @Patch('/complete/:id')
-    async complete(@Param("id") id: number) {
+    async complete(@Param("id") id: number, @Headers() header) {
         this.logger.log("방문수령 완료 처리");
         const res = await this.visitService.complete(id);
 
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 주문 방문수령목록에서 주문 완료 처리`,
+                '방문수령목록',
+                header
+            );
+        }
         return res;
     }
 
