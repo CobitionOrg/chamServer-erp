@@ -769,10 +769,13 @@ export class SendService {
                     if(price !== parseInt(objOrder.card) || price !== parseInt(objOrder.cash)) {
                         cash = price
                     }
-                }else if(price !== parseInt(objOrder.card) || price !== parseInt(objOrder.cash)) {
+                }else if(objOrder.payType === '카드결제') {
                     if(price !== objOrder.card || price !== objOrder.cash) {
                         card = price
                     }
+                }else if(objOrder.payType === '혼용') {
+                    cash = Number(objOrder.cash);
+                    card = Number(objOrder.card);
                 }
 
                 
