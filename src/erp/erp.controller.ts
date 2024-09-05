@@ -662,7 +662,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${insertUpdateInfoDto.tempOrderId}번 데이터 수정`,'발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -676,7 +676,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `장부 출력`,'완료된발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -689,7 +689,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 결제 미완료 처리`,'발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -702,7 +702,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 결제 재요청`,'발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -726,6 +726,11 @@ export class ErpController {
         this.logger.log('원내에서 주문 생성');
         const res = await this.erpService.newOrder(newOrderDto);
 
+        if(res.success) {
+            await this.logService.createLog(
+                '원내에서 주문 생성','입금생성목록',header
+            );
+        }
         return res;
     }
 
@@ -737,7 +742,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 데스크에서 업데이트 내역 체크`,'발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -751,7 +756,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 감비환실에서 업데이트 내역 체크`,'발송목록',header
-            )
+            );
         }
         return res;
     }
@@ -766,7 +771,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${checkDiscountDto.orderId}번 지인 확인 할인 여부 체크`,'입금상담목록',header
-            )
+            );
         }
         return res;
     }
@@ -779,7 +784,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 지인 할인 취소`,'입금상담목록',header
-            )
+            );
         }
         return res;
     }
@@ -793,7 +798,7 @@ export class ErpController {
        if(res.success){
             await this.logService.createLog(
                 `${updateNoteDto.orderId}번 후기 대상 목록에서 비고 수정`,'후기대상목록',header
-            )
+            );
         }
         return res;
     }
@@ -806,7 +811,7 @@ export class ErpController {
         if(res.success){
             await this.logService.createLog(
                 `${id}번 후기 대상 목록에서 후기 유무 체크`,'후기대상목록',header
-            )
+            );
         }
         return res;
 
@@ -815,10 +820,17 @@ export class ErpController {
 
     @ApiOperation({summary:'후기 대상 목록에서 새 후기 대상 생성'})
     @Post('/createNewReview')
-    async createNewReview(@Body() createNewReviewDto: CreateNewReviewDto) {
+    async createNewReview(@Body() createNewReviewDto: CreateNewReviewDto,@Headers() header) {
         this.logger.log('후기 대상 목록에서 새 후기 대상 생성');
         const res = await this.erpService.createNewReview(createNewReviewDto);
 
+        if(res.success) {
+            await this.logService.createLog(
+                '후기 대상 목록에서 새 후기 대상 생성',
+                '후기 대상 목록',
+                header
+            );
+        }
         return res;
     }
 
@@ -833,10 +845,17 @@ export class ErpController {
 
     @ApiOperation({summary: '발송목록에서 금액 변경 확인 체크'})
     @Patch("/checkPrice/:id")
-    async checkPrice(@Param("id") id: number) {
+    async checkPrice(@Param("id") id: number, @Headers() header) {
         this.logger.log('발송목록에서 금액 변경 확인 체크 처리');
 
         const res = await this.sendService.checkPrice(id);
+        if(res.success) {
+            await this.logService.createLog(
+                `발송목록에서 ${id}번 주문 금액 변경 확인 체크`,
+                '발송목록',
+                header
+            );
+        }
         return res;
     }
 
@@ -853,34 +872,57 @@ export class ErpController {
 
     @ApiOperation({summary:'지인 확인 체크'})
     @Patch('/updateRouteFlag')
-    async updateRouteFlag(@Body() routeFlagDto:RouteFlagDto){
+    async updateRouteFlag(@Body() routeFlagDto:RouteFlagDto, @Headers() header){
         this.logger.log('입금상담목록에서 지인 확인 체크 안된 거 색칠 처리');
         const res = await this.erpService.updateRouteFlag(routeFlagDto);
 
+        if(res.success) {
+            await this.logService.createLog(
+                `입금상담목록에서 ${routeFlagDto.id}번 주문 지인 확인 체크 안된거 색칠`,
+                '입금상담목록',
+                header
+            );
+        }
         return res;
     }
 
     @ApiOperation({summary:'지인 10% 할인 적용'})
     @Patch('/friendDiscount/:id')
-    async friendDiscount(@Param("id") id: number) {
+    async friendDiscount(@Param("id") id: number,@Headers() header) {
         this.logger.log('지인 10% 할인 적용');
         const res = await this.erpService.friendDiscount(id);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 주문 지인 10% 할인 적용`,
+                '입금상담목록',
+                header
+            );
+        }
         
         return res;
     }
 
-    @Public()
-    @Get('/updateCheck')
-    async updateCheck () {
-        return await this.sendService.updateCheck();
-    }
+    // @Public()
+    // @Get('/updateCheck')
+    // async updateCheck () {
+    //     return await this.sendService.updateCheck();
+    // }
 
 
     @ApiOperation({summary:'후기 취소'})
     @Patch('/reviewFlag/:id')
-    async reviewFlag(@Param("id") id: number){
+    async reviewFlag(@Param("id") id: number, @Headers() header){
         this.logger.log('후기 취소');
         const res = await this.sendService.reviewFlag(id);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 후기 취소`,
+                '후기목록',
+                header
+            );
+        }
 
         return res;
         
@@ -888,19 +930,34 @@ export class ErpController {
 
     @ApiOperation({summary:'발송목록 복구'})
     @Patch('/backSend/:id')
-    async backSend(@Param("id") id: number) {
+    async backSend(@Param("id") id: number, @Headers() header) {
         this.logger.log('발송목록 복구');
         const res = await this.sendService.backSend(id);
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 발송목록 복구`,
+                '완료된 발송목록',
+                header
+            );
+        }
 
         return res;
     }
 
     @ApiOperation({summary:'지인 10포 취소'})
     @Delete('/cancelFriendRecommend')
-    async cancelFriendRecommend(@Body() cancelRecommendDto: CancelFriendDto) {
+    async cancelFriendRecommend(@Body() cancelRecommendDto: CancelFriendDto, @Headers() header) {
         this.logger.log('지인 10포 취소 처리');
         const res = await this.erpService.cancelFriendRecommend(cancelRecommendDto);
 
+        if(res.success) {
+            await this.logService.createLog(
+                `${cancelRecommendDto.orderId}번 주문 지인 10포 취소`,
+                '입금상담목록',
+                header
+            )
+        }
         return res;
     }
 

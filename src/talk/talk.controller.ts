@@ -10,6 +10,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Public } from 'src/auth/decorators/public.decorator';
 import * as path from 'path';
+import { LogService } from 'src/log/log.service';
 /*
 ★ 접수확인알림톡 (초/재진 한번에)
 -접수확인알림톡(리뉴얼)
@@ -44,6 +45,7 @@ export class TalkController {
     constructor(
         private readonly talkService: TalkService,
         private readonly mailerService: MailerService,
+        private readonly logService: LogService
 
     ){}
 
@@ -70,7 +72,7 @@ export class TalkController {
                 msg: res.msg
             },
                 res.status
-            );
+            ); 
         }
 
         return {success:true,status:res.status,url:res.url,checkUrl:res.checkUrl};
@@ -78,7 +80,7 @@ export class TalkController {
 
     @ApiOperation({summary:'접수 알림톡 발송 완료 처리'})
     @Post('/orderInsertTalk')
-    async orderTalkUpdate(@Body() orderInsertDto: Array<OrderInsertTalk>) {
+    async orderTalkUpdate(@Body() orderInsertDto: Array<OrderInsertTalk>, @Headers() header) {
         this.logger.log('접수 알림톡 발송 완료 처리');
         const res = await this.talkService.orderTalkUpdate(orderInsertDto);
         
@@ -92,6 +94,14 @@ export class TalkController {
             );
         }
 
+        if(res.success) {
+            await this.logService.createLog(
+                '접수 알림톡 발송 완료 처리',
+                '입금상담목록',
+                header
+            );
+        }
+
         return {success:true,status:res.status};
 
     }
@@ -100,7 +110,7 @@ export class TalkController {
 
     @ApiOperation({summary:'상담 연결 처리'})
     @Patch('/consultingFlag/:id')
-    async consultingFlag(@Param('id') id: number) {
+    async consultingFlag(@Param('id') id: number, @Headers() header) {
         this.logger.log('상담 연결 처리');
         const res = await this.talkService.consultingFlag(id);
 
@@ -111,6 +121,14 @@ export class TalkController {
                 msg: res.msg
             },
                 res.status
+            );
+        }
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 상담 연결 처리`,
+                '입금상담목록',
+                header
             );
         }
 

@@ -110,6 +110,7 @@ export class UserController {
     async changPw(@Body() changePwDto: ChangePwDto,@Headers() header) {
         this.logger.log('비밀번호 변경');
         const res = await this.userService.changePw(changePwDto, getToken(header));
+        
         return res;
     }
 

@@ -15,7 +15,9 @@ import {Crypto} from '../util/crypto.util';
         LogService,
         LogRepository,
         PrismaService,
-        PatientRepository
+        PatientRepository,
+        LogService,
+        LogRepository
     ]
 })
 export class PatientModule {}
