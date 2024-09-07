@@ -191,7 +191,7 @@ export class ExchangeRepository {
             const list = await this.prisma.order.findMany({
                 where:{
                     orderSortNum:{
-                        gt:-4,
+                        gte:-4,
                         lt:-1
                     },
                     isComplete:false,
