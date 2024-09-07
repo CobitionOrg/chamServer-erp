@@ -21,6 +21,7 @@ export class LogRepository{
      */
     async createLog(log:string, DateTime:Date, stage:string, userId :number){
         try{    
+            console.log(userId)
             await this.prisma.log.create({
                 data:{
                     log,DateTime,stage,userId

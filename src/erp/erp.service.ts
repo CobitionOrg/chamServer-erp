@@ -2013,6 +2013,10 @@ export class ErpService {
 
             console.log(list);
 
+            if(list.length == 0) {
+                return {success:true, msg:'해당 일자에 초진이 없습니다'}
+            }
+
             for (let row of list) {
                 const decryptedAddr = this.crypto.decrypt(row.addr);
                 const decryptedPhoneNum = this.crypto.decrypt(row.patient.phoneNum);
