@@ -1600,7 +1600,8 @@ export class ErpService {
                             card: order.payType == '카드결제' ? order.price : 0,
                             cash: order.payType == '계좌이체' ? order.price : 0,
                             payFlag: 1,
-                            consultingFlag: true
+                            consultingFlag: true,
+                            talkFlag: true
                         }
                     });
 
