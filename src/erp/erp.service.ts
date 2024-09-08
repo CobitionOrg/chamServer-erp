@@ -1579,7 +1579,9 @@ export class ErpService {
                         isComplete: true,
                         card: order.payType == '카드결제' ? order.price : 0,
                         cash: order.payType == '계좌이체' ? order.price : 0,
-                        payFlag: 1
+                        payFlag: 1,
+                        talkFlag: true,
+                        consultingFlag:true,
                     }
                 });
 
@@ -2009,7 +2011,7 @@ export class ErpService {
                     route: true,
                     newPatientFlag: true,
                 }
-            });
+            }); 
 
             console.log(list);
 
