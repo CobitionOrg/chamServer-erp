@@ -473,6 +473,21 @@ export class ErpService {
                     }
                 }
             }
+
+            // console.log(getListDto.isFirst);
+
+            if(getListDto.isFirst == 'first') {
+                orderConditions = {
+                    ...orderConditions,
+                    isFirst:true
+                }
+            }else if(getListDto.isFirst == 'return') {
+                orderConditions = {
+                    ...orderConditions,
+                    isFirst:false
+                }
+            }
+
             let patientConditions = {};
             // if (getListDto.searchKeyword !== "") {
             //     //검색어 O
