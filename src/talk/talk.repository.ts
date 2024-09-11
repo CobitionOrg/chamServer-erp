@@ -533,7 +533,10 @@ export class TalkRepositoy {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
-                    isFirst: true
+                    isFirst: true,
+                    cancelFlag: null
+
+                    //cancelFlag: false,
                 },
                 orderBy: {
                     //id: 'asc',
@@ -579,7 +582,7 @@ export class TalkRepositoy {
                     }
                 }
             });
-
+            console.log(list);
             const sortedList = list;
 
             return { success: true, list: sortedList };
@@ -608,7 +611,8 @@ export class TalkRepositoy {
             const list = await this.prisma.tempOrder.findMany({
                 where: {
                     sendListId: id,
-                    isFirst: false
+                    isFirst: false,
+                    cancelFlag: null
                 },
                 orderBy: {
                     //id: 'asc',
@@ -654,6 +658,7 @@ export class TalkRepositoy {
                     }
                 }
             });
+            console.log(list);
 
             const sortedList = list;
 
