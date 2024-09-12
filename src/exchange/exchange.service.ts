@@ -46,7 +46,7 @@ export class ExchangeService {
                 essentialCheck: exOrder.essentialCheck,
                 isFirst:exOrder.isFirst,
                 outage: exOrder.outage,
-                patientId: exOrder.patientId,
+                patientId: exOrder.patient.id,
                 price: exOrder.price,
                 remark: exOrder.remark,
                 addr: exOrder.addr
@@ -54,7 +54,7 @@ export class ExchangeService {
 
             const objOrderItems: Array<ExOrderItemObjDto> = exOrder.orderItems;
 
-            const objOrderBodyType: ExOrderBodyTypeDto = exOrder.orderBodyType;
+            const objOrderBodyType: ExOrderBodyTypeDto = exOrder.patient.patientBodyType;
 
             // console.log(objOrder);
             // console.log(objOrderItems);

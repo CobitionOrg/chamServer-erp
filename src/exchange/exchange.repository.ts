@@ -33,18 +33,18 @@ export class ExchangeRepository {
                     payType: true,
                     essentialCheck: true,
                     outage: true,
-                    patientId: true,
+                    patient: {
+                        select:{
+                            id:true,
+                            patientBodyType:true,
+                        }
+                    },
                     addr:true,
                     price: true,
                     remark: true,
                     orderItems: {
                         select:{
                             item:true,type:true
-                        }
-                    },
-                    orderBodyType: {
-                        select:{
-                            tallWeight:true,digestion:true,sleep:true,constipation:true,nowDrug:true,pastDrug:true,pastSurgery:true
                         }
                     },
                 }
