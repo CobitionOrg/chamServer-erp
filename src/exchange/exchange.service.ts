@@ -148,7 +148,6 @@ export class ExchangeService {
         }>
      */
     async completeRefund(completeRefundDto:CompleteRefundDto){
-        console.log(completeRefundDto);
         if(completeRefundDto.orderSortNum !== -4) {
             return {success:false, status:HttpStatus.BAD_REQUEST,msg:'환불 주문만 완료 처리 가능합니다'};
         }
