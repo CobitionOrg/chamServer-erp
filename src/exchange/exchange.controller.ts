@@ -64,7 +64,7 @@ export class ExchangeController {
 
     @ApiOperation({ summary: '환불 완료 처리' })
     @Post('/completeRefund')
-    async completeRefund(@Body('id') completeRefundDto: CompleteRefundDto, @Headers() Header) {
+    async completeRefund(@Body() completeRefundDto: CompleteRefundDto, @Headers() Header) {
         const res: any = await this.exchangeService.completeRefund(completeRefundDto);
 
         if (res.status != 200) {
