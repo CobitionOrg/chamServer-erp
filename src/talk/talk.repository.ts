@@ -582,7 +582,7 @@ export class TalkRepositoy {
                     }
                 }
             });
-            console.log(list);
+
             const sortedList = list;
 
             return { success: true, list: sortedList };
@@ -658,7 +658,6 @@ export class TalkRepositoy {
                     }
                 }
             });
-            console.log(list);
 
             const sortedList = list;
 
