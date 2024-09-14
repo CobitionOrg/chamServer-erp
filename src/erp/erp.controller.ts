@@ -289,6 +289,14 @@ export class ErpController {
         return res; 
     }
 
+    @ApiOperation({summary:'발송 목록 조회'})
+    @Get('/sendCompleteList/:id') 
+    async getCompleeSendOne(@Param("id") id:number, @Headers() header){
+        this.logger.log('완료된 발송 목록 리스트');
+        const res = await this.sendService.getCompleteSendOne(id);
+        return res; 
+    } 
+
     @ApiOperation({summary:'발송 목록 엑셀 데이터 출력'})
     @Get('/sendListExcel/:id')
     async sendListExcel(@Param("id") id: number) {

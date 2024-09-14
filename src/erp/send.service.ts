@@ -177,6 +177,36 @@ export class SendService {
     }
 
     /**
+     * 완료 된 발송 목록 가져오기
+     * @param id 
+     * @returns 
+     */
+    async getCompleteSendOne(id: number) {
+        try {
+            const sendList = await this.prisma.sendList.findUnique({
+                where: { id: id },
+                select: { fixFlag: true }
+            });
+            console.log(sendList.fixFlag)
+            if (sendList.fixFlag) {
+                //고정된 발송목록
+                return await this.getFixOrderTempList(id,false);
+            } else {
+                //고정 안 된 발송목록
+                return await this.getOrderTempList(id,false);
+            }
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
      * 발송목록 엑셀 데이터 다운
      * @param id 
      * @returns 
@@ -255,12 +285,13 @@ export class SendService {
      * 고정 된 발송목록(tempOrder)에서 가져오기
      * @param id 
      */
-    async getFixOrderTempList(id: number) {
+    async getFixOrderTempList(id: number, cancelFlag? : boolean) {
         try {
             // console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
-                    sendListId: id
+                    sendListId: id,
+                    ...(cancelFlag !== undefined && {cancelFlag:null})
                 },
                 orderBy: {
                     //id: 'asc',
@@ -347,12 +378,14 @@ export class SendService {
      * 고정 안 된 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(id: number) {
+    async getOrderTempList(id: number, cancelFlag? : boolean) {
         try {
+            console.log(cancelFlag);
             // console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
-                    sendListId: id
+                    sendListId: id,
+                    ...(cancelFlag !== undefined && { cancelFlag: null })
                 },
                 orderBy: {
                     //id: 'asc',
