@@ -13,6 +13,7 @@ erDiagram
   Role grade
   String name
   Boolean useFlag
+  Boolean is_del
 }
 "log" {
   Int id PK
@@ -250,6 +251,7 @@ erDiagram
   - `grade`: 유저 등급
   - `name`: 유저 이름
   - `useFlag`: 사용 여부
+  - `is_del`: 삭제 여부
 
 ### `log`
 
