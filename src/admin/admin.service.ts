@@ -142,6 +142,7 @@ export class AdminService {
             const res = await this.prisma.user.findMany({
                 where:{
                     useFlag:false,
+                    is_del:false,
                 },
                 select:{
                     userId:true,grade:true,name:true,id:true
