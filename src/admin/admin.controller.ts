@@ -14,7 +14,7 @@ import { LogService } from 'src/log/log.service';
 export class AdminController {
     constructor(
         private adminService : AdminService,
-        private logServie: LogService
+        private logService: LogService
     ){}
     private readonly logger = new Logger(AdminController.name);
 
@@ -39,7 +39,7 @@ export class AdminController {
     @Patch('/permit')
     async permitUser(@Headers() header, @Body() body:PermitListDto){
         this.logger.log('유저 허용');
-        await this.logServie.createLog(
+        await this.logService.createLog(
             '유저 허용',
             '관리자 페이지',
             header
@@ -69,6 +69,23 @@ export class AdminController {
     async getAttendance(@Headers() header,@Param('id') id:number){
         this.logger.log('근태 기록 조회');
         return await this.adminService.getAttendance(getToken(header),id);
+    }
+
+    @ApiOperation({summary:'유저 계정 삭제'})
+    @UseGuards(AuthGuard)
+    @Patch('/delete/:id')
+    async deleteUser(@Headers() header, @Param("id") id: number){
+        this.logger.log('유저 계정 삭제');
+        const res = await this.adminService.deleteUser(id, getToken(header));
+
+        if(res.success) {
+            await this.logService.createLog(
+                `${id}번 계정 삭제`,
+                '관리자 페이지',
+                header
+            )
+        }
+        return res;
     }
 
 }

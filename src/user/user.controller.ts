@@ -11,6 +11,7 @@ import { getToken } from 'src/util/token';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { ChangePwDto } from './Dto/changePw.dto';
+import { LogService } from 'src/log/log.service';
 
 @Controller('user')
 @UseFilters(new HttpExceptionFilter())
