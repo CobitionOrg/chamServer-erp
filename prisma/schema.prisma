@@ -26,6 +26,8 @@ model user {
   name        String
   /// 사용 여부
   useFlag     Boolean      @default(false)
+  /// 삭제 여부
+  is_del      Boolean      @default(false)
   attendances attendance[]
   logs        log[]
 }
@@ -463,7 +465,7 @@ model urlData {
   /// index key
   id         Int    @id @default(autoincrement())
   /// url
-  url        String
+  url        String @db.VarChar(291)
   /// object 이름
   objectName String
 }
