@@ -173,7 +173,8 @@ export class AdminService {
 
             const data = await this.prisma.user.findMany({
                 where:{
-                    useFlag:true
+                    useFlag:true,
+                    is_del: false
                 },
                 select:{
                     id:true,
@@ -214,5 +215,42 @@ export class AdminService {
             );
         }
     }
+
+        /**
+     * 유저 계정 삭제
+     * @param id 
+     * @param header 
+     * @returns {success:boolean, status:HttpStatus}
+     */
+        async deleteUser(id: number, header: string) {
+            try{
+                const token = await this.jwtService.decode(header);
+                const userId = token.sub;
+    
+                const checkGrade = await this.userService.checkUserGrade(userId);
+                if (!checkGrade.success) return { success: false, status: HttpStatus.FORBIDDEN };
+    
+                await this.prisma.user.update({
+                    where:{
+                        id: id
+                    },
+                    data: {
+                        is_del: true
+                    }
+                });
+    
+                return { success: true, status: HttpStatus.CREATED }
+            }catch(err){
+                this.logger.error(err);
+                throw new HttpException({
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러'
+                },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+    
     
 }
