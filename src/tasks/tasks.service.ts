@@ -31,11 +31,23 @@ export class TasksService {
         // 휴일 적용
         const date = new Date();
         const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-        const year = kstDate.getUTCFullYear().toString();
-        const month = (kstDate.getUTCMonth() + 1).toString().padStart(2, '0');
-        const nextMonth = (Number(month) + 1).toString().padStart(2, '0');
-        const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
-        const endDate = new Date(`${year}-${nextMonth}-01T00:00:00.000Z`);
+        const year = kstDate.getUTCFullYear();
+        const month = (kstDate.getUTCMonth() + 1);
+
+        let nextYear = year;
+        let nextMonth = month + 1;
+        if (nextMonth > 12) {
+            nextYear++;
+            nextMonth = 1;
+        }
+
+        const yearString = year.toString();
+        const nextYearString = nextYear.toString();
+        const monthString = month.toString().padStart(2, '0');
+        const nextMonthString = nextMonth.toString().padStart(2, '0');
+
+        const startDate = new Date(`${yearString}-${monthString}-01T00:00:00.000Z`);
+        const endDate = new Date(`${nextYearString}-${nextMonthString}-01T00:00:00.000Z`);
         const { list: holidays } = await this.holidayRepository.getHolidaysByYearMonth(startDate, endDate);
         const kstDateFormatted = kstDate.toISOString().split('T')[0];
         const holidaysFormatted = holidays.map(holiday => holiday.date.toISOString().split('T')[0]);
