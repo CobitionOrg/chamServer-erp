@@ -5,11 +5,19 @@ export class GetOrderSendPrice{
     orderItems : Array<any>;
     itemList : Array<any>;
     isPickup: boolean;
+    // addr : string | null;
 
-    constructor(orderItems: any, itemList:any, isPickup: boolean = false){
+
+    constructor(
+        orderItems: any,
+        itemList:any, 
+        isPickup: boolean = false,
+        //addr? : string
+    ){
         this.orderItems = orderItems;
         this.itemList = itemList;
         this.isPickup = isPickup;
+        // this.addr = addr !== undefined ? addr : null
     }
 
     getTenDiscount() {
@@ -82,6 +90,18 @@ export class GetOrderSendPrice{
             }
             
         });
+
+        // console.log(this.addr)
+
+        // if(this.addr !== null) {
+        //     if(this.addr.includes('제주')){
+        //         priceSum += 3000;
+        //     }else if(this.addr.includes('울룽도')){
+        //         priceSum += 10000;
+        //     }
+
+            
+        // }
 
         return priceSum;
     }

@@ -84,3 +84,21 @@ export function getFirstAndLastDayOfMonth(year, month) {
       lastDay: lastDay
   };
 }
+
+/**해당 년도 달만 주어졌을 때 첫째날과 마지막날 구하기*/
+export function getFirstAndLastDayOfOnlyMonth(month) {
+  const year = new Date().getFullYear();
+  // 주어진 달의 첫째 날 구하기
+  const firstDay = new Date(year, month - 1, 1);
+  
+  // 주어진 달의 마지막 날 구하기
+  const lastDay = new Date(year, month, 0);
+  lastDay.setHours(23, 59, 59, 999); // 마지막 날의 시간을 23:59:59로 설정
+
+  return {
+      startDate: firstDay,
+      endDate: lastDay
+  };
+
+  
+}

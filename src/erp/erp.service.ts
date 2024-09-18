@@ -28,7 +28,7 @@ import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
-import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getFirstAndLastDayOfMonth, getStartOfToday } from 'src/util/kstDate.util';
+import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getFirstAndLastDayOfMonth, getFirstAndLastDayOfOnlyMonth, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
@@ -117,11 +117,15 @@ export class ErpService {
             // }
 
             const itemList = await this.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
+            const getOrderPrice = new GetOrderSendPrice(
+                objOrderItem, 
+                itemList,
+                objPatient.addr
+            );
             const price = getOrderPrice.getPrice();
             console.log(price);
             console.log('=====================');
-
+ 
             console.log(objOrder);
             console.log(objPatient);
             console.log(objOrderBodyType);
@@ -458,7 +462,10 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                const { startDate, endDate } = 
+                    getListDto.month === undefined ?  
+                     getDayStartAndEnd(getListDto.date)
+                     : getFirstAndLastDayOfOnlyMonth(getListDto.month)
 
                 firstCount = await this.getOrderCount(startDate, endDate, true);
                 returnCount = await this.getOrderCount(startDate, endDate, false);
