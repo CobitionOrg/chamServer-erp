@@ -465,7 +465,7 @@ export class ErpService {
                 const { startDate, endDate } = 
                     getListDto.month === undefined ?  
                      getDayStartAndEnd(getListDto.date)
-                     : getFirstAndLastDayOfOnlyMonth(getListDto.month)
+                     : getFirstAndLastDayOfOnlyMonth(getListDto.month);
 
                 firstCount = await this.getOrderCount(startDate, endDate, true);
                 returnCount = await this.getOrderCount(startDate, endDate, false);
@@ -611,7 +611,10 @@ export class ErpService {
                 }
             } else {
                 //날짜 조건 O
-                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                const { startDate, endDate } = 
+                    getListDto.month === undefined ?  
+                     getDayStartAndEnd(getListDto.date)
+                     : getFirstAndLastDayOfOnlyMonth(getListDto.month);
 
                 firstCount = await this.getOrderCount(startDate, endDate, true, true);
                 returnCount = await this.getOrderCount(startDate, endDate, false, true);
@@ -1354,7 +1357,11 @@ export class ErpService {
                     useFlag: true,
                 }
             } else {
-                const { startDate, endDate } = getDayStartAndEnd(getListDto.date);
+                const { startDate, endDate } =
+                    getListDto.month === undefined ?
+                        getDayStartAndEnd(getListDto.date)
+                        : getFirstAndLastDayOfOnlyMonth(getListDto.month);
+
                 orderConditions = {
                     consultingType: true,
                     isComplete: false,
