@@ -901,6 +901,19 @@ export class ErpService {
                     orderSortNum = 5;
                 }
 
+                if(orderSortNum == 5) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
+
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 5){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
+
+
                 const order = await tx.order.create({
                     data: {
                         route: objOrder.route,
