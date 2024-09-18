@@ -80,7 +80,7 @@ export class HolidayService {
     } else {
       days = postDateDto.days.map((date) => date.toString().padStart(2, '0'));
       const daysAsDates = days.map(
-        (day) => new Date(`${year}-${month}-${day}T00:00:00.000Z`),
+        (day) => new Date(`${year}-${monthString}-${day}T00:00:00.000Z`),
       );
       res = await this.holidayRepository.postHolidays(
         startDate,
