@@ -529,6 +529,7 @@ export class ErpService {
                     addr: true,
                     routeFlag: true,
                     friendDiscount: true,
+                    notCall: true,
                     patient: {
                         select: {
                             id: true,
@@ -1529,7 +1530,6 @@ export class ErpService {
                 },
                 data: {
                     consultingType: false,
-                    notCall: false,
                 }
             });
 
