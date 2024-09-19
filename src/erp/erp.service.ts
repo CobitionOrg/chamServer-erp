@@ -896,6 +896,19 @@ export class ErpService {
                     orderSortNum = 2;
                 }
 
+                if(orderSortNum == 2) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
+
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 2){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
+
+
                 if (checkGSB(objOrder.route)) {
                     remark = remark == '' ? '구수방' : remark += '/구수방';
                     orderSortNum = 5;
