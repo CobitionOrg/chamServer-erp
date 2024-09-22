@@ -120,6 +120,7 @@ export class ErpService {
             const getOrderPrice = new GetOrderSendPrice(
                 objOrderItem, 
                 itemList,
+                false,
                 objPatient.addr
             );
             const price = getOrderPrice.getPrice();
@@ -382,14 +383,22 @@ export class ErpService {
                 select: {
                     friendDiscount: true,
                     price: true,
-                    orderItems: true
+                    orderItems: true,
+                    addr: true
                 }
             });
 
             let price = 0;
             const itemList = await this.getItems();
 
-            const getOrderPrice = new GetOrderSendPrice(exOrder.orderItems, itemList);
+            const encryptedAddr = this.crypto.decrypt(exOrder.addr);
+            
+            const getOrderPrice = new GetOrderSendPrice(
+                exOrder.orderItems, 
+                itemList,
+                false,
+                encryptedAddr
+            );
 
 
             if (exOrder.friendDiscount) {
@@ -815,12 +824,6 @@ export class ErpService {
             });
 
 
-            const itemList = await this.getItems();
-            const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList);
-            let price = getOrderPrice.getPrice();
-            console.log(price);
-            console.log('=====================');
-
             const patient = await this.checkPatient(objPatient);
 
             console.log("this is patientttttttttttttttttttttttt");
@@ -837,6 +840,18 @@ export class ErpService {
             if (!existOrder) {
                 return { success: false, status: HttpStatus.CONFLICT, msg: '이미 접수된 주문이 있습니다. 수정을 원하시면 주문 수정을 해주세요' };
             }
+            const itemList = await this.getItems();
+            const getOrderPrice = new GetOrderSendPrice(
+                objOrderItem, 
+                itemList,
+                false,
+                objPatient.addr
+            );
+
+            let price = getOrderPrice.getPrice();
+            console.log(price);
+            console.log('=====================');
+
 
             const encryptedAddr = this.crypto.encrypt(objPatient.addr);
             const encryptedPhoneNum = this.crypto.encrypt(objPatient.phoneNum);
@@ -1232,7 +1247,12 @@ export class ErpService {
 
                 console.log(items);
                 const itemList = await this.getItems();
-                const getOrderPrice = new GetOrderSendPrice(items, itemList); //주문 가격
+                const getOrderPrice = new GetOrderSendPrice(
+                    items, 
+                    itemList,
+                    false,
+                    encryptedAddr
+                ); //주문 가격
                 price = getOrderPrice.getPrice();
                 console.log(price);
 
@@ -2360,10 +2380,19 @@ export class ErpService {
                         }
                     },
                     friendDiscount: true,
+                    addr: true,
                 }
             });
 
-            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const encryptAddr = this.crypto.decrypt(order.addr);
+
+            const getOrderPrice = new GetOrderSendPrice(
+                orderItemsData, 
+                itemList, 
+                updateSurveyDto.isPickup,
+                encryptAddr
+            );
+
             let price = order.tempOrders.length > 0 && order.tempOrders[0].orderSortNum == 7 ? order.price : getOrderPrice.getPrice(); //분리배송일 때 택배비가 달라질 수 있기 때문
 
             //지인 10퍼센트 할인 시 할인 처리
@@ -2455,11 +2484,21 @@ export class ErpService {
             //지인 10퍼센트 할인 시 할인 처리
             const exOrder = await this.prisma.order.findUnique({
                 where: { id: id },
-                select: { friendDiscount: true }
+                select: { 
+                    friendDiscount: true,
+                    addr: true
+                }
             });
 
+            const encryptAddr = this.crypto.decrypt(exOrder.addr);
+
             const itemList = await this.getItems();
-            const getOrderPrice = new GetOrderSendPrice(orderItemsData, itemList, updateSurveyDto.isPickup);
+            const getOrderPrice = new GetOrderSendPrice(
+                orderItemsData, 
+                itemList, 
+                updateSurveyDto.isPickup,
+                encryptAddr
+            );
             let price = getOrderPrice.getPrice();
 
             if (exOrder.friendDiscount) {

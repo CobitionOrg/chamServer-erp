@@ -697,15 +697,23 @@ export class SendService {
                                 orderItems: true,
                                 payFlag: true,
                                 combineNum: true,
-                                payType:true
+                                payType:true,
+                                addr:true
                             }
                         }
                     }
                 });
 
+                const encryptAddr = this.crypto.decrypt(exTempOrder[0].order.addr);
+
                 let price = 0;
                 const itemList = await this.erpService.getItems();
-                const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
+                const getOrderPrice = new GetOrderSendPrice(
+                    objOrderItem, 
+                    itemList,
+                    false,
+                    encryptAddr
+                ); //새로 수정된 항목으로 가격 산출 객체 생성
 
                 if (exTempOrder[0].orderSortNum < 6) {
                     //합배송, 분리 배송이 아닐 시
