@@ -35,6 +35,7 @@ import { SendCombineDto } from './Dto/sendCombineDto';
 import { GetDateDto } from './Dto/getDate.dto';
 import { RouteFlagDto } from './Dto/routeFlag.dto';
 import { CancelFriendDto } from './Dto/cancelFriend.dto';
+import { SendCompleteDto } from './Dto/sendComplete.dto';
 
 @Controller('erp')
 @UseFilters(new HttpExceptionFilter())
@@ -290,10 +291,10 @@ export class ErpController {
     }
 
     @ApiOperation({summary:'발송 목록 조회'})
-    @Get('/sendCompleteList/:id') 
-    async getCompleeSendOne(@Param("id") id:number, @Headers() header){
+    @Get('/sendCompleteList') 
+    async getCompleeSendOne(@Query() sendCompleteDto: SendCompleteDto, @Headers() header){
         this.logger.log('완료된 발송 목록 리스트');
-        const res = await this.sendService.getCompleteSendOne(id);
+        const res = await this.sendService.getCompleteSendOne(sendCompleteDto);
         return res; 
     } 
 

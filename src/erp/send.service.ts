@@ -22,6 +22,7 @@ import axios from "axios";
 import { getPhoneNum } from "src/util/getPhoneNum";
 import { orderUpdateInfo } from "src/util/orderUpdateInfo";
 import { checkOutage } from "src/util/getOutage";
+import { SendCompleteDto } from "./Dto/sendComplete.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -181,19 +182,38 @@ export class SendService {
      * @param id 
      * @returns 
      */
-    async getCompleteSendOne(id: number) {
+    async getCompleteSendOne(sendCompleteDto: SendCompleteDto) {
         try {
-            const sendList = await this.prisma.sendList.findUnique({
-                where: { id: id },
-                select: { fixFlag: true }
+            const date = new Date(sendCompleteDto.date);
+            const year = date.getFullYear();
+            const month = date.getMonth()+1;
+            const day = date.getDate();
+
+            const title = `${year}/${month}/${day}`;
+            console.log(title);
+
+            const sendList = await this.prisma.sendList.findFirst({
+                where: { title: title },
+                select: { 
+                    id: true,
+                    fixFlag: true
+                }
             });
+
+            if(sendList == null) {
+                return {
+                    succes:false, 
+                    msg: '해당 날짜에 발송된 내역이 없습니다',
+                    status:404
+                };
+            }
             console.log(sendList.fixFlag)
             if (sendList.fixFlag) {
                 //고정된 발송목록
-                return await this.getFixOrderTempList(id,false);
+                return await this.getFixOrderTempList(sendList.id,false);
             } else {
                 //고정 안 된 발송목록
-                return await this.getOrderTempList(id,false);
+                return await this.getOrderTempList(sendList.id,false);
             }
         } catch (err) {
             this.logger.error(err);
