@@ -193,7 +193,7 @@ export class SendService {
             console.log(title);
 
             const sendList = await this.prisma.sendList.findFirst({
-                where: { title: title },
+                where: { title: title, useFlag: false },
                 select: { 
                     id: true,
                     fixFlag: true
@@ -210,10 +210,12 @@ export class SendService {
             console.log(sendList.fixFlag)
             if (sendList.fixFlag) {
                 //고정된 발송목록
-                return await this.getFixOrderTempList(sendList.id,false);
+                const res =  await this.getFixOrderTempList(sendList.id,false);
+                return {...res, id: sendList.id}
             } else {
                 //고정 안 된 발송목록
-                return await this.getOrderTempList(sendList.id,false);
+                const res = await this.getOrderTempList(sendList.id,false);
+                return {...res, id: sendList.id}
             }
         } catch (err) {
             this.logger.error(err);
