@@ -718,6 +718,7 @@ export class SendService {
                 if (exTempOrder[0].orderSortNum < 6) {
                     //합배송, 분리 배송이 아닐 시
                     price = getOrderPrice.getPrice(exTempOrder[0].orderSortNum);
+                    console.log(price)
                 } else if (exTempOrder[0].orderSortNum == 6) {
                     // console.log('합배송일 시')
 
