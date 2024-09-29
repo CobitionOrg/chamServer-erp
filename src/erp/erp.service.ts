@@ -1220,7 +1220,8 @@ export class ErpService {
                     },
                     data: {
                         payType: objOrder.payType,
-                        price: price
+                        price: price,
+                        addr: encryptedAddr,
                     }
                 });
 
