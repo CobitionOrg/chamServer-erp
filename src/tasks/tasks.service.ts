@@ -211,7 +211,7 @@ export class TasksService {
         list.push(obj);
         const excelFilePath = await this.getTalkExcel(list, '테스트');
         console.log(excelFilePath);
-        await this.sendTalk(excelFilePath,'접수확인알림톡');
+        await this.sendTalk(excelFilePath,'접수확인 알림톡');
 
     }
 
@@ -261,7 +261,7 @@ export class TasksService {
             const excelFilePath = await this.getTalkExcel(res.list, excelFileName);
             console.log(excelFilePath);
             //그리고 여기에 알람톡 발송 서비스 ㄱㄱ
-            const resData = await this.sendTalk(excelFilePath, '접수확인알림톡');
+            const resData = await this.sendTalk(excelFilePath, '접수확인 알림톡');
             if(resData.success) await this.tasksRepository.updateTalkFlag(res.list);
         }
     }
@@ -609,7 +609,7 @@ export class TasksService {
             const browser = await puppeteer.launch({
                 // headless: false
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
             }); // headless: false는 브라우저 UI를 표시합니다.
             const page = await browser.newPage();
             page.on('console', msg => {
