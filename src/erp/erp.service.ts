@@ -462,7 +462,7 @@ export class ErpService {
             let orderConditions = {};
             let firstCount = 0;
             let returnCount = 0;
-            if (getListDto.date === undefined) {
+            if (getListDto.date === undefined && getListDto.month === undefined) {
                 //날짜 조건 X
                 orderConditions = {
                     consultingType: false,
