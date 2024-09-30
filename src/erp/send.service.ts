@@ -22,6 +22,7 @@ import axios from "axios";
 import { getPhoneNum } from "src/util/getPhoneNum";
 import { orderUpdateInfo } from "src/util/orderUpdateInfo";
 import { checkOutage } from "src/util/getOutage";
+import { SendCompleteDto } from "./Dto/sendComplete.dto";
 
 //발송 목록 조회 기능
 @Injectable()
@@ -177,6 +178,57 @@ export class SendService {
     }
 
     /**
+     * 완료 된 발송 목록 가져오기
+     * @param id 
+     * @returns 
+     */
+    async getCompleteSendOne(sendCompleteDto: SendCompleteDto) {
+        try {
+            const date = new Date(sendCompleteDto.date);
+            const year = date.getFullYear();
+            const month = date.getMonth()+1;
+            const day = date.getDate();
+
+            const title = `${year}/${month}/${day}`;
+            console.log(title);
+
+            const sendList = await this.prisma.sendList.findFirst({
+                where: { title: title, useFlag: false },
+                select: { 
+                    id: true,
+                    fixFlag: true
+                }
+            });
+
+            if(sendList == null) {
+                return {
+                    succes:false, 
+                    msg: '해당 날짜에 발송된 내역이 없습니다',
+                    status:404
+                };
+            }
+            console.log(sendList.fixFlag)
+            if (sendList.fixFlag) {
+                //고정된 발송목록
+                const res =  await this.getFixOrderTempList(sendList.id,false);
+                return {...res, id: sendList.id}
+            } else {
+                //고정 안 된 발송목록
+                const res = await this.getOrderTempList(sendList.id,false);
+                return {...res, id: sendList.id}
+            }
+        } catch (err) {
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
      * 발송목록 엑셀 데이터 다운
      * @param id 
      * @returns 
@@ -255,12 +307,13 @@ export class SendService {
      * 고정 된 발송목록(tempOrder)에서 가져오기
      * @param id 
      */
-    async getFixOrderTempList(id: number) {
+    async getFixOrderTempList(id: number, cancelFlag? : boolean) {
         try {
             // console.log('this is fixed list');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
-                    sendListId: id
+                    sendListId: id,
+                    ...(cancelFlag !== undefined && {cancelFlag:null})
                 },
                 orderBy: {
                     //id: 'asc',
@@ -347,12 +400,14 @@ export class SendService {
      * 고정 안 된 발송목록(tempOrder)에서 가져오기
      * @returns 
      */
-    async getOrderTempList(id: number) {
+    async getOrderTempList(id: number, cancelFlag? : boolean) {
         try {
+            console.log(cancelFlag);
             // console.log('this list is not fixed');
             const list = await this.prisma.tempOrder.findMany({
                 where: {
-                    sendListId: id
+                    sendListId: id,
+                    ...(cancelFlag !== undefined && { cancelFlag: null })
                 },
                 orderBy: {
                     //id: 'asc',
@@ -642,19 +697,28 @@ export class SendService {
                                 orderItems: true,
                                 payFlag: true,
                                 combineNum: true,
-                                payType:true
+                                payType:true,
+                                addr:true
                             }
                         }
                     }
                 });
 
+                const encryptAddr = this.crypto.decrypt(exTempOrder[0].order.addr);
+
                 let price = 0;
                 const itemList = await this.erpService.getItems();
-                const getOrderPrice = new GetOrderSendPrice(objOrderItem, itemList); //새로 수정된 항목으로 가격 산출 객체 생성
+                const getOrderPrice = new GetOrderSendPrice(
+                    objOrderItem, 
+                    itemList,
+                    false,
+                    encryptAddr
+                ); //새로 수정된 항목으로 가격 산출 객체 생성
 
                 if (exTempOrder[0].orderSortNum < 6) {
                     //합배송, 분리 배송이 아닐 시
                     price = getOrderPrice.getPrice(exTempOrder[0].orderSortNum);
+                    console.log(price)
                 } else if (exTempOrder[0].orderSortNum == 6) {
                     // console.log('합배송일 시')
 
