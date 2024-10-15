@@ -97,7 +97,6 @@ export class SurveyService {
         },
       });
 
-      console.log(res);
       return { success: true, status: HttpStatus.OK, data: res };
     } catch (err) {
       this.logger.error(err);
