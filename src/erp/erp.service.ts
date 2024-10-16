@@ -905,42 +905,43 @@ export class ErpService {
                     })
                 }
 
+                //////////////////// 클라이언트 요청으로 route 질문 삭제 (복구 시 주석 해제하면 됨) {
+                if (!objOrder.route) objOrder.route = ""; // 주석 해제 시 여기는 지우면 됨
+                // if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
+                //     remark = remark == '' ? '파주맘' : remark += '/파주맘';
+                //     orderSortNum = 2;
+                // }
 
-                if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
-                    remark = remark == '' ? '파주맘' : remark += '/파주맘';
-                    orderSortNum = 2;
-                }
+                // if(orderSortNum == 2) {
+                //     const exPatientOrder = await tx.order.findMany({
+                //         where:{patientId:patient.patient.id}
+                //     });
 
-                if(orderSortNum == 2) {
-                    const exPatientOrder = await tx.order.findMany({
-                        where:{patientId:patient.patient.id}
-                    });
-
-                    for(const e of exPatientOrder) {
-                        if(e.orderSortNum == 2){
-                            orderSortNum = 1;
-                        }
-                    }
-                }
+                //     for(const e of exPatientOrder) {
+                //         if(e.orderSortNum == 2){
+                //             orderSortNum = 1;
+                //         }
+                //     }
+                // }
 
 
-                if (checkGSB(objOrder.route)) {
-                    remark = remark == '' ? '구수방' : remark += '/구수방';
-                    orderSortNum = 5;
-                }
+                // if (checkGSB(objOrder.route)) {
+                //     remark = remark == '' ? '구수방' : remark += '/구수방';
+                //     orderSortNum = 5;
+                // }
 
-                if(orderSortNum == 5) {
-                    const exPatientOrder = await tx.order.findMany({
-                        where:{patientId:patient.patient.id}
-                    });
+                // if(orderSortNum == 5) {
+                //     const exPatientOrder = await tx.order.findMany({
+                //         where:{patientId:patient.patient.id}
+                //     });
 
-                    for(const e of exPatientOrder) {
-                        if(e.orderSortNum == 5){
-                            orderSortNum = 1;
-                        }
-                    }
-                }
-
+                //     for(const e of exPatientOrder) {
+                //         if(e.orderSortNum == 5){
+                //             orderSortNum = 1;
+                //         }
+                //     }
+                // }
+                //////////////////// }
 
                 const order = await tx.order.create({
                     data: {
@@ -1033,75 +1034,77 @@ export class ErpService {
                 //
                 //}
 
+                //////////////////// 클라이언트 요청으로 route 질문 삭제 (복구 시 주석 해제하면 됨) {
                 //지인 체크
-                const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
-                console.log(route);
+                // const route = objOrder.route.replace(/\s+/g, '').replace(/\//g, '');
+                // console.log(route);
 
-                if (route !== "" && orderSortNum != 0) {
-                    console.log('지인 체크');
+                // if (route !== "" && orderSortNum != 0) {
+                //     console.log('지인 체크');
 
-                    const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
-                    const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
+                //     const routeName = route.match(/[^\d]+/g) !== null ? route.match(/[^\d]+/g).join('') : null;//지인 이름
+                //     const routePhoneNum = route.match(/\d+/g) !== null ? route.match(/\d+/g).join('') : null;//지인 번호
 
-                    let checkRecommend;
+                //     let checkRecommend;
 
-                    //이름과 전화번호가 둘 다 있어야만 지인 체크                     
-                    if (routeName !== null && routePhoneNum !== null) {
-                        checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
+                //     //이름과 전화번호가 둘 다 있어야만 지인 체크                     
+                //     if (routeName !== null && routePhoneNum !== null) {
+                //         checkRecommend = await this.checkRecommend(routeName, routePhoneNum);
 
-                        //기존에 이 추천인으로 할인 받은 내역 있나 체크
-                        const existRecommendCheck = await tx.friendRecommend.findMany({
-                            where: { patientId: checkRecommend.patientId },
-                            select: { order: true }
-                        });
+                //         //기존에 이 추천인으로 할인 받은 내역 있나 체크
+                //         const existRecommendCheck = await tx.friendRecommend.findMany({
+                //             where: { patientId: checkRecommend.patientId },
+                //             select: { order: true }
+                //         });
 
-                        let existRecommendCheckFlag = true;
+                //         let existRecommendCheckFlag = true;
 
-                        for (const e of existRecommendCheck) {
-                            if (e.order.patientId == patient.patient.id) {
-                                existRecommendCheckFlag = false
-                            }
-                        }
+                //         for (const e of existRecommendCheck) {
+                //             if (e.order.patientId == patient.patient.id) {
+                //                 existRecommendCheckFlag = false
+                //             }
+                //         }
 
-                        if (checkRecommend.success && existRecommendCheckFlag) {
-                            //지인 확인 되었을 시
-                            orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
-                            remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
+                //         if (checkRecommend.success && existRecommendCheckFlag) {
+                //             //지인 확인 되었을 시
+                //             orderSortNum = orderSortNum == 1 ? 4 : orderSortNum; // 일반일 경우만 지인 처리 (나머지는 그 orderSortNum으로)
+                //             remark = remark == '' ? '지인 10포' : remark += '/지인 10포'
 
-                            await tx.friendRecommend.create({
-                                data: {
-                                    orderId: order.id,
-                                    patientId: checkRecommend.patientId,
-                                    checkFlag: true,
-                                    date: kstDate,
-                                    name: routeName,
-                                    phoneNum: routePhoneNum,
-                                }
-                            });
+                //             await tx.friendRecommend.create({
+                //                 data: {
+                //                     orderId: order.id,
+                //                     patientId: checkRecommend.patientId,
+                //                     checkFlag: true,
+                //                     date: kstDate,
+                //                     name: routeName,
+                //                     phoneNum: routePhoneNum,
+                //                 }
+                //             });
 
-                            await tx.order.update({
-                                where: { id: order.id },
-                                data: {
-                                    orderSortNum: orderSortNum,
-                                    remark: remark
-                                }
-                            });
-                        } else {
-                            //지인을 입력했을 때 지인 확인이 안될 때
-                            await tx.order.update({
-                                where: { id: order.id },
-                                data: { routeFlag: true }
-                            });
-                        }
+                //             await tx.order.update({
+                //                 where: { id: order.id },
+                //                 data: {
+                //                     orderSortNum: orderSortNum,
+                //                     remark: remark
+                //                 }
+                //             });
+                //         } else {
+                //             //지인을 입력했을 때 지인 확인이 안될 때
+                //             await tx.order.update({
+                //                 where: { id: order.id },
+                //                 data: { routeFlag: true }
+                //             });
+                //         }
 
-                    }
-                } else {
-                    //그 외의 경우 마지막으로 orderSortNum 업데이트
-                    await tx.order.update({
-                        where: { id: order.id },
-                        data: { orderSortNum: orderSortNum }
-                    });
-                }
+                //     }
+                // } else {
+                //     //그 외의 경우 마지막으로 orderSortNum 업데이트
+                //     await tx.order.update({
+                //         where: { id: order.id },
+                //         data: { orderSortNum: orderSortNum }
+                //     });
+                // }
+                //////////////////// }
             }, { timeout: 20000 });
 
             return { success: true, status: HttpStatus.CREATED };
