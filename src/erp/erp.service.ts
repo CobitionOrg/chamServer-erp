@@ -152,12 +152,19 @@ export class ErpService {
                     }
                 });
 
-
                 if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
                     remark = '파주맘';
                     orderSortNum = 2;
                 }
 
+
+                if(objPatient.addr && objPatient.addr.includes('제주')){
+                    remark = remark == '' ? '제주' : remark += '/제주';
+                }
+
+                if(objPatient.addr && objPatient.addr.includes('울릉')){
+                    remark = remark == '' ? '울릉' : remark += '/울릉';
+                }           
 
                 if (checkGSB(objOrder.route)) {
                     remark = remark == '' ? '구수방' : remark += '/구수방';
@@ -892,6 +899,14 @@ export class ErpService {
 
                 }
 
+                if(objPatient.addr && objPatient.addr.includes('제주')){
+                    remark = remark == '' ? '제주' : remark += '/제주';
+                }
+
+                if(objPatient.addr && objPatient.addr.includes('울릉')){
+                    remark = remark == '' ? '울릉' : remark += '/울릉';
+                }           
+                
                 const noteData = await tx.patientNote.findMany({
                     where: { patientId: patient.patient.id, useFlag: true }
                 });
