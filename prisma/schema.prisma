@@ -477,10 +477,15 @@ model holiday {
 }
 
 model dailyDeliveryVolume {
+  /// index key
   id          Int                             @id @default(autoincrement())
+  /// 요일
   day_of_week dailyDeliveryVolume_day_of_week
+  /// 발송량
   volume      Int                             @default(350) @db.UnsignedSmallInt
+  /// 업데이트 날짜
   updated_at  DateTime                        @db.DateTime(0)
+  /// 사용 여부
   is_del      Boolean                         @default(false)
 }
 

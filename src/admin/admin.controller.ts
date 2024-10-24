@@ -7,8 +7,10 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { PermitListDto } from './Dto/permitUser.dto';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
 import { LogService } from 'src/log/log.service';
+import { PatchDeliveryVolumeDto } from './Dto/patchDeliveryVolume.dto';
 
 @Controller('admin')
+@UseGuards(AuthGuard)
 @UseFilters(new HttpExceptionFilter())
 @ApiTags('admin api')
 export class AdminController {
@@ -19,7 +21,6 @@ export class AdminController {
     private readonly logger = new Logger(AdminController.name);
 
     @ApiOperation({summary:'질문 생성'})
-    @UseGuards(AuthGuard)
     @Post('/question')
     async insertQuestion(@Body() questionDto : InsertQuestionDto, @Headers() header){
         this.logger.log('질문 생성');
@@ -27,7 +28,6 @@ export class AdminController {
     }
 
     @ApiOperation({summary:'관리자 체크'})
-    @UseGuards(AuthGuard)
     @Get('/checkAdmin')
     async checkAdmin(@Headers() header){
         this.logger.log('관리자 체크');
@@ -35,7 +35,6 @@ export class AdminController {
     }
     
     @ApiOperation({summary:'유저 허용'})
-    @UseGuards(AuthGuard)
     @Patch('/permit')
     async permitUser(@Headers() header, @Body() body:PermitListDto){
         this.logger.log('유저 허용');
@@ -48,7 +47,6 @@ export class AdminController {
     }
 
     @ApiOperation({summary:'미등록 유저 리스트'})
-    @UseGuards(AuthGuard)
     @Get('/permit')
     async permitList(@Headers() header){
         this.logger.log('미등록 유저 리스트');
@@ -56,7 +54,6 @@ export class AdminController {
     }
 
     @ApiOperation({summary:'유저 리스트 조회'})
-    @UseGuards(AuthGuard)
     @Get('/userList')
     async getUserList(@Headers() header){
         this.logger.log('유저 리스트 조회');
@@ -64,7 +61,6 @@ export class AdminController {
     }
 
     @ApiOperation({summary:'근태 조회'})
-    @UseGuards(AuthGuard)
     @Get('/attendance/:id')
     async getAttendance(@Headers() header,@Param('id') id:number){
         this.logger.log('근태 기록 조회');
@@ -72,7 +68,6 @@ export class AdminController {
     }
 
     @ApiOperation({summary:'유저 계정 삭제'})
-    @UseGuards(AuthGuard)
     @Patch('/delete/:id')
     async deleteUser(@Headers() header, @Param("id") id: number){
         this.logger.log('유저 계정 삭제');
@@ -88,5 +83,33 @@ export class AdminController {
         return res;
     }
 
+    @ApiOperation({ summary: '요일별 발송량 전체 조회' })
+    @Get('/daily-delivery-volume')
+    async getAllDeliveryVolume(@Headers() header) {
+        this.logger.log('요일별 발송량 전체 조회');
+        return await this.adminService.getAllDeliveryVolume(getToken(header));
+    }
+
+    @ApiOperation({ summary: '요일별 발송량 전체 수정' })
+    @Patch('/daily-delivery-volume')
+    async patchAllDeliveryVolume(
+        @Headers() header,
+        @Body() patchDeliveryVolumeDto: PatchDeliveryVolumeDto,
+      ) {
+        this.logger.log('요일별 발송량 전체 수정');
+        const res = await this.adminService.patchChangedDeliveryVolume(
+          getToken(header),
+          patchDeliveryVolumeDto,
+        );
+
+        if(res.success) {
+            await this.logService.createLog(
+                `발송량 수정`,
+                '관리자 페이지',
+                header
+            )
+        }
+        return res;
+    }
 }
  

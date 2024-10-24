@@ -7,16 +7,24 @@ import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
+import { AdminRepository } from './admin.repository';
 
 @Module({
-  imports:[
-    JwtModule.register({
-      global:true,
-      secret:jwtConstants.secret,
-      signOptions:{expiresIn:'60s'}
-    }),
-  ],
-  controllers:[AdminController],
-  providers: [AdminService,PrismaService,UserService,LogService,LogRepository]
+    imports: [
+        JwtModule.register({
+            global: true,
+            secret: jwtConstants.secret,
+            signOptions: { expiresIn: '60s' },
+        }),
+    ],
+    controllers: [AdminController],
+    providers: [
+        AdminService,
+        PrismaService,
+        UserService,
+        LogService,
+        LogRepository,
+        AdminRepository,
+    ],
 })
 export class AdminModule {}

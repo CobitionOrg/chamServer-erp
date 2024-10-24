@@ -19,7 +19,6 @@ import { PatientModule } from './patient/patient.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PrismaService } from './prisma.service';
 import { HolidayModule } from './holiday/holiday.module';
-import { DailyDeliveryVolumeModule } from './daily-delivery-volume/daily-delivery-volume.module';
 @Module({
 
   imports: [
@@ -48,7 +47,6 @@ import { DailyDeliveryVolumeModule } from './daily-delivery-volume/daily-deliver
       },
     }),
     HolidayModule,
-    DailyDeliveryVolumeModule,
   ],
   controllers: [AppController],
   providers: [
