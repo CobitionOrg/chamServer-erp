@@ -313,8 +313,17 @@ export class ErpService {
                             });
                         }
 
-                    } else if(route.includes('579') || route.includes('오칠구')){
-                        console.log('597이야 뭐야')
+                    } else if(routeName === null && (route.includes('579') || route.includes('오칠구'))){
+                        orderSortNum = orderSortNum = 8;
+                        remark = remark == '' ? '이벤트 10포' : remark += '/이벤트 10포'
+
+                        await tx.order.update({
+                            where: { id: order.id },
+                            data: {
+                                orderSortNum: orderSortNum,
+                                remark: remark
+                            }
+                        });
                     } else {
 
                     }
@@ -1116,6 +1125,17 @@ export class ErpService {
                 //         }
 
                 //     }
+                // } else if(routeName === null && (route.includes('579') || route.includes('오칠구'))){
+                //     orderSortNum = orderSortNum = 8;
+                //     remark = remark == '' ? '이벤트 10포' : remark += '/이벤트 10포'
+
+                //     await tx.order.update({
+                //         where: { id: order.id },
+                //         data: {
+                //             orderSortNum: orderSortNum,
+                //             remark: remark
+                //         }
+                //     });
                 // } else {
                 //     //그 외의 경우 마지막으로 orderSortNum 업데이트
                 //     await tx.order.update({
