@@ -90,13 +90,13 @@ export class AdminController {
         return await this.adminService.getAllDeliveryVolume(getToken(header));
     }
 
-    @ApiOperation({ summary: '요일별 발송량 전체 수정' })
+    @ApiOperation({ summary: '해당 요일 발송량 수정' })
     @Patch('/daily-delivery-volume')
     async patchAllDeliveryVolume(
         @Headers() header,
         @Body() patchDeliveryVolumeDto: PatchDeliveryVolumeDto,
       ) {
-        this.logger.log('요일별 발송량 전체 수정');
+        this.logger.log('해당 요일 발송량 수정');
         const res = await this.adminService.patchChangedDeliveryVolume(
           getToken(header),
           patchDeliveryVolumeDto,

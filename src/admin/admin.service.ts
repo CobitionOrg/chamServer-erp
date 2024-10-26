@@ -276,31 +276,7 @@ export class AdminService {
             const checkAdmin = await this.checkAdmin(header);
             if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
 
-            const res = await this.adminRepository.getAllDeliveryVolume();
-
-            if (res.success) {
-                const existingData = res.data;
-
-                const volumeArray = [
-                    patchDeliveryVolumeDto.monday,
-                    patchDeliveryVolumeDto.tuesday,
-                    patchDeliveryVolumeDto.wednesday,
-                    patchDeliveryVolumeDto.thursday,
-                    patchDeliveryVolumeDto.friday,
-                    patchDeliveryVolumeDto.saturday,
-                    patchDeliveryVolumeDto.sunday,
-                ];
-
-                const updatedDate = getCurrentDateAndTime();
-
-                const updatedData = existingData.map((data, i) => {
-                    if(data.volume !== volumeArray[i]) {
-                        return { ...data, updated_at: updatedDate, volume: volumeArray[i] };
-                    }
-                    return null;
-                }).filter((data) => data !== null);
-
-                return await this.adminRepository.patchChangedDeliveryVolume(updatedData);
-            }
+            const updatedDate = getCurrentDateAndTime();
+            return await this.adminRepository.patchChangedDeliveryVolume(patchDeliveryVolumeDto, updatedDate);
         }
 }

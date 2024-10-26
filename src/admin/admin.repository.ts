@@ -29,23 +29,21 @@ export class AdminRepository {
         }
     }
 
-    async patchChangedDeliveryVolume(updatedData) {
+    async patchChangedDeliveryVolume(patchDeliveryVolumeDto, updatedDate) {
         try {
-            await this.prisma.$transaction(async (tx) => {
-                for (let i = 0; i < updatedData.length; i++) {
-                    await tx.dailyDeliveryVolume.update({
-                        where: { id: updatedData[i].id },
-                        data: {
-                            volume: updatedData[i].volume,
-                            updated_at: updatedData[i].updated_at,
-                        },
-                    });
+            await this.prisma.dailyDeliveryVolume.update({
+                where: {
+                    id: patchDeliveryVolumeDto.id
+                },
+                data: {
+                    volume: patchDeliveryVolumeDto.volume,
+                    updated_at: updatedDate,
                 }
-            });
+            })
 
             const res = await this.getAllDeliveryVolume();
 
-            return { success: true, status: HttpStatus.OK, data: res };
+            return { success: true, status: HttpStatus.OK, data: res.data };
         } catch (err) {
             this.logger.error(err);
             throw new HttpException(
