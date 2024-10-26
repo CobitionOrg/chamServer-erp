@@ -347,7 +347,7 @@ export class ErpService {
             console.log(name);
             console.log(socialNum);
             const res = await this.prisma.patient.findMany({
-                where: { name } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
+                where: { name, useFlag:true } //설마 이름도 같고 생년월일에 성도 같은 사람이 존재 하겠어?
             },
 
             );
@@ -3813,7 +3813,7 @@ export class ErpService {
     async checkRecommend(name: string, phoneNum: string) {
         try {
             const res = await this.prisma.patient.findMany({
-                where: { name: name }
+                where: { name: name, useFlag: true }
             });
 
             let flag = false;
