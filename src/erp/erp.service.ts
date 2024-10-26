@@ -313,6 +313,10 @@ export class ErpService {
                             });
                         }
 
+                    } else if(route.includes('579') || route.includes('오칠구')){
+                        console.log('597이야 뭐야')
+                    } else {
+
                     }
                 } else {
                     //그 외의 경우 마지막으로 orderSortNum 업데이트
