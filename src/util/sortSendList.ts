@@ -167,7 +167,7 @@ export const getSortedList = (orders: Array<any>): Array<any> => {
     });
 
   const sorted1To5 = orders
-    .filter((item) => item.orderSortNum >= 1 && item.orderSortNum <= 5)
+    .filter((item) => (item.orderSortNum >= 1 && item.orderSortNum <= 5)|| item.orderSortNum === 8 )
     .sort((a, b) => {
       return compareItems(a, b);
     });
