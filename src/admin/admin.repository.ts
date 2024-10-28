@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
+import { PatchDeliveryVolumeDto } from './Dto/patchDeliveryVolume.dto';
 
 @Injectable()
 export class AdminRepository {
@@ -7,6 +8,20 @@ export class AdminRepository {
 
     private readonly logger = new Logger(AdminRepository.name);
 
+    /**
+     * 전체 발송량 조회
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            data: {
+                id: number;
+                day_of_week: $Enums.dailyDeliveryVolume_day_of_week;
+                volume: number;
+                updated_at: Date;
+                is_del: boolean;
+            }[];
+        }>
+     */
     async getAllDeliveryVolume() {
         try {
             const res = await this.prisma.dailyDeliveryVolume.findMany({
@@ -29,17 +44,36 @@ export class AdminRepository {
         }
     }
 
-    async patchChangedDeliveryVolume(patchDeliveryVolumeDto, updatedDate) {
+    /**
+     * 해당 요일 발송량 수정
+     * @param patchDeliveryVolumeDto
+     * @param updatedDate
+     * @returns Promise<{
+            success: boolean;
+            status: HttpStatus;
+            data: {
+                id: number;
+                day_of_week: $Enums.dailyDeliveryVolume_day_of_week;
+                volume: number;
+                updated_at: Date;
+                is_del: boolean;
+            }[];
+        }>
+     */
+    async patchChangedDeliveryVolume(
+        patchDeliveryVolumeDto: PatchDeliveryVolumeDto,
+        updatedDate: Date,
+    ) {
         try {
             await this.prisma.dailyDeliveryVolume.update({
                 where: {
-                    id: patchDeliveryVolumeDto.id
+                    id: patchDeliveryVolumeDto.id,
                 },
                 data: {
                     volume: patchDeliveryVolumeDto.volume,
                     updated_at: updatedDate,
-                }
-            })
+                },
+            });
 
             const res = await this.getAllDeliveryVolume();
 
