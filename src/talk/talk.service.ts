@@ -463,7 +463,7 @@ export class TalkService {
 
         const res = await this.talkRepository.notPay(yesterday, fourWeeksAgo);
         if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-        const url = await this.getTalkExcel(res.list,'미입금');
+        const url = await this.getTalkExcel(res.list);
         return { successs: true, status: HttpStatus.OK, url };
     }
 
@@ -472,35 +472,31 @@ export class TalkService {
 
 
     /**
-    * 상담 연결 안 된 사람들 카톡 자동발송
+    * 상담 연결 안 된 사람들 엑셀
     * @returns Promise<{
            success: boolean;
            status:HttpStatus;
            msg?:string
        }>
     */
-    // async notConsultingCron() {
-    //     const dateVar = new Date();
+    async notConsulting(getListDto) {
+        const today = new Date();
 
-    //     const getListDto: GetListDto = {
-    //         date: dateVar.toISOString(),
-    //         searchCategory: "",
-    //         searchKeyword: ""
-    //     }
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate()-1);
+        
+        const fourWeeksAgo = new Date(yesterday);
+        fourWeeksAgo.setDate(yesterday.getDate() - 28);
+        
+        const res = await this.talkRepository.notConsulting(yesterday,fourWeeksAgo);
+        if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
 
-    //     const res = await this.talkRepository.notConsulting(getListDto);
-    //     if (!res.success) return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
+        const url = await this.getTalkExcel(res.list);
+        if (!url) { return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' }; }
 
-    //     const url = await this.getTalkExcel(res.list, getListDto.date);
-    //     if (!url) { return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' }; }
+        return { successs: true, status: HttpStatus.OK, url };
 
-    //     const rt = await this.sendTalk(url, '유선상담 후 연결안되는 경우');
-    //     if (rt.success) {
-    //         return { successs: true, status: HttpStatus.OK };
-    //     }
-    //     return { success: false, status: HttpStatus.INTERNAL_SERVER_ERROR, msg: '서버 내부 에러 발생' };
-
-    // }
+    }
 
     /**
      * 상담 연결 안 된 사람들 엑셀 데이터
