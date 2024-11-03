@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, Patch, Post, Query, Headers, UseFilters, UseGuards, Head } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Patch, Post, Query, Headers, UseFilters, UseGuards, Head, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { HttpExceptionFilter } from 'src/filter/httpExceptionFilter';
@@ -11,6 +11,7 @@ import { UpdatePatientDto } from './Dto/updatePatient.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreatePatientDto } from './Dto/createPatient.dto';
 import { LogService } from 'src/log/log.service';
+import { UpdateFriendRecommendDto } from './Dto/updateFreindRecommend.dto';
 
 @Controller('patient')
 @UseFilters(new HttpExceptionFilter())
@@ -121,6 +122,23 @@ export class PatientController {
                 header
             );
         }
+        return res;
+    }
+
+    @ApiOperation({summary:'지인 할인 데이터 사용 여부 변경'})
+    @Put('/update/friend-recommend')
+    async updataFriendRecommend(@Body() updateFrendRecommendDto: UpdateFriendRecommendDto, @Headers() header){
+        this.logger.log('지인 할인 데이터 사용 여부 변경')
+        const res = await this.patientService.updateFriendRecommend(updateFrendRecommendDto);
+
+        if(res.success){
+            await this.logService.createLog(
+                `${updateFrendRecommendDto.id}번 지인 할인 데이터 사용 여부 변경`,
+                '환자리스트',
+                header
+            )
+        }
+
         return res;
     }
     
