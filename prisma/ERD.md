@@ -121,6 +121,7 @@ erDiagram
   Int patientId FK
   Int orderId FK
   Boolean useFlag "nullable"
+  Boolean is_del
 }
 "tempOrder" {
   Int id PK
@@ -220,6 +221,13 @@ erDiagram
   Int id PK
   DateTime date "nullable"
   Boolean useFlag "nullable"
+}
+"dailyDeliveryVolume" {
+  Int id PK
+  dailyDeliveryVolume_day_of_week day_of_week
+  Int volume
+  DateTime updated_at
+  Boolean is_del
 }
 "log" }o--|| "user" : user
 "attendance" }o--|| "user" : user
@@ -378,7 +386,8 @@ erDiagram
   - `date`: 접수 일자
   - `patientId`: 환자 key
   - `orderId`: 원 오더 key
-  - `useFlag`: 
+  - `useFlag`: 사용 flag
+  - `is_del`: 삭제 flag
 
 ### `tempOrder`
 
@@ -502,3 +511,12 @@ erDiagram
   - `id`: 
   - `date`: 
   - `useFlag`: 
+
+### `dailyDeliveryVolume`
+
+**Properties**
+  - `id`: 
+  - `day_of_week`: 
+  - `volume`: 
+  - `updated_at`: 
+  - `is_del`: 

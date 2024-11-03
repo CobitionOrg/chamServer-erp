@@ -1408,19 +1408,40 @@ export class SendService {
                     select: {
                         order: {
                             select: {
-                                id: true
+                                id: true,
+                                friendDiscount: true,
+                                patientId: true
                             }
                         }
                     }
                 });
 
-                const qryArr = list.map(async (e) => {
-                    return tx.order.update({
-                        where: { id: e.order.id },
-                        data: { useFlag: false }
-                    });
+                const qryArr = list.flatMap((e) => {
+                    const queries:any = [
+                        tx.order.update({
+                            where: { id: e.order.id },
+                            data: { useFlag: false }
+                        })
+                    ];
+                    console.log(e.order.friendDiscount +' : '+e.order.id)
+                    // 지인 할인 10% 대상일 시 사용된거 제거
+                    if (e.order.friendDiscount) {
+                        queries.push(
+                            tx.friendRecommend.updateMany({
+                                where: { 
+                                    patientId: e.order.patientId, 
+                                    is_del: false,
+                                    useFlag: false,
+                                },
+                                data: { is_del: true }
+                            })
+                        );
+                    }
+                
+                    return queries;
                 });
 
+                console.log(qryArr)
                 await Promise.all([...qryArr]).then((value) => {
                     return { success: true, status: HttpStatus.CREATED };
                 }).catch((err) => {
@@ -1433,6 +1454,7 @@ export class SendService {
                     );
                 });
 
+                
             });
 
 
