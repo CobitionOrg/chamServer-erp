@@ -715,7 +715,7 @@ export class SendService {
                     encryptAddr
                 ); //새로 수정된 항목으로 가격 산출 객체 생성
 
-                if (exTempOrder[0].orderSortNum < 6) {
+                if (exTempOrder[0].orderSortNum < 6 || exTempOrder[0].orderSortNum === 8) {
                     //합배송, 분리 배송이 아닐 시
                     price = getOrderPrice.getPrice(exTempOrder[0].orderSortNum);
                     console.log(price)
