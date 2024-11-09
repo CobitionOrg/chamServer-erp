@@ -10,6 +10,7 @@ import { LogService } from 'src/log/log.service';
 import { LogRepository } from 'src/log/log.repository';
 import { IpGuard } from './gaurds/ip.guard';
 import { Crypto } from 'src/util/crypto.util';
+import { AdminRepository } from 'src/admin/admin.repository';
 
 @Module({
     controllers:[ErpController],
@@ -22,7 +23,8 @@ import { Crypto } from 'src/util/crypto.util';
         LogService,
         LogRepository,
         IpGuard,
-        Crypto
+        Crypto,
+        AdminRepository,
     ]
 })
 
