@@ -215,6 +215,7 @@ export class PatientRepository {
                             id:true,
                             order:{
                                 select:{
+                                    id:true,
                                     patient:{
                                         select:{
                                             id:true,
