@@ -1432,7 +1432,7 @@ export class SendService {
                                     patientId: e.order.patientId, 
                                     is_del: false,
                                     useFlag: false,
-                                },
+                                }, 
                                 data: { is_del: true }
                             })
                         );
@@ -1440,7 +1440,7 @@ export class SendService {
                 
                     return queries;
                 });
-
+ 
                 console.log(qryArr)
                 await Promise.all([...qryArr]).then((value) => {
                     return { success: true, status: HttpStatus.CREATED };

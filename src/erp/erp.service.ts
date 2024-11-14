@@ -899,18 +899,23 @@ export class ErpService {
                 console.log(recommendList);
                 /**지인 추천이 세 명이 넘을 때 */
                 if (recommendList.length >= 3) {
-                    freindRecommendcheckFlag = true;
-                    console.log('++++++++++++++++++++++++++++');
-                    price = getOrderPrice.getTenDiscount();
-                    console.log(price);
+                    /**1년 내에 할인 받은 내역 있는지 확인 */
+                    const check = await this.checkFriendDiscountInYear(patient.patient.id);
+                    if(check) {
+                        freindRecommendcheckFlag = true;
+                        console.log('++++++++++++++++++++++++++++');
+                        price = getOrderPrice.getTenDiscount();
+                        console.log(price);
 
-                    remark = '지인 10% 할인/'
-                    for(let i = 0; i<3 ; i++) {
-                        await tx.friendRecommend.updateMany({
-                            where: { id: recommendList[i].id },
-                            data: { useFlag: false }
-                        })
+                        remark = '지인 10% 할인/'
+                        for(let i = 0; i<3 ; i++) {
+                            await tx.friendRecommend.updateMany({
+                                where: { id: recommendList[i].id },
+                                data: { useFlag: false }
+                            })
+                        }
                     }
+                   
                 }
 
                 if(objPatient.addr && objPatient.addr.includes('제주')){
@@ -1206,6 +1211,42 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 1년 내에 할인 받은 내역 있나 확인
+     * @param patientId 
+     * @returns boolean
+     */
+    async checkFriendDiscountInYear(patientId: number): Promise<boolean> {
+        try{
+            // 1년 전 날짜 계산
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const check = await this.prisma.order.findMany({
+                where:{
+                    patientId: patientId,
+                    friendDiscount: true,
+                    isComplete: true,
+                    useFlag: false,
+                    date: {
+                        gte: oneYearAgo, // 1년 전보다 크거나 같은 데이터만 조회
+                    },
+                }
+            });
+
+            return check.length === 0 ? true : false;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 
