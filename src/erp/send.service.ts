@@ -864,7 +864,7 @@ export class SendService {
                 });
 
                 //이 부분 이슈 생성 예정
-                if((exTempOrder[0].orderSortNum>-1 && exTempOrder[0].orderSortNum<6) || exTempOrder[0].orderSortNum === 8){
+                if((exTempOrder[0].orderSortNum>-2 && exTempOrder[0].orderSortNum<6) || exTempOrder[0].orderSortNum === 8){
                     //합배송 분리배송 교환 누락 제외만 순서 바뀌게
                     await tx.tempOrder.updateMany({
                         where: { orderId: orderId },
