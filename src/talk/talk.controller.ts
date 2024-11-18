@@ -239,24 +239,24 @@ export class TalkController {
     //         const res = await this.talkService.orderInsertCron();
     //     }
 
-    // @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
-    // @Get('/notConsulting')
-    // async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
-    //     this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
-    //     const res = await this.talkService.notConsulting(getListDto);
-    //     if (res.status != 200) {
-    //         throw new HttpException({
-    //             success: false,
-    //             status: res.status,
-    //             msg: res.msg
-    //         },
-    //             res.status 
-    //         );
-    //     }
+    @ApiOperation({summary:'상담 연결 안된 사람들 엑셀 데이터'})
+    @Get('/notConsulting')
+    async notConsulting(@Query() getListDto: GetListDto, @Headers() header) {
+        this.logger.log('상담 연결 안된 사람들 엑셀 데이터');
+        const res = await this.talkService.notConsulting(getListDto);
+        if (res.status != 200) {
+            throw new HttpException({
+                success: false,
+                status: res.status,
+                msg: res.msg
+            },
+                res.status 
+            );
+        }
 
-    //     return {success:true,status:res.status,url:res.url};
+        return {success:true,status:res.status,url:res.url};
 
-    // }
+    }
 
     // @ApiOperation({summary:'상담 연결 안된 사람들 카톡 발송'})
     // //@Cron('0 10 * * 5',{timeZone:"Asia/Seoul"})

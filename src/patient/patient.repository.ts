@@ -208,6 +208,23 @@ export class PatientRepository {
                                 }
                             }
                         }
+                    },
+                    friendRecommends:{
+                        where:{useFlag:true,is_del:false},
+                        select:{
+                            id:true,
+                            order:{
+                                select:{
+                                    id:true,
+                                    patient:{
+                                        select:{
+                                            id:true,
+                                            name:true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -305,6 +322,7 @@ export class PatientRepository {
         }
     }
 
+    /**환자 데이터 생성 */
     async createPatient(createPatientDto:CreatePatientDto) {
         try{
             await this.prisma.$transaction(async (tx) => {
@@ -349,6 +367,7 @@ export class PatientRepository {
         
     }
 
+    /**환자 삭제 */
     async deletePatient(id:number){
         try{
             await this.prisma.patient.update({
@@ -361,6 +380,28 @@ export class PatientRepository {
             });
 
             return {success:true,status:HttpStatus.CREATED,msg:'환자 삭제 완료'};
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                msg: '내부 서버 에러'
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    /**지인 할인 데이터 사용 여부 변경 */
+    async updateFriendRecommend(id:number, useFlag: boolean){
+        try{
+            await this.prisma.friendRecommend.update({
+                where:{id:id},
+                data:{useFlag:!useFlag,is_del:true}
+            });
+
+            return {success:true,status:HttpStatus.CREATED,msg:'지인 할인 추천 사용 여부 변경'};
         }catch(err){
             this.logger.error(err);
             throw new HttpException({

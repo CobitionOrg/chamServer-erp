@@ -258,7 +258,10 @@ model friendRecommend {
   patientId Int
   /// 원 오더 key
   orderId   Int      @unique
+  /// 사용 flag
   useFlag   Boolean? @default(true)
+  /// 삭제 flag
+  is_del    Boolean  @default(false)
   order     order    @relation(fields: [orderId], references: [id])
   patient   patient  @relation(fields: [patientId], references: [id])
 

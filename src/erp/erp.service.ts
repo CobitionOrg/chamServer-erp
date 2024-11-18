@@ -889,27 +889,33 @@ export class ErpService {
                 });
 
                 //지인 10% 할인 플래그
-                let checkFlag = false;
+                let freindRecommendcheckFlag = false;
                 let remark = '';
                 let orderSortNum = 1;
 
                 const recommendList = await tx.friendRecommend.findMany({
-                    where: { patientId: patient.patient.id, checkFlag: true, useFlag: true }
+                    where: { patientId: patient.patient.id, checkFlag: true, useFlag: true, is_del:false }
                 });
                 console.log(recommendList);
-                if (recommendList.length !== 0 && (recommendList.length) % 3 == 0) {
-                    checkFlag = true;
-                    console.log('++++++++++++++++++++++++++++');
-                    price = getOrderPrice.getTenDiscount();
-                    console.log(price);
+                /**지인 추천이 세 명이 넘을 때 */
+                if (recommendList.length >= 3) {
+                    /**1년 내에 할인 받은 내역 있는지 확인 */
+                    const check = await this.checkFriendDiscountInYear(patient.patient.id);
+                    if(check) {
+                        freindRecommendcheckFlag = true;
+                        console.log('++++++++++++++++++++++++++++');
+                        price = getOrderPrice.getTenDiscount();
+                        console.log(price);
 
-                    remark = '지인 10% 할인/'
-                    await tx.friendRecommend.updateMany({
-                        where: { patientId: patient.patient.id, checkFlag: true, useFlag: true },
-                        data: { useFlag: false }
-                    })
-
-
+                        remark = '지인 10% 할인/'
+                        for(let i = 0; i<3 ; i++) {
+                            await tx.friendRecommend.updateMany({
+                                where: { id: recommendList[i].id },
+                                data: { useFlag: false }
+                            })
+                        }
+                    }
+                   
                 }
 
                 if(objPatient.addr && objPatient.addr.includes('제주')){
@@ -935,40 +941,40 @@ export class ErpService {
 
                 //////////////////// 클라이언트 요청으로 route 질문 삭제 (복구 시 주석 해제하면 됨) {
                 if (!objOrder.route) objOrder.route = ""; // 주석 해제 시 여기는 지우면 됨
-                // if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
-                //     remark = remark == '' ? '파주맘' : remark += '/파주맘';
-                //     orderSortNum = 2;
-                // }
+                if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
+                    remark = remark == '' ? '파주맘' : remark += '/파주맘';
+                    orderSortNum = 2;
+                }
 
-                // if(orderSortNum == 2) {
-                //     const exPatientOrder = await tx.order.findMany({
-                //         where:{patientId:patient.patient.id}
-                //     });
+                if(orderSortNum == 2) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
 
-                //     for(const e of exPatientOrder) {
-                //         if(e.orderSortNum == 2){
-                //             orderSortNum = 1;
-                //         }
-                //     }
-                // }
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 2){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
 
 
-                // if (checkGSB(objOrder.route)) {
-                //     remark = remark == '' ? '구수방' : remark += '/구수방';
-                //     orderSortNum = 5;
-                // }
+                if (checkGSB(objOrder.route)) {
+                    remark = remark == '' ? '구수방' : remark += '/구수방';
+                    orderSortNum = 5;
+                }
 
-                // if(orderSortNum == 5) {
-                //     const exPatientOrder = await tx.order.findMany({
-                //         where:{patientId:patient.patient.id}
-                //     });
+                if(orderSortNum == 5) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
 
-                //     for(const e of exPatientOrder) {
-                //         if(e.orderSortNum == 5){
-                //             orderSortNum = 1;
-                //         }
-                //     }
-                // }
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 5){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
                 //////////////////// }
 
                 const order = await tx.order.create({
@@ -987,7 +993,7 @@ export class ErpService {
                         date: kstDate,
                         orderSortNum: orderSortNum, //구수방인지 체크
                         addr: encryptedAddr,
-                        friendDiscount: checkFlag,
+                        friendDiscount: freindRecommendcheckFlag,
                         remark: remark,
                     }
                 });
@@ -1205,6 +1211,42 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 1년 내에 할인 받은 내역 있나 확인
+     * @param patientId 
+     * @returns boolean
+     */
+    async checkFriendDiscountInYear(patientId: number): Promise<boolean> {
+        try{
+            // 1년 전 날짜 계산
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const check = await this.prisma.order.findMany({
+                where:{
+                    patientId: patientId,
+                    friendDiscount: true,
+                    isComplete: true,
+                    useFlag: false,
+                    date: {
+                        gte: oneYearAgo, // 1년 전보다 크거나 같은 데이터만 조회
+                    },
+                }
+            });
+
+            return check.length === 0 ? true : false;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 

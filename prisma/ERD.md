@@ -121,6 +121,7 @@ erDiagram
   Int patientId FK
   Int orderId FK
   Boolean useFlag "nullable"
+  Boolean is_del
 }
 "tempOrder" {
   Int id PK
@@ -385,7 +386,8 @@ erDiagram
   - `date`: 접수 일자
   - `patientId`: 환자 key
   - `orderId`: 원 오더 key
-  - `useFlag`: 
+  - `useFlag`: 사용 flag
+  - `is_del`: 삭제 flag
 
 ### `tempOrder`
 
