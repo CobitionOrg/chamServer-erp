@@ -9,6 +9,7 @@ import { AdminService } from 'src/admin/admin.service';
 import { UserService } from 'src/user/user.service';
 import { Crypto } from 'src/util/crypto.util';
 import { LogRepository } from 'src/log/log.repository';
+import { AdminRepository } from 'src/admin/admin.repository';
 
 @Module({
     providers:[
@@ -20,7 +21,8 @@ import { LogRepository } from 'src/log/log.repository';
         UserService,
         Crypto,
         LogService,
-        LogRepository
+        LogRepository,
+        AdminRepository,
     ],
     controllers: [TalkController]
 }) 
