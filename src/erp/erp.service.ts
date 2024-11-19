@@ -28,7 +28,7 @@ import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
-import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getFirstAndLastDayOfMonth, getFirstAndLastDayOfOnlyMonth, getStartOfToday } from 'src/util/kstDate.util';
+import { getCurrentDateAndTime, getCurrentMonth, getDayOfWeek, getDayStartAndEnd, getFirstAndLastDayOfMonth, getFirstAndLastDayOfOnlyMonth, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
@@ -1834,12 +1834,28 @@ export class ErpService {
 
             console.log("sendList Len : " + sendList.length);
 
-            //아직 350개 차지 않은 발송 목록이 있을 때
+            //아직 발송량이 차지 않은 발송 목록이 있을 때
             if (sendList.length > 0) {
                 const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
 
-                if (checkAmount > 350) {
-                    //350개가 넘으면 새로운 발송목록에 삽입
+                const volumeDatas = await this.adminService.getAllDeliveryVolume(); // 전체 요일 발송량 데이터
+
+                // console.log(sendList[0].title); // ex) '2024/8/22'
+                const sendListDate = new Date(sendList[0].title);
+
+                const day = getDayOfWeek(sendListDate.getDay());
+                // console.log(day); // 'sunday' ~ 'saturday' 중 1
+
+                const volumeData = volumeDatas.data.filter(e => {
+                    return e.day_of_week === day;
+                });
+
+                const maxVolume = volumeData[0].volume; // 해당 발송 목록 요일에 맞는 발송량
+
+                // console.log("maxVolume: " + maxVolume);
+
+                if (checkAmount > maxVolume) {
+                    //해당 요일에 맞는 발송량 개수가 넘으면 새로운 발송목록에 삽입
                     if (sendList.length == 1) {
                         //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
                         const sendList = await tx.sendList.findMany({
@@ -1879,24 +1895,26 @@ export class ErpService {
                             }
                         });
 
-                        if (checkAmount > 345 && checkAmount <= 350) {
+                        // 해당 발송량을 딱 맞추기 어려우니 이 안에 들어오면 그냥 fix
+                        if (checkAmount > maxVolume - 5 && checkAmount <= maxVolume) {
                             await this.fixSendList(sendList[1].id, tx);
                         }
 
                         return sendList[1].id
                     }
                 } else {
-                    //350개 이하면 기존 발송목록에 삽입
+                    //해당 요일 발송량 이하면 기존 발송목록에 삽입
                     const checkAmount = sendList[0].amount + orderAmount;
 
-                    if (checkAmount == 350) {
+                    if (checkAmount == maxVolume) {
                         await tx.sendList.update({
                             where: {
                                 id: sendList[0].id
                             },
                             data: {
                                 full: true,
-                                fixFlag: true, //350개 되면 자동으로 fix
+                                fixFlag: true, //해당 요일에 맞는 발송량이 되면 자동으로 fix
+                                amount: checkAmount,
                             }
                         });
 
@@ -1913,7 +1931,8 @@ export class ErpService {
                         })
                     }
 
-                    if (checkAmount > 345 && checkAmount <= 350) {
+                    // 해당 발송량을 딱 맞추기 어려우니 이 안에 들어오면 그냥 fix
+                    if (checkAmount > maxVolume - 5 && checkAmount <= maxVolume) {
                         await this.fixSendList(sendList[0].id, tx);
                     }
 

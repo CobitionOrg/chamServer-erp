@@ -85,9 +85,9 @@ export class AdminController {
 
     @ApiOperation({ summary: '요일별 발송량 전체 조회' })
     @Get('/daily-delivery-volume')
-    async getAllDeliveryVolume(@Headers() header) {
+    async getAllDeliveryVolume() {
         this.logger.log('요일별 발송량 전체 조회');
-        return await this.adminService.getAllDeliveryVolume(getToken(header));
+        return await this.adminService.getAllDeliveryVolume();
     }
 
     @ApiOperation({ summary: '해당 요일 발송량 수정' })

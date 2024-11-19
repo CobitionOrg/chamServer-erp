@@ -260,10 +260,7 @@ export class AdminService {
          * 요일별 발송량 전체 조회
          * @param header
          */
-        async getAllDeliveryVolume(header: string) {
-            const checkAdmin = await this.checkAdmin(header);
-            if(!checkAdmin.success) return {success:false,status:HttpStatus.FORBIDDEN}; //일반 유저 거르기
-
+        async getAllDeliveryVolume() {
             return await this.adminRepository.getAllDeliveryVolume();
         }
 
