@@ -1838,7 +1838,7 @@ export class ErpService {
             if (sendList.length > 0) {
                 const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
 
-                const volumeDatas = await this.adminService.getAllDeliveryVolume(); // 전체 요일 발송량 데이터
+                const volumeDatas = await this.adminService.getAllDeliveryVolumeForERP(); // 전체 요일 발송량 데이터
 
                 // console.log(sendList[0].title); // ex) '2024/8/22'
                 const sendListDate = new Date(sendList[0].title);
