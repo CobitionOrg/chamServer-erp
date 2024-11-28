@@ -398,45 +398,65 @@ export class ErpService {
      */
     async friendDiscount(id: number) {
         try {
-            const exOrder = await this.prisma.order.findUnique({
-                where: { id: id },
-                select: {
-                    friendDiscount: true,
-                    price: true,
-                    orderItems: true,
-                    addr: true
-                }
-            });
-
-            let price = 0;
             const itemList = await this.getItems();
 
-            const encryptedAddr = this.crypto.decrypt(exOrder.addr);
-            
-            const getOrderPrice = new GetOrderSendPrice(
-                exOrder.orderItems, 
-                itemList,
-                false,
-                encryptedAddr
-            );
+            await this.prisma.$transaction(async (tx) => {
+                const exOrder = await tx.order.findUnique({
+                    where: { id: id },
+                    select: {
+                        friendDiscount: true,
+                        price: true,
+                        orderItems: true,
+                        addr: true,
+                        patientId:true
+                    }
+                });
+    
+                let price = 0;
+    
+                const encryptedAddr = this.crypto.decrypt(exOrder.addr);
+                
+                const getOrderPrice = new GetOrderSendPrice(
+                    exOrder.orderItems, 
+                    itemList,
+                    false,
+                    encryptedAddr
+                );
+    
+    
+                if (exOrder.friendDiscount) {
+                    //할인 한다고 했다가 취소하는 경우
+                    price = getOrderPrice.getPrice();
 
+                    const usedAlreadyRecommend = await tx.friendRecommend.findMany({
+                        where:{patientId:exOrder.patientId, useFlag:false, is_del:false}
+                    })
+                    
+                    for(let i = 0; i<3; i++) {
+                        //3개가 안되는 경우가 있으므로
+                        if(!usedAlreadyRecommend[i]) break;
 
-            if (exOrder.friendDiscount) {
-                //할인 한다고 했다가 취소하는 경우
-                price = getOrderPrice.getPrice();
-            } else {
-                //할인 적용하는 경우
-                price = getOrderPrice.getTenDiscount();
-            }
-
-            await this.prisma.order.update({
-                where: { id: id },
-                data: {
-                    friendDiscount: !exOrder.friendDiscount,
-                    price: price
+                        await tx.friendRecommend.update({
+                            where:{id:usedAlreadyRecommend[i].id},
+                            data:{useFlag:true}
+                        });
+                    }
+                } else {
+                    //할인 적용하는 경우
+                    price = getOrderPrice.getTenDiscount();
                 }
-            });
-
+    
+                await tx.order.update({
+                    where: { id: id },
+                    data: {
+                        friendDiscount: !exOrder.friendDiscount,
+                        price: price
+                    }
+                });
+    
+    
+            })
+           
             return { success: true, status: HttpStatus.CREATED };
 
         } catch (err) {

@@ -398,7 +398,7 @@ export class PatientRepository {
         try{
             await this.prisma.friendRecommend.update({
                 where:{id:id},
-                data:{useFlag:!useFlag,is_del:true}
+                data:{useFlag:!useFlag,is_del:false}
             });
 
             return {success:true,status:HttpStatus.CREATED,msg:'지인 할인 추천 사용 여부 변경'};
