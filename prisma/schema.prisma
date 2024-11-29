@@ -258,7 +258,10 @@ model friendRecommend {
   patientId Int
   /// 원 오더 key
   orderId   Int      @unique
+  /// 사용 flag
   useFlag   Boolean? @default(true)
+  /// 삭제 flag
+  is_del    Boolean  @default(false)
   order     order    @relation(fields: [orderId], references: [id])
   patient   patient  @relation(fields: [patientId], references: [id])
 
@@ -476,6 +479,19 @@ model holiday {
   useFlag Boolean?
 }
 
+model dailyDeliveryVolume {
+  /// index key
+  id          Int                             @id @default(autoincrement())
+  /// 요일
+  day_of_week dailyDeliveryVolume_day_of_week
+  /// 발송량
+  volume      Int                             @default(350) @db.UnsignedSmallInt
+  /// 업데이트 날짜
+  updated_at  DateTime                        @db.DateTime(0)
+  /// 사용 여부
+  is_del      Boolean                         @default(false)
+}
+
 enum Role {
   user
   admin
@@ -497,4 +513,14 @@ enum ItemType {
   common
   yoyo
   assistant
+}
+
+enum dailyDeliveryVolume_day_of_week {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
 }

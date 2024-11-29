@@ -160,9 +160,25 @@ export class PatientService {
         return res;
     }
 
+    /**
+     * 환자 정보 삭제
+     * @param id 
+     * @returns {success:boolean}
+     */
     async deletePatient(id: number){
         const res = await this.patientRepository.deletePatient(id);
         return res;
+    }
+
+
+    /**
+     * 지인 할인 데이터 사용 여부 변경 
+     * @param param0 
+     * @returns 
+     */
+    async updateFriendRecommend({ id, useFlag }: {id: number, useFlag: boolean}) {
+        const res = await this.patientRepository.updateFriendRecommend(id,useFlag);
+        return res
     }
     
 }

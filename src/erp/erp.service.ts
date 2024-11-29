@@ -28,7 +28,7 @@ import { NewOrderDto } from './Dto/newOrder.dto';
 import { CheckDiscountDto } from './Dto/checkDiscount.dto';
 import { UpdateNoteDto } from './Dto/updateNote.dto';
 import { CreateNewReviewDto } from './Dto/createNewReview.dto';
-import { getCurrentDateAndTime, getCurrentMonth, getDayStartAndEnd, getFirstAndLastDayOfMonth, getFirstAndLastDayOfOnlyMonth, getStartOfToday } from 'src/util/kstDate.util';
+import { getCurrentDateAndTime, getCurrentMonth, getDayOfWeek, getDayStartAndEnd, getFirstAndLastDayOfMonth, getFirstAndLastDayOfOnlyMonth, getStartOfToday } from 'src/util/kstDate.util';
 import { getMonth } from 'src/util/getMonth';
 import { getSortedList } from 'src/util/sortSendList';
 import { getOutage } from 'src/util/getOutage';
@@ -398,45 +398,65 @@ export class ErpService {
      */
     async friendDiscount(id: number) {
         try {
-            const exOrder = await this.prisma.order.findUnique({
-                where: { id: id },
-                select: {
-                    friendDiscount: true,
-                    price: true,
-                    orderItems: true,
-                    addr: true
-                }
-            });
-
-            let price = 0;
             const itemList = await this.getItems();
 
-            const encryptedAddr = this.crypto.decrypt(exOrder.addr);
-            
-            const getOrderPrice = new GetOrderSendPrice(
-                exOrder.orderItems, 
-                itemList,
-                false,
-                encryptedAddr
-            );
+            await this.prisma.$transaction(async (tx) => {
+                const exOrder = await tx.order.findUnique({
+                    where: { id: id },
+                    select: {
+                        friendDiscount: true,
+                        price: true,
+                        orderItems: true,
+                        addr: true,
+                        patientId:true
+                    }
+                });
+    
+                let price = 0;
+    
+                const encryptedAddr = this.crypto.decrypt(exOrder.addr);
+                
+                const getOrderPrice = new GetOrderSendPrice(
+                    exOrder.orderItems, 
+                    itemList,
+                    false,
+                    encryptedAddr
+                );
+    
+    
+                if (exOrder.friendDiscount) {
+                    //할인 한다고 했다가 취소하는 경우
+                    price = getOrderPrice.getPrice();
 
+                    const usedAlreadyRecommend = await tx.friendRecommend.findMany({
+                        where:{patientId:exOrder.patientId, useFlag:false, is_del:false}
+                    })
+                    
+                    for(let i = 0; i<3; i++) {
+                        //3개가 안되는 경우가 있으므로
+                        if(!usedAlreadyRecommend[i]) break;
 
-            if (exOrder.friendDiscount) {
-                //할인 한다고 했다가 취소하는 경우
-                price = getOrderPrice.getPrice();
-            } else {
-                //할인 적용하는 경우
-                price = getOrderPrice.getTenDiscount();
-            }
-
-            await this.prisma.order.update({
-                where: { id: id },
-                data: {
-                    friendDiscount: !exOrder.friendDiscount,
-                    price: price
+                        await tx.friendRecommend.update({
+                            where:{id:usedAlreadyRecommend[i].id},
+                            data:{useFlag:true}
+                        });
+                    }
+                } else {
+                    //할인 적용하는 경우
+                    price = getOrderPrice.getTenDiscount();
                 }
-            });
-
+    
+                await tx.order.update({
+                    where: { id: id },
+                    data: {
+                        friendDiscount: !exOrder.friendDiscount,
+                        price: price
+                    }
+                });
+    
+    
+            })
+           
             return { success: true, status: HttpStatus.CREATED };
 
         } catch (err) {
@@ -889,27 +909,33 @@ export class ErpService {
                 });
 
                 //지인 10% 할인 플래그
-                let checkFlag = false;
+                let freindRecommendcheckFlag = false;
                 let remark = '';
                 let orderSortNum = 1;
 
                 const recommendList = await tx.friendRecommend.findMany({
-                    where: { patientId: patient.patient.id, checkFlag: true, useFlag: true }
+                    where: { patientId: patient.patient.id, checkFlag: true, useFlag: true, is_del:false }
                 });
                 console.log(recommendList);
-                if (recommendList.length !== 0 && (recommendList.length) % 3 == 0) {
-                    checkFlag = true;
-                    console.log('++++++++++++++++++++++++++++');
-                    price = getOrderPrice.getTenDiscount();
-                    console.log(price);
+                /**지인 추천이 세 명이 넘을 때 */
+                if (recommendList.length >= 3) {
+                    /**1년 내에 할인 받은 내역 있는지 확인 */
+                    const check = await this.checkFriendDiscountInYear(patient.patient.id);
+                    if(check) {
+                        freindRecommendcheckFlag = true;
+                        console.log('++++++++++++++++++++++++++++');
+                        price = getOrderPrice.getTenDiscount();
+                        console.log(price);
 
-                    remark = '지인 10% 할인/'
-                    await tx.friendRecommend.updateMany({
-                        where: { patientId: patient.patient.id, checkFlag: true, useFlag: true },
-                        data: { useFlag: false }
-                    })
-
-
+                        remark = '지인 10% 할인/'
+                        for(let i = 0; i<3 ; i++) {
+                            await tx.friendRecommend.updateMany({
+                                where: { id: recommendList[i].id },
+                                data: { useFlag: false }
+                            })
+                        }
+                    }
+                   
                 }
 
                 if(objPatient.addr && objPatient.addr.includes('제주')){
@@ -935,40 +961,40 @@ export class ErpService {
 
                 //////////////////// 클라이언트 요청으로 route 질문 삭제 (복구 시 주석 해제하면 됨) {
                 if (!objOrder.route) objOrder.route = ""; // 주석 해제 시 여기는 지우면 됨
-                // if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
-                //     remark = remark == '' ? '파주맘' : remark += '/파주맘';
-                //     orderSortNum = 2;
-                // }
+                if (objOrder.route.includes('파주맘') || objOrder.route.includes('파주')) {
+                    remark = remark == '' ? '파주맘' : remark += '/파주맘';
+                    orderSortNum = 2;
+                }
 
-                // if(orderSortNum == 2) {
-                //     const exPatientOrder = await tx.order.findMany({
-                //         where:{patientId:patient.patient.id}
-                //     });
+                if(orderSortNum == 2) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
 
-                //     for(const e of exPatientOrder) {
-                //         if(e.orderSortNum == 2){
-                //             orderSortNum = 1;
-                //         }
-                //     }
-                // }
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 2){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
 
 
-                // if (checkGSB(objOrder.route)) {
-                //     remark = remark == '' ? '구수방' : remark += '/구수방';
-                //     orderSortNum = 5;
-                // }
+                if (checkGSB(objOrder.route)) {
+                    remark = remark == '' ? '구수방' : remark += '/구수방';
+                    orderSortNum = 5;
+                }
 
-                // if(orderSortNum == 5) {
-                //     const exPatientOrder = await tx.order.findMany({
-                //         where:{patientId:patient.patient.id}
-                //     });
+                if(orderSortNum == 5) {
+                    const exPatientOrder = await tx.order.findMany({
+                        where:{patientId:patient.patient.id}
+                    });
 
-                //     for(const e of exPatientOrder) {
-                //         if(e.orderSortNum == 5){
-                //             orderSortNum = 1;
-                //         }
-                //     }
-                // }
+                    for(const e of exPatientOrder) {
+                        if(e.orderSortNum == 5){
+                            orderSortNum = 1;
+                        }
+                    }
+                }
                 //////////////////// }
 
                 const order = await tx.order.create({
@@ -987,7 +1013,7 @@ export class ErpService {
                         date: kstDate,
                         orderSortNum: orderSortNum, //구수방인지 체크
                         addr: encryptedAddr,
-                        friendDiscount: checkFlag,
+                        friendDiscount: freindRecommendcheckFlag,
                         remark: remark,
                     }
                 });
@@ -1205,6 +1231,42 @@ export class ErpService {
             },
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * 1년 내에 할인 받은 내역 있나 확인
+     * @param patientId 
+     * @returns boolean
+     */
+    async checkFriendDiscountInYear(patientId: number): Promise<boolean> {
+        try{
+            // 1년 전 날짜 계산
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const check = await this.prisma.order.findMany({
+                where:{
+                    patientId: patientId,
+                    friendDiscount: true,
+                    isComplete: true,
+                    useFlag: false,
+                    date: {
+                        gte: oneYearAgo, // 1년 전보다 크거나 같은 데이터만 조회
+                    },
+                }
+            });
+
+            return check.length === 0 ? true : false;
+        }catch(err){
+            this.logger.error(err);
+            throw new HttpException({
+                success: false,
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
         }
     }
 
@@ -1792,12 +1854,28 @@ export class ErpService {
 
             console.log("sendList Len : " + sendList.length);
 
-            //아직 350개 차지 않은 발송 목록이 있을 때
+            //아직 발송량이 차지 않은 발송 목록이 있을 때
             if (sendList.length > 0) {
                 const checkAmount = sendList[0].amount + orderAmount; //기존 발송목록과 추가되는 오더의 개수 더한거
 
-                if (checkAmount > 350) {
-                    //350개가 넘으면 새로운 발송목록에 삽입
+                const volumeDatas = await this.adminService.getAllDeliveryVolumeForERP(); // 전체 요일 발송량 데이터
+
+                // console.log(sendList[0].title); // ex) '2024/8/22'
+                const sendListDate = new Date(sendList[0].title);
+
+                const day = getDayOfWeek(sendListDate.getDay());
+                // console.log(day); // 'sunday' ~ 'saturday' 중 1
+
+                const volumeData = volumeDatas.data.filter(e => {
+                    return e.day_of_week === day;
+                });
+
+                const maxVolume = volumeData[0].volume; // 해당 발송 목록 요일에 맞는 발송량
+
+                // console.log("maxVolume: " + maxVolume);
+
+                if (checkAmount > maxVolume) {
+                    //해당 요일에 맞는 발송량 개수가 넘으면 새로운 발송목록에 삽입
                     if (sendList.length == 1) {
                         //새로 삽입할 발송목록이 없어 새로 만들어야 될 때
                         const sendList = await tx.sendList.findMany({
@@ -1827,34 +1905,48 @@ export class ErpService {
                         return newSendList.id;
 
                     } else {
-                        //다 차지 않은 발송목록이 있어서 그냥 넣으면 될 때
+                        //다 차지 않은 발송목록이 있어서 해당 발송 목록 발송량 체크
+                        const nextCheckAmount = sendList[1].amount + orderAmount;
+
+                        const nextSendListDate = new Date(sendList[1].title);
+
+                        const nextDay = getDayOfWeek(nextSendListDate.getDay());
+
+                        const nextVolumeData = volumeDatas.data.filter(e => {
+                            return e.day_of_week === nextDay;
+                        });
+
+                        const nextMaxVolume = nextVolumeData[0].volume;
+
                         await tx.sendList.update({
                             where: {
                                 id: sendList[1].id
                             },
                             data: {
-                                amount: checkAmount
+                                amount: nextCheckAmount
                             }
                         });
 
-                        if (checkAmount > 345 && checkAmount <= 350) {
+                        // 해당 발송량을 딱 맞추기 어려우니 이 안에 들어오면 그냥 fix
+                        if (nextCheckAmount > nextMaxVolume - 5 && nextCheckAmount <= nextMaxVolume) {
                             await this.fixSendList(sendList[1].id, tx);
                         }
 
                         return sendList[1].id
                     }
                 } else {
-                    //350개 이하면 기존 발송목록에 삽입
+                    //해당 요일 발송량 이하면 기존 발송목록에 삽입
                     const checkAmount = sendList[0].amount + orderAmount;
 
-                    if (checkAmount == 350) {
+                    if (checkAmount == maxVolume) {
                         await tx.sendList.update({
                             where: {
                                 id: sendList[0].id
                             },
                             data: {
                                 full: true,
-                                fixFlag: true, //350개 되면 자동으로 fix
+                                fixFlag: true, //해당 요일에 맞는 발송량이 되면 자동으로 fix
+                                amount: checkAmount,
                             }
                         });
 
@@ -1871,7 +1963,8 @@ export class ErpService {
                         })
                     }
 
-                    if (checkAmount > 345 && checkAmount <= 350) {
+                    // 해당 발송량을 딱 맞추기 어려우니 이 안에 들어오면 그냥 fix
+                    if (checkAmount > maxVolume - 5 && checkAmount <= maxVolume) {
                         await this.fixSendList(sendList[0].id, tx);
                     }
 
