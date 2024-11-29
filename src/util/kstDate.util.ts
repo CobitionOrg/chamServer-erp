@@ -99,6 +99,14 @@ export function getFirstAndLastDayOfOnlyMonth(month) {
       startDate: firstDay,
       endDate: lastDay
   };
+}
 
-  
+/**
+ * @param id 
+ * 0(sunday) ~ 6(saturday)
+ * @returns 
+ */
+export const getDayOfWeek = (id: number) => {
+  const day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  return day[id];
 }

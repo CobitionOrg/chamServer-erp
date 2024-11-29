@@ -279,4 +279,12 @@ export class AdminService {
             const updatedDate = getCurrentDateAndTime();
             return await this.adminRepository.patchChangedDeliveryVolume(patchDeliveryVolumeDto, updatedDate);
         }
+
+        /**
+         * 요일별 발송량 전체 조회
+         * epr.service에서 발송량 확인용
+         */
+        async getAllDeliveryVolumeForERP() {
+            return await this.adminRepository.getAllDeliveryVolume();
+        }
 }

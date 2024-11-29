@@ -515,8 +515,8 @@ erDiagram
 ### `dailyDeliveryVolume`
 
 **Properties**
-  - `id`: 
-  - `day_of_week`: 
-  - `volume`: 
-  - `updated_at`: 
-  - `is_del`: 
+  - `id`: index key
+  - `day_of_week`: 요일
+  - `volume`: 발송량
+  - `updated_at`: 업데이트 날짜
+  - `is_del`: 사용 여부
