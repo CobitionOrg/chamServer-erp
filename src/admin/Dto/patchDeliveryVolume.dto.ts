@@ -7,7 +7,7 @@ export class PatchDeliveryVolumeDto {
     @Max(7)
     id: number;
 
-    // mysql unsgined small int (0~65535)
+    // mysql unsigned small int (0~65535)
     @IsInt()
     @Min(0)
     @Max(65535)

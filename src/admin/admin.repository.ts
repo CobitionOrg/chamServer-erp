@@ -29,6 +29,11 @@ export class AdminRepository {
                     is_del: false,
                 },
                 orderBy: { id: 'asc' },
+                select:{
+                    id: true,
+                    day_of_week:true,
+                    volume:true
+                }
             });
 
             return { success: true, status: HttpStatus.OK, data: res };
