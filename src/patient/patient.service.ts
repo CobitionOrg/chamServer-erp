@@ -120,6 +120,11 @@ export class PatientService {
             row.addr = decryptedAddr;
             row.phoneNum = decryptedPhoneNum;
             row.socialNum = markedSocialNum;
+
+            for (const friendRecommend of row.friendRecommends) {
+                const decryptedFriendPhoneNum = this.crypto.decrypt(friendRecommend.order.patient.phoneNum);
+                friendRecommend.order.patient.phoneNum = decryptedFriendPhoneNum;
+            }
         }
 
         //번호 검색

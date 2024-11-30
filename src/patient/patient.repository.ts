@@ -220,6 +220,7 @@ export class PatientRepository {
                                         select:{
                                             id:true,
                                             name:true,
+                                            phoneNum: true,
                                         }
                                     }
                                 }
