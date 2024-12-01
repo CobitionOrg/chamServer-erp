@@ -2057,13 +2057,14 @@ export class ErpService {
                         return newSendList.id;
                     } else {
                         //다 차지 않은 발송목록이 있어서 해당 발송 목록 발송량 체크
-                        const nextCheckAmount = sendList[1].amount + orderAmount;
+                        const nextCheckAmount =
+                            sendList[1].amount + orderAmount;
 
                         const nextSendListDate = new Date(sendList[1].title);
 
                         const nextDay = getDayOfWeek(nextSendListDate.getDay());
 
-                        const nextVolumeData = volumeDatas.data.filter(e => {
+                        const nextVolumeData = volumeDatas.data.filter((e) => {
                             return e.day_of_week === nextDay;
                         });
 
@@ -2074,14 +2075,14 @@ export class ErpService {
                                 id: sendList[1].id,
                             },
                             data: {
-                                amount: checkAmount,
+                                amount: nextCheckAmount,
                             },
                         });
 
                         // 해당 발송량을 딱 맞추기 어려우니 이 안에 들어오면 그냥 fix
                         if (
-                            checkAmount > maxVolume - 5 &&
-                            checkAmount <= maxVolume
+                            nextCheckAmount > nextMaxVolume - 5 &&
+                            nextCheckAmount <= nextMaxVolume
                         ) {
                             await this.fixSendList(sendList[1].id, tx);
                         }
