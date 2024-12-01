@@ -2056,7 +2056,19 @@ export class ErpService {
 
                         return newSendList.id;
                     } else {
-                        //다 차지 않은 발송목록이 있어서 그냥 넣으면 될 때
+                        //다 차지 않은 발송목록이 있어서 해당 발송 목록 발송량 체크
+                        const nextCheckAmount = sendList[1].amount + orderAmount;
+
+                        const nextSendListDate = new Date(sendList[1].title);
+
+                        const nextDay = getDayOfWeek(nextSendListDate.getDay());
+
+                        const nextVolumeData = volumeDatas.data.filter(e => {
+                            return e.day_of_week === nextDay;
+                        });
+
+                        const nextMaxVolume = nextVolumeData[0].volume;
+
                         await tx.sendList.update({
                             where: {
                                 id: sendList[1].id,
