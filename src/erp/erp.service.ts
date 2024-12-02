@@ -3040,9 +3040,12 @@ export class ErpService {
 
     async getCashTypeList(startDate, endDate) {
         try {
-            //날짜 별 조회 추가 예정
             const list = await this.prisma.order.findMany({
                 where: {
+                    date: {
+                        gte: startDate, // 시작 시간 이상
+                        lte: endDate, // 종료 시간 이하
+                    },
                     consultingType: false,
                     isComplete: false,
                     payType: '계좌이체',
