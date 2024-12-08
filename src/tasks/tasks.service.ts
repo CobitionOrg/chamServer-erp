@@ -107,7 +107,7 @@ export class TasksService {
         await this.tasksRepository.deleteNotCallOrder();
     }
 
-    @Cron('0 50 23 * * * ', { timeZone: 'Asia/Seoul' })
+    @Cron('0 55 23 * * * ', { timeZone: 'Asia/Seoul' })
     async deleteOldOrder() {
         //예전 데이터 삭제
 
