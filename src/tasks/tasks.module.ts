@@ -7,9 +7,14 @@ import { LogRepository } from 'src/log/log.repository';
 import { Crypto } from 'src/util/crypto.util';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { HolidayRepository } from 'src/holiday/holiday.repository';
+import { PatientRepository } from 'src/patient/patient.repository';
+import { AdminService } from 'src/admin/admin.service';
+import { AdminRepository } from 'src/admin/admin.repository';
+import { UserService } from 'src/user/user.service';
+import { ErpService } from 'src/erp/erp.service';
 
 @Module({
-    providers:[
+    providers: [
         TasksService,
         TasksRepository,
         PrismaService,
@@ -18,6 +23,11 @@ import { HolidayRepository } from 'src/holiday/holiday.repository';
         Crypto,
         HolidayService,
         HolidayRepository,
-    ]
+        ErpService,
+        PatientRepository,
+        AdminService,
+        AdminRepository,
+        UserService,
+    ],
 })
 export class TasksModule {}
