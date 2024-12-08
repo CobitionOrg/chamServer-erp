@@ -13,6 +13,7 @@ import { HolidayService } from 'src/holiday/holiday.service';
 import { HolidayRepository } from 'src/holiday/holiday.repository';
 import { ErpService } from 'src/erp/erp.service';
 import { CancelOrderDto } from 'src/erp/Dto/cancelOrder.dto';
+import { CF_CANCEL_ORDER_BATCH_SIZE } from 'src/config/cancelOrder.config';
 const fs = require('fs');
 const path = require('path');
 
@@ -120,17 +121,27 @@ export class TasksService {
         }
 
         const oldOrders = oldList.list;
-        // Promise.all로 병렬 삭제
-        await Promise.all(
-            oldOrders.map((oldOrder) => {
-                const cancelOrderDto: CancelOrderDto = {
-                    orderId: oldOrder.id,
-                    isFirst: oldOrder.isFirst,
-                    patientId: oldOrder.patientId,
-                };
-                this.erpService.cancelOrder(cancelOrderDto);
-            }),
-        );
+        const BATCH_SIZE = CF_CANCEL_ORDER_BATCH_SIZE;
+
+        for (let i = 0; i < oldOrders.length; i += BATCH_SIZE) {
+            const batch = oldOrders.slice(i, i + BATCH_SIZE);
+
+            await Promise.all(
+                batch.map(async (oldOrder) => {
+                    const cancelOrderDto: CancelOrderDto = {
+                        orderId: oldOrder.id,
+                        isFirst: oldOrder.isFirst,
+                        patientId: oldOrder.patientId,
+                    };
+                    await this.erpService.cancelOrder(cancelOrderDto);
+                    await this.logService.createLog(
+                        `오래된 ${oldOrder.id}번 주문 취소 처리`,
+                        `오래된 ${oldOrder.id}번 주문 취소 처리`,
+                        null,
+                    );
+                }),
+            );
+        }
     }
 
     // 매일 13시 59분
