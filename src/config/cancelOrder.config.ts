@@ -1,1 +1,1 @@
-export const CF_CANCEL_ORDER_BATCH_SIZE = 4;
+export const CF_CANCEL_ORDER_BATCH_SIZE = 2;
