@@ -719,7 +719,6 @@ export class TasksRepository {
                     date: {
                         lt: twoMonthAgo,
                     },
-                    consultingFlag: false,
                     useFlag: true,
                     isComplete: false,
                     orderSortNum: { gte: CF_ORDERSORT_NUM.EXTRA },
