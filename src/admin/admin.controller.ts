@@ -91,7 +91,7 @@ export class AdminController {
     }
 
     @ApiOperation({ summary: '해당 요일 발송량 수정' })
-    @Patch('/daily-delivery-volume')
+    @Post('/daily-delivery-volume')
     async patchAllDeliveryVolume(
         @Headers() header,
         @Body() patchDeliveryVolumeDto: PatchDeliveryVolumeDto,
@@ -101,7 +101,6 @@ export class AdminController {
           getToken(header),
           patchDeliveryVolumeDto,
         );
-
         if(res.success) {
             await this.logService.createLog(
                 `발송량 수정`,
