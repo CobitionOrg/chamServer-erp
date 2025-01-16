@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+    HttpException,
+    HttpStatus,
+    Injectable,
+    Logger,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { BcryptUtilClass } from 'src/util/bcrypt.util';
@@ -8,7 +14,11 @@ import { JwtService } from '@nestjs/jwt';
 import { AttendanceDto } from './Dto/attendance.dto';
 import { LeaveWorkDto } from './Dto/leaveWork.dto';
 import { getMonth } from 'src/util/getMonth';
-import { getCurrentDateAndTime, getStartOfToday, checkTardy } from 'src/util/kstDate.util';
+import {
+    getCurrentDateAndTime,
+    getStartOfToday,
+    checkTardy,
+} from 'src/util/kstDate.util';
 import { ChangePwDto } from './Dto/changePw.dto';
 
 @Injectable()
@@ -16,7 +26,7 @@ export class UserService {
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
-    ) { }
+    ) {}
 
     private readonly logger = new Logger(UserService.name);
     private readonly bcryptClass = new BcryptUtilClass();
@@ -44,7 +54,9 @@ export class UserService {
             console.log(userPw);
 
             const checkId = await this.checkId(signUpDto.userId);
-            if (!checkId.success) return { success: false, status: HttpStatus.CONFLICT };
+            console.log(checkId);
+            if (!checkId.success)
+                return { success: false, status: HttpStatus.CONFLICT };
 
             const res = await this.prisma.user.create({
                 data: {
@@ -60,11 +72,12 @@ export class UserService {
             return { success: true, status: HttpStatus.CREATED };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -78,19 +91,20 @@ export class UserService {
         try {
             const res = await this.prisma.user.findFirst({
                 where: {
-                    userId: userId
-                }
+                    userId: userId,
+                },
             });
 
             if (res) return { success: false };
             else return { success: true };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -105,23 +119,27 @@ export class UserService {
             const userData = await this.prisma.user.findUnique({
                 where: {
                     userId: loginDto.userId,
-                    useFlag: true
+                    useFlag: true,
                 },
             });
 
             if (userData?.userId == null || userData.userPw == null) {
-                return { success: false, status: 404 }
+                return { success: false, status: 404 };
             }
 
-            const check = await this.bcryptClass.checkLogin(loginDto.userPw, userData.userPw);
+            const check = await this.bcryptClass.checkLogin(
+                loginDto.userPw,
+                userData.userPw,
+            );
 
-            if (!check) { //비밀번호 일치하지 않을 시
+            if (!check) {
+                //비밀번호 일치하지 않을 시
                 throw new UnauthorizedException();
             } else {
                 const payload = {
                     sub: userData.id,
                     name: userData.name,
-                    userId: userData.userId
+                    userId: userData.userId,
                 };
 
                 const access_token = await this.jwtService.signAsync(payload);
@@ -129,24 +147,24 @@ export class UserService {
                     success: true,
                     status: HttpStatus.OK,
                     token: access_token,
-                    id: userData.id
+                    id: userData.id,
                 };
             }
-
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 출근
-     * @param attendanceDto 
+     * @param attendanceDto
      * @returns {success:bool,status:HttpStatus};
      */
     async attendance(attendanceDto: AttendanceDto) {
@@ -161,16 +179,17 @@ export class UserService {
 
             if (!login.success) return login;
 
-            //중복 출근 방지 
+            //중복 출근 방지
             const attendanceDate = getStartOfToday();
             const alreadyAttendance = await this.prisma.attendance.findFirst({
                 where: {
                     userId: login.id,
-                    date: attendanceDate
-                }
+                    date: attendanceDate,
+                },
             });
             //console.log(alreadyAttendance);
-            if (alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
+            if (alreadyAttendance)
+                return { success: true, status: HttpStatus.CONFLICT };
 
             //console.log(attendanceDto.todayDate)
             let startTime = getCurrentDateAndTime();
@@ -182,8 +201,8 @@ export class UserService {
                     startTime: startTime,
                     endTime: startTime,
                     userId: login.id,
-                    tardy: isTardy
-                }
+                    tardy: isTardy,
+                },
             });
 
             return {
@@ -191,23 +210,23 @@ export class UserService {
                 status: HttpStatus.OK,
                 token: login.token,
             };
-
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 퇴근하기
-     * @param header 
-     * @param leaveWork 
-     * @returns 
+     * @param header
+     * @param leaveWork
+     * @returns
      */
     async leaveWork(header, leaveWork: LeaveWorkDto) {
         try {
@@ -216,7 +235,7 @@ export class UserService {
             await this.prisma.attendance.update({
                 where: {
                     id: leaveWork.id,
-                    userId: token.sub
+                    userId: token.sub,
                 },
                 data: {
                     endTime: getCurrentDateAndTime(),
@@ -226,26 +245,26 @@ export class UserService {
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 유저 데이터 가져오기
-     * @param header :string 
+     * @param header :string
      * @param month : number
-     * @returns 
+     * @returns
      */
     async getUserData(header, month: number) {
         try {
             const token = await this.jwtService.decode(header);
             console.log(token);
-
 
             const res = await this.getAttendance(token.sub, month);
 
@@ -254,24 +273,24 @@ export class UserService {
             return { data: res, success: true };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 해당 유저 근태 조회
-     * @param id 
-     * @param month 
-     * @returns 
+     * @param id
+     * @param month
+     * @returns
      */
     async getAttendance(id: number, month: number) {
         try {
-
             const getTimeObj = getMonth(month);
             console.log(getTimeObj);
             const res = await this.prisma.user.findFirst({
@@ -292,34 +311,35 @@ export class UserService {
                             date: {
                                 lte: new Date(getTimeObj.lte),
                                 gte: new Date(getTimeObj.gte),
-                            }
+                            },
                         },
                         orderBy: {
-                            date: 'desc'
-                        }
-                    }
+                            date: 'desc',
+                        },
+                    },
                 },
                 where: {
-                    id: id
-                }
+                    id: id,
+                },
             });
             console.log(res);
             return res;
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 유저 권한 업데이트
-     * @param header 
-     * @param id 
+     * @param header
+     * @param id
      * @returns {success:boolean}
      */
     async userFlagUpd(header: string, id: number) {
@@ -331,43 +351,43 @@ export class UserService {
             const userId = token.sub;
 
             const checkGrade = await this.checkUserGrade(userId);
-            if (!checkGrade.success) return { success: false, status: HttpStatus.FORBIDDEN };
-
+            if (!checkGrade.success)
+                return { success: false, status: HttpStatus.FORBIDDEN };
 
             const userUpd = await this.prisma.user.update({
                 where: {
-                    id: id
+                    id: id,
                 },
                 data: {
-                    useFlag: true
-                }
+                    useFlag: true,
+                },
             });
 
             console.log(userUpd);
 
             return { success: true, status: HttpStatus.OK };
-
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 유저 등급 확인
-     * @param id 
+     * @param id
      * @returns {success:boolean}
      */
     async checkUserGrade(id: number) {
         try {
             const userData = await this.prisma.user.findUnique({
                 where: {
-                    id: id
+                    id: id,
                 },
                 select: {
                     grade: true,
@@ -379,14 +399,14 @@ export class UserService {
             } else {
                 return { success: false };
             }
-
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -404,28 +424,32 @@ export class UserService {
                 where: {
                     date: getStartOfToday(),
                     userId: userId,
-                }
+                },
             });
 
             let isWorking = false;
 
-            if(attendanceData !== null) {
+            if (attendanceData !== null) {
                 isWorking = true;
-                if(attendanceData.startTime.getTime() !== attendanceData.endTime.getTime()) {
+                if (
+                    attendanceData.startTime.getTime() !==
+                    attendanceData.endTime.getTime()
+                ) {
                     isWorking = false;
                 }
             }
-            
+
             console.log(isWorking);
 
             return { success: true, isWorking: isWorking };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -441,14 +465,15 @@ export class UserService {
 
             // 중복 출근 방지
             const attendanceData = getStartOfToday();
-            const alreadyAttendance =  await this.prisma.attendance.findFirst({
+            const alreadyAttendance = await this.prisma.attendance.findFirst({
                 where: {
                     userId: userId,
-                    date: attendanceData
-                }
+                    date: attendanceData,
+                },
             });
 
-            if(alreadyAttendance) return { success: true, status: HttpStatus.CONFLICT }
+            if (alreadyAttendance)
+                return { success: true, status: HttpStatus.CONFLICT };
 
             const startTime = getCurrentDateAndTime();
             const isTardy = checkTardy(startTime);
@@ -460,17 +485,18 @@ export class UserService {
                     endTime: startTime,
                     userId: userId,
                     tardy: isTardy,
-                }
+                },
             });
 
             return { success: true, status: HttpStatus.OK };
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -478,13 +504,13 @@ export class UserService {
     async requestReview() {
         try {
             const today = getStartOfToday();
-    
+
             // 이번 주 월요일부터 금요일까지의 날짜를 계산
             const monday = new Date(today);
             const tuesday = new Date(today);
             const thursday = new Date(today);
             const friday = new Date(today);
-        
+
             monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
             tuesday.setDate(monday.getDate() + 1);
             thursday.setDate(monday.getDate() + 3);
@@ -494,73 +520,79 @@ export class UserService {
             console.log(tuesday);
             console.log(thursday);
             console.log(friday);
-        
+
             // 데이터 조회
             const data = await this.prisma.order.findMany({
-              where: {
-                date: {
-                  in: [monday, tuesday, thursday, friday],
-                }
-              }
+                where: {
+                    date: {
+                        in: [monday, tuesday, thursday, friday],
+                    },
+                },
             });
 
             console.log(data);
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                msg: '내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 비밀번호 변경
-     * @param changePwDto 
-     * @param header 
+     * @param changePwDto
+     * @param header
      * @returns {success:boolean, status: HttpStatus}
      */
     async changePw(changePwDto: ChangePwDto, header: string) {
-        try{
+        try {
             const token = await this.jwtService.decode(header);
             const userData = await this.prisma.user.findUnique({
                 where: {
                     id: token.sub,
-                    useFlag: true
+                    useFlag: true,
                 },
             });
 
             if (userData?.userId == null || userData.userPw == null) {
-                return { success: false, status: 404 }
+                return { success: false, status: 404 };
             }
 
-            const check = await this.bcryptClass.checkLogin(changePwDto.userPw, userData.userPw);
+            const check = await this.bcryptClass.checkLogin(
+                changePwDto.userPw,
+                userData.userPw,
+            );
 
-            if (!check) { //비밀번호 일치하지 않을 시
+            if (!check) {
+                //비밀번호 일치하지 않을 시
                 throw new UnauthorizedException();
             } else {
-                const newPassWord = await this.bcryptClass.hashing(changePwDto.newPw);
+                const newPassWord = await this.bcryptClass.hashing(
+                    changePwDto.newPw,
+                );
                 await this.prisma.user.update({
-                    where:{id:userData.id},
-                    data:{userPw:newPassWord}
+                    where: { id: userData.id },
+                    data: { userPw: newPassWord },
                 });
             }
 
-            return { success:true, status:HttpStatus.CREATED }
-
-        }catch(err){
+            return { success: true, status: HttpStatus.CREATED };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success: false,
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                msg: '내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
-
 }

@@ -1,23 +1,21 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
-import { PrismaService } from "src/prisma.service";
-import { ExOrderObjDto } from "./Dto/exOrderObj.dto";
-import { ExOrderItemObjDto } from "./Dto/exOrderItemObj.dto";
-import { ExOrderBodyTypeDto } from "./Dto/exOrderBodyType.dto";
-import { getCurrentDateAndTime } from "src/util/kstDate.util";
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
+import { ExOrderObjDto } from './Dto/exOrderObj.dto';
+import { ExOrderItemObjDto } from './Dto/exOrderItemObj.dto';
+import { ExOrderBodyTypeDto } from './Dto/exOrderBodyType.dto';
+import { getCurrentDateAndTime } from 'src/util/kstDate.util';
 
 @Injectable()
 export class ExchangeRepository {
-    constructor(
-        private prisma: PrismaService
-    ) { }
+    constructor(private prisma: PrismaService) {}
 
     private readonly logger = new Logger(ExchangeRepository.name);
 
     /**
      * 이 전 주문 데이터 조회
-     * @param id 
-     * @param tx 
-     * @returns 
+     * @param id
+     * @param tx
+     * @returns
      */
     async getExOrder(id: number, tx) {
         try {
@@ -27,27 +25,28 @@ export class ExchangeRepository {
                     route: true,
                     message: true,
                     cachReceipt: true,
-                    isFirst:true,
+                    isFirst: true,
                     typeCheck: true,
                     consultingTime: true,
                     payType: true,
                     essentialCheck: true,
                     outage: true,
                     patient: {
-                        select:{
-                            id:true,
-                            patientBodyType:true,
-                        }
+                        select: {
+                            id: true,
+                            patientBodyType: true,
+                        },
                     },
-                    addr:true,
+                    addr: true,
                     price: true,
                     remark: true,
                     orderItems: {
-                        select:{
-                            item:true,type:true
-                        }
+                        select: {
+                            item: true,
+                            type: true,
+                        },
                     },
-                }
+                },
             });
 
             console.log(exOrder);
@@ -55,107 +54,121 @@ export class ExchangeRepository {
             return exOrder;
         } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 오더 생성
-     * @param tx 
-     * @param objOrder 
-     * @param orderSortNum 
+     * @param tx
+     * @param objOrder
+     * @param orderSortNum
      * @returns {success:boolean, id:number}
      */
-    async insertOrder(tx, objOrder:ExOrderObjDto, orderSortNum:number){
-        try{
+    async insertOrder(tx, objOrder: ExOrderObjDto, orderSortNum: number) {
+        try {
             const newOrder = await tx.order.create({
-                data:{
+                data: {
                     route: objOrder.route,
                     message: objOrder.message,
                     outage: objOrder.outage,
                     payType: objOrder.payType,
                     cachReceipt: objOrder.cachReceipt,
                     isFirst: false,
-                    patientId : objOrder.patientId,
+                    patientId: objOrder.patientId,
                     typeCheck: objOrder.typeCheck,
                     consultingTime: objOrder.consultingTime,
                     essentialCheck: objOrder.essentialCheck,
                     price: objOrder.price,
                     addr: objOrder.addr,
                     date: getCurrentDateAndTime(),
-                    orderSortNum: orderSortNum
-                }
+                    orderSortNum: orderSortNum,
+                },
             });
 
-            return {success:true,id:newOrder.id};
-        }catch(err){
+            return { success: true, id: newOrder.id };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 오더 아이템 생성
-     * @param tx 
-     * @param objOrderItems 
-     * @param orderId 
+     * @param tx
+     * @param objOrderItems
+     * @param orderId
      * @returns {success:boolean}
      */
-    async insertOrderItems(tx,objOrderItems:Array<ExOrderItemObjDto>,orderId:number){
-        try{
+    async insertOrderItems(
+        tx,
+        objOrderItems: Array<ExOrderItemObjDto>,
+        orderId: number,
+    ) {
+        try {
             const qryArr = [];
 
             objOrderItems.forEach(async (e) => {
                 const qry = tx.orderItem.create({
-                    data:{item:e.item,type:e.type,orderId:orderId}
+                    data: { item: e.item, type: e.type, orderId: orderId },
                 });
                 qryArr.push(qry);
             });
 
-            await Promise.all([...qryArr]).then((value) => {
-                return {success:true}
-            }).catch((err)=>{
-                this.logger.error(err);
-                return {success:false};
-            });
+            await Promise.all([...qryArr])
+                .then((value) => {
+                    return { success: true };
+                })
+                .catch((err) => {
+                    this.logger.error(err);
+                    return { success: false };
+                });
 
-            return {success:true};
-        }catch(err){
+            return { success: true };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 오더 바디 타입 생성
-     * @param tx 
-     * @param objOrderBodyType 
-     * @param orderId 
+     * @param tx
+     * @param objOrderBodyType
+     * @param orderId
      * @returns {success:boolean}
      */
-    async insertOrderBodyType(tx, objOrderBodyType:ExOrderBodyTypeDto,orderId:number,isFirst:boolean){
-        try{
-            if(isFirst){
+    async insertOrderBodyType(
+        tx,
+        objOrderBodyType: ExOrderBodyTypeDto,
+        orderId: number,
+        isFirst: boolean,
+    ) {
+        try {
+            if (isFirst) {
                 await tx.orderBodyType.create({
-                    data:{
+                    data: {
                         tallWeight: objOrderBodyType.tallWeight ?? '',
                         digestion: objOrderBodyType.digestion ?? '',
                         sleep: objOrderBodyType.sleep ?? '',
@@ -164,39 +177,39 @@ export class ExchangeRepository {
                         pastDrug: objOrderBodyType.pastDrug ?? '',
                         pastSurgery: objOrderBodyType.pastSurgery ?? '',
                         orderId: orderId,
-                    }
+                    },
                 });
-    
             }
 
-            return {success:true};
-        }catch(err){
+            return { success: true };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
     /**
      * 교환,누락,환불 리스트 가져오기
-     * @returns 
+     * @returns
      */
-    async getExchangeList(orderConditions, patientConditions){
-        try{
+    async getExchangeList(orderConditions, patientConditions) {
+        try {
             const list = await this.prisma.order.findMany({
-                where:{
-                    orderSortNum:{
-                        gte:-4,
-                        lt:-1
+                where: {
+                    orderSortNum: {
+                        gte: -4,
+                        lt: -1,
                     },
-                    isComplete:false,
+                    isComplete: false,
                     ...orderConditions,
-                    ...patientConditions
+                    ...patientConditions,
                 },
                 select: {
                     id: true,
@@ -213,7 +226,7 @@ export class ExchangeRepository {
                     date: true,
                     orderSortNum: true,
                     remark: true,
-                    addr:true,
+                    addr: true,
                     isPickup: true,
                     patient: {
                         select: {
@@ -221,26 +234,27 @@ export class ExchangeRepository {
                             name: true,
                             addr: true,
                             phoneNum: true,
-                        }
+                        },
                     },
                     orderItems: {
                         select: {
                             item: true,
                             type: true,
-                        }
+                        },
                     },
-                }
+                },
             });
 
-            return {success:true, list, status:HttpStatus.OK};
-        }catch(err){
+            return { success: true, list, status: HttpStatus.OK };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
@@ -254,25 +268,24 @@ export class ExchangeRepository {
             msg: string;
         }>
      */
-    async completeRefund(id:number){
-        try{
+    async completeRefund(id: number) {
+        try {
             await this.prisma.order.update({
-                where:{id:id},
-                data:{isComplete:true}
+                where: { id: id },
+                data: { isComplete: true },
             });
 
-            return {success:true,status:HttpStatus.OK,msg:'완료'};
-        }catch(err){
+            return { success: true, status: HttpStatus.OK, msg: '완료' };
+        } catch (err) {
             this.logger.error(err);
-            throw new HttpException({
-                success:false,
-                status:HttpStatus.INTERNAL_SERVER_ERROR,
-                msg:'내부 서버 에러'
-            },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
+            throw new HttpException(
+                {
+                    success: false,
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg: '내부 서버 에러',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
-
- 
 }

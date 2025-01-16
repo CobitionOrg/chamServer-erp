@@ -1,4 +1,16 @@
-import { Body, Controller, Logger, Post, Headers, Get, UseGuards, Param, Patch, Head, UseFilters } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Logger,
+    Post,
+    Headers,
+    Get,
+    UseGuards,
+    Param,
+    Patch,
+    Head,
+    UseFilters,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InsertQuestionDto } from './Dto/question.dto';
@@ -15,70 +27,72 @@ import { PatchDeliveryVolumeDto } from './Dto/patchDeliveryVolume.dto';
 @ApiTags('admin api')
 export class AdminController {
     constructor(
-        private adminService : AdminService,
-        private logService: LogService
-    ){}
+        private adminService: AdminService,
+        private logService: LogService,
+    ) {}
     private readonly logger = new Logger(AdminController.name);
 
-    @ApiOperation({summary:'질문 생성'})
+    @ApiOperation({ summary: '질문 생성' })
     @Post('/question')
-    async insertQuestion(@Body() questionDto : InsertQuestionDto, @Headers() header){
+    async insertQuestion(
+        @Body() questionDto: InsertQuestionDto,
+        @Headers() header,
+    ) {
         this.logger.log('질문 생성');
-        return await this.adminService.insertQuestion(questionDto,getToken(header));
+        return await this.adminService.insertQuestion(
+            questionDto,
+            getToken(header),
+        );
     }
 
-    @ApiOperation({summary:'관리자 체크'})
+    @ApiOperation({ summary: '관리자 체크' })
     @Get('/checkAdmin')
-    async checkAdmin(@Headers() header){
+    async checkAdmin(@Headers() header) {
         this.logger.log('관리자 체크');
         return await this.adminService.checkAdmin(getToken(header));
     }
-    
-    @ApiOperation({summary:'유저 허용'})
+
+    @ApiOperation({ summary: '유저 허용' })
     @Patch('/permit')
-    async permitUser(@Headers() header, @Body() body:PermitListDto){
+    async permitUser(@Headers() header, @Body() body: PermitListDto) {
         this.logger.log('유저 허용');
-        await this.logService.createLog(
-            '유저 허용',
-            '관리자 페이지',
-            header
-        );
+        await this.logService.createLog('유저 허용', '관리자 페이지', header);
         return await this.adminService.permitUser(getToken(header), body);
     }
 
-    @ApiOperation({summary:'미등록 유저 리스트'})
+    @ApiOperation({ summary: '미등록 유저 리스트' })
     @Get('/permit')
-    async permitList(@Headers() header){
+    async permitList(@Headers() header) {
         this.logger.log('미등록 유저 리스트');
         return await this.adminService.permitList(getToken(header));
     }
 
-    @ApiOperation({summary:'유저 리스트 조회'})
+    @ApiOperation({ summary: '유저 리스트 조회' })
     @Get('/userList')
-    async getUserList(@Headers() header){
+    async getUserList(@Headers() header) {
         this.logger.log('유저 리스트 조회');
         return await this.adminService.getUserList(getToken(header));
     }
 
-    @ApiOperation({summary:'근태 조회'})
+    @ApiOperation({ summary: '근태 조회' })
     @Get('/attendance/:id')
-    async getAttendance(@Headers() header,@Param('id') id:number){
+    async getAttendance(@Headers() header, @Param('id') id: number) {
         this.logger.log('근태 기록 조회');
-        return await this.adminService.getAttendance(getToken(header),id);
+        return await this.adminService.getAttendance(getToken(header), id);
     }
 
-    @ApiOperation({summary:'유저 계정 삭제'})
+    @ApiOperation({ summary: '유저 계정 삭제' })
     @Patch('/delete/:id')
-    async deleteUser(@Headers() header, @Param("id") id: number){
+    async deleteUser(@Headers() header, @Param('id') id: number) {
         this.logger.log('유저 계정 삭제');
         const res = await this.adminService.deleteUser(id, getToken(header));
 
-        if(res.success) {
+        if (res.success) {
             await this.logService.createLog(
                 `${id}번 계정 삭제`,
                 '관리자 페이지',
-                header
-            )
+                header,
+            );
         }
         return res;
     }
@@ -91,25 +105,24 @@ export class AdminController {
     }
 
     @ApiOperation({ summary: '해당 요일 발송량 수정' })
-    @Patch('/daily-delivery-volume')
+    @Post('/daily-delivery-volume')
     async patchAllDeliveryVolume(
         @Headers() header,
         @Body() patchDeliveryVolumeDto: PatchDeliveryVolumeDto,
-      ) {
+    ) {
         this.logger.log('해당 요일 발송량 수정');
         const res = await this.adminService.patchChangedDeliveryVolume(
-          getToken(header),
-          patchDeliveryVolumeDto,
+            getToken(header),
+            patchDeliveryVolumeDto,
         );
 
-        if(res.success) {
+        if (res.success) {
             await this.logService.createLog(
                 `발송량 수정`,
                 '관리자 페이지',
-                header
-            )
+                header,
+            );
         }
         return res;
     }
 }
- 
