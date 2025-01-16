@@ -356,19 +356,26 @@ export class ErpService {
                             }
                         }
                         // 이벤트용 코드
-                        // else if(routeName === null && (route.includes('579') || route.includes('오칠구'))){
-                        //     orderSortNum = orderSortNum = 8;
-                        //     remark = remark == '' ? '이벤트 10포' : remark += '/이벤트 10포'
+                        else if (
+                            routePhoneNum === null &&
+                            route.includes('참새')
+                        ) {
+                            console.log('////////////////////////////////////');
 
-                        //     await tx.order.update({
-                        //         where: { id: order.id },
-                        //         data: {
-                        //             orderSortNum: orderSortNum,
-                        //             remark: remark
-                        //         }
-                        //     });
-                        // }
-                        else {
+                            orderSortNum = orderSortNum = 8;
+                            remark =
+                                remark == ''
+                                    ? '이벤트 10포'
+                                    : (remark += '/이벤트 10포');
+
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: {
+                                    orderSortNum: orderSortNum,
+                                    remark: remark,
+                                },
+                            });
+                        } else {
                         }
                     } else {
                         //그 외의 경우 마지막으로 orderSortNum 업데이트
@@ -1261,25 +1268,25 @@ export class ErpService {
                             }
                         }
                         // 이벤트용 코드
-                        // else if (
-                        //     routeName === null &&
-                        //     (route.includes('579') || route.includes('오칠구'))
-                        // ) {
-                        //     orderSortNum = orderSortNum = 8;
-                        //     remark =
-                        //         remark == ''
-                        //             ? '이벤트 10포'
-                        //             : (remark += '/이벤트 10포');
+                        else if (
+                            routePhoneNum === null &&
+                            route.includes('참새')
+                        ) {
+                            console.log('////////////////////////////////////');
+                            orderSortNum = orderSortNum = 8;
+                            remark =
+                                remark == ''
+                                    ? '이벤트 10포'
+                                    : (remark += '/이벤트 10포');
 
-                        //     await tx.order.update({
-                        //         where: { id: order.id },
-                        //         data: {
-                        //             orderSortNum: orderSortNum,
-                        //             remark: remark,
-                        //         },
-                        //     });
-                        // }
-                        else {
+                            await tx.order.update({
+                                where: { id: order.id },
+                                data: {
+                                    orderSortNum: orderSortNum,
+                                    remark: remark,
+                                },
+                            });
+                        } else {
                         }
                     } else {
                         //그 외의 경우 마지막으로 orderSortNum 업데이트
