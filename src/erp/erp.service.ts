@@ -2029,6 +2029,7 @@ export class ErpService {
                 const maxVolume = volumeData[0].volume; // 해당 발송 목록 요일에 맞는 발송량
 
                 // console.log("maxVolume: " + maxVolume);
+                // console.log(checkAmount);
 
                 if (checkAmount > maxVolume) {
                     //해당 요일에 맞는 발송량 개수가 넘으면 새로운 발송목록에 삽입
@@ -2052,9 +2053,15 @@ export class ErpService {
                         const title = getSendTitle(date);
                         console.log(title);
 
+                        // 여기서 검증
+                        const checkedTitle = await this.checkIsHoliday(
+                            tx,
+                            new Date(title),
+                        );
+
                         const newSendList = await tx.sendList.create({
                             data: {
-                                title: title,
+                                title: checkedTitle,
                                 amount: orderAmount,
                                 date: date,
                                 full: false,
@@ -2160,9 +2167,16 @@ export class ErpService {
                 console.log(date);
                 const title = getSendTitle(date);
                 //console.log(title);
+
+                // 여기서 검증
+                const checkedTitle = await this.checkIsHoliday(
+                    tx,
+                    new Date(title),
+                );
+
                 const newSendList = await tx.sendList.create({
                     data: {
-                        title: title,
+                        title: checkedTitle,
                         amount: orderAmount,
                         date: date,
                         full: false,
@@ -4804,6 +4818,51 @@ export class ErpService {
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
+    }
+
+    /**
+     * 휴일, 주말, 수요일 아닌 날짜 title 형식('2025/2/6')으로 반환
+     * @param tx
+     * @param date
+     * @returns
+     */
+    async checkIsHoliday(tx, date: Date) {
+        const holidays = await tx.holiday.findMany({
+            where: {
+                date: {
+                    gt: new Date(),
+                },
+                useFlag: true,
+            },
+            orderBy: {
+                date: 'asc',
+            },
+        });
+
+        let nextDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        while (true) {
+            // console.log('nextDate', nextDate);
+            const dayOfWeek = nextDate.getDay();
+            // console.log('dayOfWeek', dayOfWeek);
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isWednesDay = dayOfWeek === 3;
+
+            const isHoliday = holidays.some((holiday) => {
+                return (
+                    new Date(holiday.date).toISOString().split('T')[0] ===
+                    nextDate.toISOString().split('T')[0]
+                );
+            });
+
+            // 주말, 휴일, 수요일 아니면 반환
+            if (!isWeekend && !isHoliday && !isWednesDay) {
+                break;
+            }
+
+            nextDate.setDate(nextDate.getDate() + 1);
+        }
+
+        return `${nextDate.getFullYear()}/${nextDate.getMonth() + 1}/${nextDate.getDate()}`;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////데이터 테스트입니다.
