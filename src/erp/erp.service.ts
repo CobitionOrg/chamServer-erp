@@ -738,7 +738,12 @@ export class ErpService {
                 const { startDate, endDate } =
                     getListDto.month === undefined
                         ? getDayStartAndEnd(getListDto.date)
-                        : getFirstAndLastDayOfOnlyMonth(getListDto.month);
+                        : getListDto.year !== undefined
+                          ? getFirstAndLastDayOfYearAndMonth(
+                                getListDto.year,
+                                getListDto.month,
+                            )
+                          : getFirstAndLastDayOfOnlyMonth(getListDto.month);
 
                 firstCount = await this.getOrderCount(
                     startDate,
